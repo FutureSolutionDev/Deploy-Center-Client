@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -23,6 +24,7 @@ import {
 import { DeploymentsService, type IDeployment } from '@/services/deploymentsService';
 
 export const DeploymentsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [deployments, setDeployments] = useState<IDeployment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -123,7 +125,7 @@ export const DeploymentsPage: React.FC = () => {
                     <TableCell>{deployment.timestamp}</TableCell>
                     <TableCell>{deployment.duration || '-'}</TableCell>
                     <TableCell align="right">
-                      <IconButton size="small" title="View Logs">
+                      <IconButton size="small" title="View Logs" onClick={() => navigate(`/deployments/${deployment.id}`)}>
                         <ViewIcon />
                       </IconButton>
                     </TableCell>

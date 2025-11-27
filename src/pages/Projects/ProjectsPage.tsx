@@ -23,10 +23,12 @@ import {
   GitHub as GitHubIcon,
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProjectsService, type IProject } from '@/services/projectsService';
 
 export const ProjectsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { } = useLanguage();
   const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +124,7 @@ export const ProjectsPage: React.FC = () => {
                   )}
                 </CardContent>
                 <CardActions>
-                  <Button size="small">Details</Button>
+                  <Button size="small" onClick={() => navigate(`/projects/${project.id}`)}>Details</Button>
                   <Button size="small">Deploy</Button>
                   <Box sx={{ flexGrow: 1 }} />
                   <IconButton size="small">

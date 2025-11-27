@@ -15,41 +15,14 @@ export interface IProject {
 
 export const ProjectsService = {
   getAll: async (): Promise<IProject[]> => {
-    // Mock data for now until backend is ready
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          {
-            id: 1,
-            name: 'CRM Backend',
-            repoUrl: 'https://github.com/org/crm-backend',
-            branch: 'master',
-            type: 'node',
-            status: 'active',
-            lastDeployment: { status: 'success', timestamp: '2 hours ago' },
-          },
-          {
-            id: 2,
-            name: 'Admin Portal',
-            repoUrl: 'https://github.com/org/admin-portal',
-            branch: 'develop',
-            type: 'static',
-            status: 'active',
-            lastDeployment: { status: 'success', timestamp: '4 hours ago' },
-          },
-          {
-            id: 3,
-            name: 'Customer Portal',
-            repoUrl: 'https://github.com/org/customer-portal',
-            branch: 'master',
-            type: 'static',
-            status: 'inactive',
-            lastDeployment: { status: 'failed', timestamp: '6 hours ago' },
-          },
-        ]);
-      }, 500);
-    });
-    // return ApiInstance.get('/projects').then((res) => res.data);
+    try {
+      const response = await ApiInstance.get('/projects');
+      return response.data.Data || [];
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+      // Return empty array on error
+      return [];
+    }
   },
 
   getById: async (id: number): Promise<IProject> => {
@@ -66,5 +39,10 @@ export const ProjectsService = {
 
   delete: async (id: number): Promise<void> => {
     return ApiInstance.delete(`/projects/${id}`).then((res) => res.data);
+  },
+
+  deploy: async (id: number, branch?: string): Promise<IProject> => {
+    const response = await ApiInstance.post(`/projects/${id}/deploy`, { branch });
+    return response.data.Data;
   },
 };

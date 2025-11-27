@@ -13,7 +13,9 @@ import { MainLayout } from '@/components/Layout/MainLayout';
 import { LoginPage } from '@/pages/Auth/LoginPage';
 import { DashboardPage } from '@/pages/Dashboard/DashboardPage';
 import { ProjectsPage } from '@/pages/Projects/ProjectsPage';
+import { ProjectDetailsPage } from '@/pages/Projects/ProjectDetailsPage';
 import { DeploymentsPage } from '@/pages/Deployments/DeploymentsPage';
+import { DeploymentLogsPage } from '@/pages/Deployments/DeploymentLogsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
 
 /**
@@ -89,7 +91,9 @@ const AppRoutes: React.FC = () => {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="projects" element={<ProjectsPage />} />
+        <Route path="projects/:id" element={<ProjectDetailsPage />} />
         <Route path="deployments" element={<DeploymentsPage />} />
+        <Route path="deployments/:id" element={<DeploymentLogsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
