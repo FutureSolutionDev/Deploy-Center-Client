@@ -3,8 +3,8 @@
  * Provides the main app layout with sidebar, header, and content area
  */
 
-import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Drawer,
@@ -23,7 +23,7 @@ import {
   MenuItem,
   useMediaQuery,
   useTheme as useMuiTheme,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -35,10 +35,10 @@ import {
   Brightness4,
   Brightness7,
   Language as LanguageIcon,
-} from '@mui/icons-material';
-import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useLanguage } from '@/contexts/LanguageContext';
+} from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const DRAWER_WIDTH = 240;
 
@@ -51,27 +51,27 @@ interface IMenuItem {
 
 const MenuItems: IMenuItem[] = [
   {
-    Title: 'Dashboard',
-    TitleAr: 'لوحة التحكم',
-    Path: '/dashboard',
+    Title: "Dashboard",
+    TitleAr: "لوحة التحكم",
+    Path: "/dashboard",
     Icon: <DashboardIcon />,
   },
   {
-    Title: 'Projects',
-    TitleAr: 'المشاريع',
-    Path: '/projects',
+    Title: "Projects",
+    TitleAr: "المشاريع",
+    Path: "/projects",
     Icon: <ProjectsIcon />,
   },
   {
-    Title: 'Deployments',
-    TitleAr: 'النشر',
-    Path: '/deployments',
+    Title: "Deployments",
+    TitleAr: "النشر",
+    Path: "/deployments",
     Icon: <DeploymentsIcon />,
   },
   {
-    Title: 'Settings',
-    TitleAr: 'الإعدادات',
-    Path: '/settings',
+    Title: "Settings",
+    TitleAr: "الإعدادات",
+    Path: "/settings",
     Icon: <SettingsIcon />,
   },
 ];
@@ -80,14 +80,16 @@ export const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const muiTheme = useMuiTheme();
-  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down("md"));
 
   const { User, Logout } = useAuth();
   const { Mode, ToggleMode } = useTheme();
   const { Language, ChangeLanguage, t } = useLanguage();
 
   const [MobileOpen, setMobileOpen] = useState(false);
-  const [UserMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
+  const [UserMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
+    null
+  );
 
   const HandleDrawerToggle = () => {
     setMobileOpen(!MobileOpen);
@@ -104,18 +106,18 @@ export const MainLayout: React.FC = () => {
   const HandleLogout = () => {
     HandleUserMenuClose();
     Logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const HandleLanguageToggle = () => {
-    ChangeLanguage(Language === 'en' ? 'ar' : 'en');
+    ChangeLanguage(Language === "en" ? "ar" : "en");
   };
 
   const DrawerContent = (
     <Box>
       <Toolbar>
         <Typography variant="h6" noWrap component="div">
-          {t('app.name')}
+          {t("app.name")}
         </Typography>
       </Toolbar>
       <Divider />
@@ -135,7 +137,7 @@ export const MainLayout: React.FC = () => {
               >
                 <ListItemIcon>{item.Icon}</ListItemIcon>
                 <ListItemText
-                  primary={Language === 'ar' ? item.TitleAr : item.Title}
+                  primary={Language === "ar" ? item.TitleAr : item.Title}
                 />
               </ListItemButton>
             </ListItem>
@@ -146,12 +148,12 @@ export const MainLayout: React.FC = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       {/* AppBar */}
       <AppBar
         position="fixed"
         sx={{
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { md: `calc(100dvw - ${DRAWER_WIDTH}px)` },
           ml: { md: `${DRAWER_WIDTH}px` },
         }}
       >
@@ -161,18 +163,18 @@ export const MainLayout: React.FC = () => {
             aria-label="open drawer"
             edge="start"
             onClick={HandleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
+            sx={{ mr: 2, display: { md: "none" } }}
           >
             <MenuIcon />
           </IconButton>
 
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {t('app.name')}
+            {t("app.name")}
           </Typography>
 
           {/* Theme Toggle */}
           <IconButton color="inherit" onClick={ToggleMode}>
-            {Mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
+            {Mode === "dark" ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
 
           {/* Language Toggle */}
@@ -182,8 +184,8 @@ export const MainLayout: React.FC = () => {
 
           {/* User Menu */}
           <IconButton color="inherit" onClick={HandleUserMenuOpen}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-              {User?.Username?.charAt(0).toUpperCase() || 'U'}
+            <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}>
+              {User?.Username?.charAt(0).toUpperCase() || "U"}
             </Avatar>
           </IconButton>
 
@@ -196,16 +198,14 @@ export const MainLayout: React.FC = () => {
               <ListItemIcon>
                 <AccountCircle fontSize="small" />
               </ListItemIcon>
-              <ListItemText>
-                {User?.Username || 'User'}
-              </ListItemText>
+              <ListItemText>{User?.Username || "User"}</ListItemText>
             </MenuItem>
             <Divider />
             <MenuItem onClick={HandleLogout}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText>{t('auth.logout')}</ListItemText>
+              <ListItemText>{t("auth.logout")}</ListItemText>
             </MenuItem>
           </Menu>
         </Toolbar>
@@ -225,9 +225,9 @@ export const MainLayout: React.FC = () => {
             keepMounted: true, // Better mobile performance
           }}
           sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
               width: DRAWER_WIDTH,
             },
           }}
@@ -239,9 +239,9 @@ export const MainLayout: React.FC = () => {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
+            display: { xs: "none", md: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
               width: DRAWER_WIDTH,
             },
           }}
@@ -257,9 +257,9 @@ export const MainLayout: React.FC = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          minHeight: '100vh',
-          bgcolor: 'background.default',
+          width: { md: `calc(100dvw - ${DRAWER_WIDTH}px)` },
+          minHeight: "100dvh",
+          bgcolor: "background.default",
         }}
       >
         <Toolbar /> {/* Spacer for AppBar */}

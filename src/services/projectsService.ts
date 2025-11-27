@@ -17,7 +17,8 @@ export const ProjectsService = {
   getAll: async (): Promise<IProject[]> => {
     try {
       const response = await ApiInstance.get('/projects');
-      return response.data.Data || [];
+      const data = response.data.Data;
+      return data?.Projects || [];
     } catch (error) {
       console.error('Failed to fetch projects:', error);
       // Return empty array on error
@@ -26,15 +27,15 @@ export const ProjectsService = {
   },
 
   getById: async (id: number): Promise<IProject> => {
-    return ApiInstance.get(`/projects/${id}`).then((res) => res.data);
+    return ApiInstance.get(`/projects/${id}`).then((res) => res.data.Data?.Project);
   },
 
   create: async (data: Omit<IProject, 'id'>): Promise<IProject> => {
-    return ApiInstance.post('/projects', data).then((res) => res.data);
+    return ApiInstance.post('/projects', data).then((res) => res.data.Data?.Project);
   },
 
   update: async (id: number, data: Partial<IProject>): Promise<IProject> => {
-    return ApiInstance.put(`/projects/${id}`, data).then((res) => res.data);
+    return ApiInstance.put(`/projects/${id}`, data).then((res) => res.data.Data?.Project);
   },
 
   delete: async (id: number): Promise<void> => {
@@ -43,6 +44,6 @@ export const ProjectsService = {
 
   deploy: async (id: number, branch?: string): Promise<IProject> => {
     const response = await ApiInstance.post(`/projects/${id}/deploy`, { branch });
-    return response.data.Data;
+    return response.data.Data?.Deployment;
   },
 };

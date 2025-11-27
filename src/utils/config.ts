@@ -6,7 +6,7 @@
 export const Config = {
   // API Configuration
   Api: {
-    BaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+    BaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
     Timeout: 30000,
   },
   // Authentication
@@ -30,7 +30,7 @@ export const Config = {
   },
   // Real-time
   Socket: {
-    Url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000',
+    Url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001',
     ReconnectAttempts: 5,
     ReconnectDelay: 3000,
   },
