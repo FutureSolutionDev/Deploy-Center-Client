@@ -11,6 +11,7 @@ import { ThemeContextProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { LoginPage } from '@/pages/Auth/LoginPage';
+import { RegisterPage } from '@/pages/Auth/RegisterPage';
 import { DashboardPage } from '@/pages/Dashboard/DashboardPage';
 import { ProjectsPage } from '@/pages/Projects/ProjectsPage';
 import { ProjectDetailsPage } from '@/pages/Projects/ProjectDetailsPage';
@@ -75,6 +76,15 @@ const AppRoutes: React.FC = () => {
         element={
           <PublicRoute>
             <LoginPage />
+          </PublicRoute>
+        }
+      />
+      
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <RegisterPage />
           </PublicRoute>
         }
       />

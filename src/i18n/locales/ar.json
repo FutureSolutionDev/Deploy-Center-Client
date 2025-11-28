@@ -28,7 +28,10 @@
     "usernameRequired": "اسم المستخدم مطلوب",
     "passwordRequired": "كلمة المرور مطلوبة",
     "loginSubtitle": "تسجيل الدخول إلى حسابك",
+    "registerSubtitle": "إنشاء حساب جديد للبدء",
+    "createAccount": "إنشاء حساب",
     "noAccount": "ليس لديك حساب؟",
+    "haveAccount": "لديك حساب بالفعل؟",
     "loggingIn": "جاري تسجيل الدخول..."
   },
   "dashboard": {

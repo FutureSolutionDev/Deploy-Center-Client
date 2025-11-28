@@ -28,7 +28,10 @@
     "usernameRequired": "Username is required",
     "passwordRequired": "Password is required",
     "loginSubtitle": "Sign in to your account",
+    "registerSubtitle": "Create a new account to get started",
+    "createAccount": "Create Account",
     "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
     "loggingIn": "Logging in..."
   },
   "dashboard": {
