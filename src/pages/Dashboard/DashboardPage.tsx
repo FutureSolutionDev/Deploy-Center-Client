@@ -29,7 +29,7 @@ interface IStatCard {
 }
 
 export const DashboardPage: React.FC = () => {
-  const { t, Language } = useLanguage();
+  const { t } = useLanguage();
   const { User } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<IStatCard[]>([]);
@@ -51,29 +51,29 @@ export const DashboardPage: React.FC = () => {
 
         setStats([
           {
-            Title: 'Total Projects',
-            TitleAr: 'إجمالي المشاريع',
+            Title: 'totalProjects',
+            TitleAr: 'totalProjects',
             Value: totalProjects,
             Icon: <ProjectsIcon fontSize="large" />,
             Color: '#1976d2',
           },
           {
-            Title: 'Total Deployments',
-            TitleAr: 'إجمالي عمليات النشر',
+            Title: 'totalDeployments',
+            TitleAr: 'totalDeployments',
             Value: totalDeployments,
             Icon: <DeploymentsIcon fontSize="large" />,
             Color: '#9c27b0',
           },
           {
-            Title: 'Successful Deployments',
-            TitleAr: 'عمليات النشر الناجحة',
+            Title: 'successfulDeployments',
+            TitleAr: 'successfulDeployments',
             Value: successDeployments,
             Icon: <SuccessIcon fontSize="large" />,
             Color: '#4caf50',
           },
           {
-            Title: 'Failed Deployments',
-            TitleAr: 'عمليات النشر الفاشلة',
+            Title: 'failedDeployments',
+            TitleAr: 'failedDeployments',
             Value: failedDeployments,
             Icon: <ErrorIcon fontSize="large" />,
             Color: '#f44336',
@@ -115,7 +115,7 @@ export const DashboardPage: React.FC = () => {
       {/* Welcome Section */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          {Language === 'ar' ? 'مرحباً' : 'Welcome'}, {User?.Username || 'User'}!
+          {t('dashboard.welcome')}, {User?.Username || 'User'}!
         </Typography>
         <Typography variant="body1" color="text.secondary">
           {t('dashboard.subtitle')}
@@ -147,7 +147,7 @@ export const DashboardPage: React.FC = () => {
               >
                 <Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {Language === 'ar' ? stat.TitleAr : stat.Title}
+                    {t(`dashboard.${stat.Title}`)}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold">
                     {stat.Value}
@@ -163,7 +163,7 @@ export const DashboardPage: React.FC = () => {
       {/* Recent Deployments */}
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          {Language === 'ar' ? 'عمليات النشر الأخيرة' : 'Recent Deployments'}
+          {t('dashboard.recentDeployments')}
         </Typography>
 
         <Box sx={{ mt: 2 }}>

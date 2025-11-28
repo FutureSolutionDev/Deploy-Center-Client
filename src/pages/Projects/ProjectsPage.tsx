@@ -167,7 +167,7 @@ export const ProjectsPage: React.FC = () => {
             {t("projects.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage your deployment projects
+            {t("projects.baseInfo")}
           </Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
@@ -253,7 +253,7 @@ export const ProjectsPage: React.FC = () => {
                       {project.Name}
                     </Typography>
                     <Chip
-                      label={project.IsActive ? "Active" : "Inactive"}
+                      label={project.IsActive ? t("common.active") : t("common.inactive")}
                       color={project.IsActive ? "success" : "default"}
                       size="small"
                     />
@@ -289,15 +289,15 @@ export const ProjectsPage: React.FC = () => {
                       startIcon={<ViewIcon />}
                       onClick={() => navigate(`/projects/${project.Id}`)}
                     >
-                      Details
+                      {t("projects.viewDetails")}
                     </Button>
                     <Button
                       size="small"
                       startIcon={<DeployIcon />}
-                      onClick={() => handleDeploy(project)}
+                      onClick={() => handleOpenDeploy(project)}
                       color="primary"
                     >
-                      Deploy
+                      {t("common.deploy")}
                     </Button>
                   </Box>
                   <IconButton
@@ -354,6 +354,17 @@ export const ProjectsPage: React.FC = () => {
         )}
       </Dialog>
 
+      {/* Manual Deployment Dialog */}
+      <DeploymentModal
+        Open={deployDialogOpen}
+        Project={deployingProject}
+        OnClose={() => {
+          setDeployDialogOpen(false);
+          setDeployingProject(null);
+        }}
+        OnDeploy={handleDeploy}
+      />
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -361,22 +372,21 @@ export const ProjectsPage: React.FC = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Delete Project</DialogTitle>
+        <DialogTitle>{t("projects.confirmDelete")}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete <strong>{selectedProject?.Name}</strong>?
-            This action cannot be undone.
+            {t("projects.confirmDeleteDesc")}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t("common.cancel")}</Button>
           <Button
             variant="contained"
             color="error"
             onClick={handleDeleteConfirm}
             startIcon={<DeleteIcon />}
           >
-            Delete
+            {t("common.delete")}
           </Button>
         </DialogActions>
       </Dialog>

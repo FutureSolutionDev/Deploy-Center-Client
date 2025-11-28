@@ -118,7 +118,7 @@ export const DeploymentsPage: React.FC = () => {
     return (
       <Chip
         label={config.label}
-        color={config.color}
+        color={config.color as any}
         size="small"
         icon={config.icon || undefined}
       />
@@ -135,7 +135,7 @@ export const DeploymentsPage: React.FC = () => {
               {t("deployments.title")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              View and manage all deployments
+              {t("deployments.description")}
             </Typography>
           </Box>
 

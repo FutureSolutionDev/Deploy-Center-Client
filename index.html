@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Deploy Center</title>
+    <!-- Google Fonts for Arabic Support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <!-- RTL Support -->
+    <style>
+      body {
+        transition: direction 0.3s ease, font-family 0.3s ease;
+      }
+      body.rtl {
+        direction: rtl;
+        font-family: 'Tajawal', 'Cairo', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      }
+      body:not(.rtl) {
+        font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

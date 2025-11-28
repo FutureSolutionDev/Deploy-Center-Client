@@ -52,7 +52,7 @@ export const DeploymentLogsPage: React.FC = () => {
       const deployment = await DeploymentsService.getById(Number(id));
       setDeployment(deployment);
     } catch (error: unknown) {
-      setError(error?.message || "Failed to load deployment");
+      setError((error as any)?.message || "Failed to load deployment");
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export const DeploymentLogsPage: React.FC = () => {
 
     const config = statusConfig[status] || statusConfig.pending;
 
-    return <Chip label={config.label} color={config.color} size="small" icon={config.icon || undefined} />;
+    return <Chip label={config.label} color={config.color as any} size="small" icon={config.icon || undefined} />;
   };
 
   const getLogColor = (log: string) => {

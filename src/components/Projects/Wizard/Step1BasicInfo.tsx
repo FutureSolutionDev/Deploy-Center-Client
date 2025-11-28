@@ -55,7 +55,7 @@ export const Step1BasicInfo: React.FC<IStep1Props> = ({ data, onChange }) => {
                 <Select
                     value={data.ProjectType}
                     label="Project Type"
-                    onChange={(e) => onChange({ ProjectType: e.target.value as string })}
+                    onChange={(e) => onChange({ ProjectType: e.target.value })}
                 >
                     <MenuItem value={EProjectType.NodeJS}>Node.js</MenuItem>
                     <MenuItem value={EProjectType.React}>React</MenuItem>

@@ -23,3 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 package-lock.json
+DEPLOY_CENTER_IMPLEMENTATION_PLAN.md
+Work_PROGRESS.md

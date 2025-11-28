@@ -232,7 +232,7 @@ export const SettingsPage: React.FC = () => {
                     <Box
                       key={color}
                       onClick={() => {
-                        SetColor(color as string);
+                        SetColor(color as "blue" | "green" | "purple" | "orange" | "red");
                         setSuccess("Color theme updated successfully!");
                         setTimeout(() => setSuccess(null), 2000);
                       }}

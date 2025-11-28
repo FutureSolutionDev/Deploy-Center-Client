@@ -19,16 +19,18 @@ interface IStep4Props {
 }
 
 export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onChange }) => {
-    const updateChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email', data: string) => {
+    const updateChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email', data: Record<string, any>) => {
+        const currentConfig = notifications[channel.toLowerCase() as keyof INotificationConfig] as any || {};
         onChange({
             ...notifications,
-            [channel]: { ...(notifications[channel as keyof INotificationConfig] as string), ...data },
+            [channel.toLowerCase()]: { ...currentConfig, ...data },
         });
     };
 
     const toggleChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email') => {
-        const current = notifications[channel as keyof INotificationConfig] as string;
-        updateChannel(channel, { Enabled: !current?.Enabled });
+        const currentConfig = notifications[channel.toLowerCase() as keyof INotificationConfig] as any;
+        const enabled = currentConfig?.Enabled || false;
+        updateChannel(channel, { Enabled: !enabled });
     };
 
     return (
