@@ -297,7 +297,7 @@ export const ProjectsPage: React.FC = () => {
                       onClick={() => handleOpenDeploy(project)}
                       color="primary"
                     >
-                      {t("common.deploy")}
+                      {t("projects.deploy")}
                     </Button>
                   </Box>
                   <IconButton

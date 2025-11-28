@@ -121,14 +121,19 @@ export const MainLayout: React.FC = () => {
   };
 
   const DrawerContent = (
-    <Box>
+    <Box
+      dir={Language === "ar" ? "rtl" : "ltr"}
+    >
       <Toolbar>
-        <Typography variant="h6" noWrap component="div">
+        <Typography variant="h6" noWrap component="div"
+          sx={{ height: "4rem", display: "flex", alignItems: "center" }}
+        >
           {t("app.name")}
         </Typography>
       </Toolbar>
       <Divider />
-      <List>
+      <List
+      >
         {MenuItems.map((item) => {
           const isActive = location.pathname === item.Path;
           return (
@@ -141,6 +146,7 @@ export const MainLayout: React.FC = () => {
                     setMobileOpen(false);
                   }
                 }}
+                sx={{ textAlign: Language === "ar" ? "right" : "left" }}
               >
                 <ListItemIcon>{item.Icon}</ListItemIcon>
                 <ListItemText
@@ -161,7 +167,10 @@ export const MainLayout: React.FC = () => {
       {/* AppBar */}
       <AppBar
         position="fixed"
+        component="nav"
+        dir={Language === "ar" ? "rtl" : "ltr"}
         sx={{
+          height: "4rem",
           width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { xs: 0, md: isRTL ? 0 : `${DRAWER_WIDTH}px` },
           mr: { xs: 0, md: isRTL ? `${DRAWER_WIDTH}px` : 0 },
@@ -223,7 +232,7 @@ export const MainLayout: React.FC = () => {
 
       {/* Drawer */}
       <Box
-        component="nav"
+        component="aside"
         sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
       >
         {/* Mobile drawer */}
@@ -235,6 +244,7 @@ export const MainLayout: React.FC = () => {
           ModalProps={{
             keepMounted: true, // Better mobile performance
           }}
+          dir={Language === "ar" ? "rtl" : "ltr"}
           sx={{
             display: { xs: "block", md: "none" },
             "& .MuiDrawer-paper": {
@@ -266,15 +276,20 @@ export const MainLayout: React.FC = () => {
       {/* Main content */}
       <Box
         component="main"
+        position="fixed"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: 1,
+          top: "4rem",
           width: { md: `calc(100dvw - ${DRAWER_WIDTH}px)` },
-          minHeight: "100dvh",
+          minHeight: "calc(100dvh - 4rem)",
           bgcolor: "background.default",
+          ml: { xs: 0, md: isRTL ? 0 : `${DRAWER_WIDTH}px` },
+          mr: { xs: 0, md: isRTL ? `${DRAWER_WIDTH}px` : 0 },
+          maxHeight: "calc(100dvh - 4rem)",
+          overflowY: "auto",
         }}
       >
-        <Toolbar /> {/* Spacer for AppBar */}
         <Outlet />
       </Box>
     </Box>

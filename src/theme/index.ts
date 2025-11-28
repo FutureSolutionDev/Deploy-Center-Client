@@ -1,5 +1,5 @@
+// Arabic locale removed - LTR only
 import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
-import { arSA } from '@mui/material/locale';
 
 export const ThemeColors = {
   blue: {
@@ -26,11 +26,11 @@ export const ThemeColors = {
 
 export type TThemeColor = keyof typeof ThemeColors;
 
-export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue', locale: 'en' | 'ar' = 'en'): Theme => {
+export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue'): Theme => {
   const colors = ThemeColors[color];
 
   const themeOptions: ThemeOptions = {
-    direction: locale === 'ar' ? 'rtl' : 'ltr',
+    direction: 'ltr', // Always LTR regardless of language
     palette: {
       mode,
       primary: {
@@ -45,29 +45,14 @@ export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue',
       },
     },
     typography: {
-      fontFamily: locale === 'ar'
-        ? '"Tajawal", "Cairo", "Roboto", "Helvetica", "Arial", sans-serif'
-        : '"Roboto", "Helvetica", "Arial", sans-serif',
-      h1: locale === 'ar' ? { direction: 'rtl' } : {},
-      h2: locale === 'ar' ? { direction: 'rtl' } : {},
-      h3: locale === 'ar' ? { direction: 'rtl' } : {},
-      h4: locale === 'ar' ? { direction: 'rtl' } : {},
-      h5: locale === 'ar' ? { direction: 'rtl' } : {},
-      h6: locale === 'ar' ? { direction: 'rtl' } : {},
-      body1: locale === 'ar' ? { direction: 'rtl' } : {},
-      body2: locale === 'ar' ? { direction: 'rtl' } : {},
-      subtitle1: locale === 'ar' ? { direction: 'rtl' } : {},
-      subtitle2: locale === 'ar' ? { direction: 'rtl' } : {},
-      caption: locale === 'ar' ? { direction: 'rtl' } : {},
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif', // Standard font family
     },
     components: {
       MuiCssBaseline: {
         styleOverrides: (theme) => ({
           body: {
-            direction: locale === 'ar' ? 'rtl' : 'ltr',
-            fontFamily: locale === 'ar'
-              ? '"Tajawal", "Cairo", "Roboto", "Helvetica", "Arial", sans-serif'
-              : '"Roboto", "Helvetica", "Arial", sans-serif',
+            direction: 'ltr', // Always LTR
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
             scrollbarColor: theme.palette.mode === 'dark' ? '#6b6b6b #2b2b2b' : '#959595 #f1f1f1',
             '&::-webkit-scrollbar': {
               width: '8px',
@@ -81,168 +66,17 @@ export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue',
               borderRadius: '4px',
             },
           },
-          // RTL Support
-          '@font-face': locale === 'ar' ? [
-            {
-              fontFamily: 'Tajawal',
-              fontStyle: 'normal',
-              fontWeight: 400,
-              src: 'url(https://fonts.gstatic.com/s/tajawal/v8/Iura6YBj_oCad4k1NzGqvRnJvMk.woff2) format("woff2")',
-              unicodeRange: 'U+0600-06FF',
-            },
-            {
-              fontFamily: 'Tajawal',
-              fontStyle: 'bold',
-              fontWeight: 700,
-              src: 'url(https://fonts.gstatic.com/s/tajawal/v8/Iure6YBj_oCad4k1nJeKvVy-MuHk.woff2) format("woff2")',
-              unicodeRange: 'U+0600-06FF',
-            },
-          ] : [],
         }),
       },
       MuiButton: {
         styleOverrides: {
           root: {
-            textTransform: 'none', // Important for Arabic text
-          },
-        },
-      },
-      MuiInputLabel: {
-        styleOverrides: {
-          root: {
-            ...(locale === 'ar' && {
-              right: 20,
-              left: 'auto',
-              transformOrigin: 'top right',
-            }),
-          },
-        },
-      },
-      MuiInputBase: {
-        styleOverrides: {
-          input: {
-            ...(locale === 'ar' && {
-              textAlign: 'right',
-              direction: 'rtl',
-            }),
-          },
-          inputAdornedStart: {
-            ...(locale === 'ar' && {
-              paddingRight: '14px',
-            }),
-          },
-          inputAdornedEnd: {
-            ...(locale === 'ar' && {
-              paddingLeft: '14px',
-            }),
-          },
-        },
-      },
-      MuiOutlinedInput: {
-        styleOverrides: {
-          input: {
-            ...(locale === 'ar' && {
-              textAlign: 'right',
-              paddingLeft: '14px',
-              paddingRight: '14px',
-            }),
-          },
-        },
-      },
-      MuiTextField: {
-        styleOverrides: {
-          root: {
-            ...(locale === 'ar' && {
-              '& .MuiInputBase-root': {
-                textAlign: 'right',
-              },
-              '& .MuiInputLabel-root': {
-                right: 20,
-                left: 'auto',
-                transformOrigin: 'top right',
-              },
-              '& .MuiInputLabel-shrink': {
-                transform: locale === 'ar' ? 'translate(0, -9px) scale(0.75)' : undefined,
-                transformOrigin: locale === 'ar' ? 'top right' : 'top left',
-              },
-            }),
-          },
-        },
-      },
-      MuiChip: {
-        styleOverrides: {
-          root: {
-            direction: locale === 'ar' ? 'rtl' : 'ltr',
-          },
-        },
-      },
-      MuiTableCell: {
-        styleOverrides: {
-          root: {
-            ...(locale === 'ar' && {
-              textAlign: 'right',
-            }),
-          },
-        },
-      },
-      MuiDrawer: {
-        styleOverrides: {
-          paper: {
-            // RTL handled by anchor prop in component
-          },
-        },
-      },
-      MuiGrid: {
-        styleOverrides: {
-          root: {
-            direction: locale === 'ar' ? 'rtl' : 'ltr',
-          },
-        },
-      },
-      MuiListItemIcon: {
-        styleOverrides: {
-          root: {
-            ...(locale === 'ar' && {
-              marginRight: 0,
-              marginLeft: 16,
-            }),
-          },
-        },
-      },
-      MuiListItemText: {
-        styleOverrides: {
-          root: {
-            textAlign: locale === 'ar' ? 'right' : 'left',
-          },
-        },
-      },
-      MuiMenuItem: {
-        styleOverrides: {
-          root: {
-            ...(locale === 'ar' && {
-              textAlign: 'right',
-            }),
-          },
-        },
-      },
-      MuiIconButton: {
-        styleOverrides: {
-          root: {
-            ...(locale === 'ar' && {
-              '&.MuiIconButton-edgeStart': {
-                marginLeft: -12,
-                marginRight: 8,
-              },
-              '&.MuiIconButton-edgeEnd': {
-                marginLeft: 8,
-                marginRight: -12,
-              },
-            }),
+            textTransform: 'none',
           },
         },
       },
     },
   };
 
-  return createTheme(themeOptions, locale === 'ar' ? arSA : {});
+  return createTheme(themeOptions);
 };

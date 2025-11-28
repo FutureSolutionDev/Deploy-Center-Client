@@ -8,7 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeContextProvider } from '@/contexts/ThemeContext';
-import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { LoginPage } from '@/pages/Auth/LoginPage';
 import { RegisterPage } from '@/pages/Auth/RegisterPage';
@@ -120,10 +120,8 @@ const AppRoutes: React.FC = () => {
  * App Component with Theme Provider
  */
 const AppWithTheme: React.FC = () => {
-  const { Language } = useLanguage();
-
   return (
-    <ThemeContextProvider language={Language}>
+    <ThemeContextProvider>
       <CssBaseline />
       <AppRoutes />
     </ThemeContextProvider>

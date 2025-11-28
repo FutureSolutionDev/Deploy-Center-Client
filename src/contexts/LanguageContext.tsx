@@ -1,6 +1,6 @@
 /**
  * Language Context
- * Provides i18n language management with RTL/LTR support
+ * Provides i18n language management
  */
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
@@ -9,7 +9,6 @@ import type { TLanguage } from '@/types';
 
 interface ILanguageContextValue {
   Language: TLanguage;
-  Direction: 'rtl' | 'ltr';
   ChangeLanguage: (lang: TLanguage) => void;
   t: (key: string) => string;
 }
@@ -26,37 +25,26 @@ export const LanguageProvider: React.FC<ILanguageProviderProps> = ({ children })
   const { t, i18n } = useTranslation();
 
   // Initialize from localStorage or default to 'en'
-  const [Language, setLanguage] = useState<TLanguage>(() => {
+  const [language, setLanguage] = useState<TLanguage>(() => {
     const stored = localStorage.getItem(LANGUAGE_KEY);
     return (stored as TLanguage) || 'en';
   });
 
-  const [Direction, setDirection] = useState<'rtl' | 'ltr'>(() => {
-    const stored = localStorage.getItem(LANGUAGE_KEY);
-    return (stored as TLanguage) === 'ar' ? 'rtl' : 'ltr';
-  });
-
-  // Initialize i18n language
-  useEffect(() => {
-    i18n.changeLanguage(Language);
-  }, [Language, i18n]);
-
-  // Update document direction
-  useEffect(() => {
-    document.documentElement.dir = Direction;
-    document.documentElement.lang = Language;
-  }, [Direction, Language]);
-
+  // Use React state management
   const ChangeLanguage = (lang: TLanguage): void => {
     setLanguage(lang);
-    setDirection(lang === 'ar' ? 'rtl' : 'ltr');
     localStorage.setItem(LANGUAGE_KEY, lang);
     i18n.changeLanguage(lang);
   };
 
+  // Set document language on mount and language change
+  useEffect(() => {
+    document.documentElement.lang = language;
+    // Always LTR - no direction changes needed
+  }, [language]);
+
   const value: ILanguageContextValue = {
-    Language,
-    Direction,
+    Language: language,
     ChangeLanguage,
     t,
   };

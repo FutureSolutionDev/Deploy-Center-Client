@@ -8,7 +8,7 @@ import { ThemeProvider as MuiThemeProvider, type Theme } from '@mui/material/sty
 import { CacheProvider } from '@emotion/react';
 import { CreateTheme, type TThemeColor, ThemeColors } from '@/theme';
 import type { TThemeMode } from '@/types';
-import { cacheRtl, cacheLtr } from '@/utils/rtlCache';
+import { cacheLtr } from '@/utils/rtlCache';
 
 interface IThemeContextValue {
   Mode: TThemeMode;
@@ -23,15 +23,13 @@ const ThemeContext = createContext<IThemeContextValue | undefined>(undefined);
 
 interface IThemeProviderProps {
   children: ReactNode;
-  language?: 'ar' | 'en';
 }
 
 const THEME_MODE_KEY = 'deploy_center_theme_mode';
 const THEME_COLOR_KEY = 'deploy_center_theme_color';
 
 export const ThemeContextProvider: React.FC<IThemeProviderProps> = ({
-  children,
-  language = 'en'
+  children
 }) => {
   // Initialize from localStorage or defaults
   const [Mode, setModeState] = useState<TThemeMode>(() => {
@@ -43,10 +41,10 @@ export const ThemeContextProvider: React.FC<IThemeProviderProps> = ({
     const stored = localStorage.getItem(THEME_COLOR_KEY);
     return (stored as TThemeColor) || 'blue';
   });
-  // Create MUI theme based on current settings
+  // Create MUI theme based on current settings (LTR only)
   const MuiTheme: Theme = useMemo(() => {
-    return CreateTheme(Mode, Color, language);
-  }, [Mode, Color, language]);
+    return CreateTheme(Mode, Color);
+  }, [Mode, Color]);
 
   // Persist mode changes
   useEffect(() => {
@@ -81,7 +79,7 @@ export const ThemeContextProvider: React.FC<IThemeProviderProps> = ({
 
   return (
     <ThemeContext.Provider value={value}>
-      <CacheProvider value={language === 'ar' ? cacheRtl : cacheLtr}>
+      <CacheProvider value={cacheLtr}>
         <MuiThemeProvider theme={MuiTheme}>{children}</MuiThemeProvider>
       </CacheProvider>
     </ThemeContext.Provider>
