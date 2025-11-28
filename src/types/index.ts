@@ -246,6 +246,15 @@ export interface IQueueStatus {
   EstimatedWaitTime: number;
 }
 
+// Paginated Response
+export interface IPaginatedResponse<T> {
+  Data: T[];
+  Total: number;
+  Page: number;
+  Limit: number;
+  TotalPages: number;
+}
+
 export interface IDeploymentByDay {
   Date: string;
   Total: number;

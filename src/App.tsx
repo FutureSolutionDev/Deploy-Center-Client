@@ -19,7 +19,9 @@ import { DeploymentsPage } from '@/pages/Deployments/DeploymentsPage';
 import { DeploymentLogsPage } from '@/pages/Deployments/DeploymentLogsPage';
 import { ReportsPage } from '@/pages/Reports/ReportsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
+import { QueuePage } from '@/pages/Queue/QueuePage';
 import { Loader } from './components/Common';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 /**
  * Protected Route Component
@@ -106,6 +108,7 @@ const AppRoutes: React.FC = () => {
         <Route path="projects/:id" element={<ProjectDetailsPage />} />
         <Route path="deployments" element={<DeploymentsPage />} />
         <Route path="deployments/:id" element={<DeploymentLogsPage />} />
+        <Route path="queue" element={<QueuePage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
@@ -116,17 +119,6 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-/**
- * App Component with Theme Provider
- */
-const AppWithTheme: React.FC = () => {
-  return (
-    <ThemeContextProvider>
-      <CssBaseline />
-      <AppRoutes />
-    </ThemeContextProvider>
-  );
-};
 
 /**
  * Main App Component
@@ -135,11 +127,16 @@ const AppWithTheme: React.FC = () => {
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <AppWithTheme />
-        </AuthProvider>
-      </LanguageProvider>
+      <ErrorBoundary>
+        <LanguageProvider>
+          <AuthProvider>
+            <ThemeContextProvider>
+              <CssBaseline />
+              <AppRoutes />
+            </ThemeContextProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 };

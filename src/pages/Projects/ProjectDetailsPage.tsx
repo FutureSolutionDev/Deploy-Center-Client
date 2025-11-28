@@ -44,7 +44,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProjectsService } from "@/services/projectsService";
 import { DeploymentsService } from "@/services/deploymentsService";
-import type { IProject, IDeployment, IProjectStatistics } from "@/types";
+import type { IProject, IDeployment, IProjectStatistics, IDeploymentRequest } from "@/types";
+import { DeploymentModal } from "@/components/Projects/DeploymentModal";
 import {
   BarChart,
   Bar,
@@ -71,6 +72,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const [deploying, setDeploying] = useState(false);
   const [showWebhook, setShowWebhook] = useState(false);
   const [regeneratingWebhook, setRegeneratingWebhook] = useState(false);
+  const [deployDialogOpen, setDeployDialogOpen] = useState(false);
 
   const fetchProjectDetails = async () => {
     if (!id) return;
@@ -99,19 +101,28 @@ export const ProjectDetailsPage: React.FC = () => {
     fetchProjectDetails();
   }, [id]);
 
-  const handleDeploy = async () => {
+  const handleOpenDeploy = () => {
+    setDeployDialogOpen(true);
+  };
+
+  const handleDeploy = async (data: IDeploymentRequest) => {
     if (!project) return;
 
     try {
       setDeploying(true);
-      await ProjectsService.deploy(project.Id);
+      await ProjectsService.deploy(data.ProjectId, data);
       setSuccess(t("deployments.startedSuccessfully"));
+      setDeployDialogOpen(false);
       setTimeout(() => {
         fetchProjectDetails();
         setSuccess(null);
-      }, 2000);
-    } catch (error: any) {
-      setError(error?.message || t("deployments.failedToStart"));
+      }, 3000);
+    } catch (error: unknown) {
+      const errorMessage =
+        error && typeof error === 'object' && 'message' in error
+          ? String(error.message)
+          : t("deployments.failedToStart");
+      throw new Error(errorMessage);
     } finally {
       setDeploying(false);
     }
@@ -249,11 +260,11 @@ export const ProjectDetailsPage: React.FC = () => {
             </Button>
             <Button
               variant="contained"
-              startIcon={deploying ? <CircularProgress size={20} /> : <DeployIcon />}
-              onClick={handleDeploy}
+              startIcon={<DeployIcon />}
+              onClick={handleOpenDeploy}
               disabled={deploying}
             >
-              {deploying ? t("deployments.manualDeploy.deploying") : t("projects.deployNow")}
+              {t("projects.deployNow")}
             </Button>
           </Box>
         </Box>
@@ -477,6 +488,14 @@ export const ProjectDetailsPage: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Manual Deployment Dialog */}
+      <DeploymentModal
+        Open={deployDialogOpen}
+        Project={project}
+        OnClose={() => setDeployDialogOpen(false)}
+        OnDeploy={handleDeploy}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog

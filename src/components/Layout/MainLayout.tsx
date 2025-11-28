@@ -70,6 +70,12 @@ const MenuItems: IMenuItem[] = [
     Icon: <DeploymentsIcon />,
   },
   {
+    Title: "Queue",
+    TitleAr: "قائمة الانتظار",
+    Path: "/queue",
+    Icon: <DeploymentsIcon />, // Using same icon, can be changed
+  },
+  {
     Title: "Reports",
     TitleAr: "التقارير",
     Path: "/reports",
