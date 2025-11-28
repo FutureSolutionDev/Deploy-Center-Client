@@ -17,6 +17,7 @@ import { ProjectsPage } from '@/pages/Projects/ProjectsPage';
 import { ProjectDetailsPage } from '@/pages/Projects/ProjectDetailsPage';
 import { DeploymentsPage } from '@/pages/Deployments/DeploymentsPage';
 import { DeploymentLogsPage } from '@/pages/Deployments/DeploymentLogsPage';
+import { ReportsPage } from '@/pages/Reports/ReportsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
 
 /**
@@ -79,7 +80,7 @@ const AppRoutes: React.FC = () => {
           </PublicRoute>
         }
       />
-      
+
       <Route
         path="/register"
         element={
@@ -104,6 +105,7 @@ const AppRoutes: React.FC = () => {
         <Route path="projects/:id" element={<ProjectDetailsPage />} />
         <Route path="deployments" element={<DeploymentsPage />} />
         <Route path="deployments/:id" element={<DeploymentLogsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 

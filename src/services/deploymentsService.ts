@@ -5,6 +5,7 @@ export interface IDeployment {
   projectId: number;
   projectName: string;
   branch: string;
+  commit?: string;
   commitHash: string;
   status: 'pending' | 'in_progress' | 'success' | 'failed';
   triggerType: 'webhook' | 'manual';

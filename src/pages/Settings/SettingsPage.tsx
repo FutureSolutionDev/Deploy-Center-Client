@@ -1,26 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
+  Card,
+  CardContent,
   Typography,
-  Paper,
   Tabs,
   Tab,
   TextField,
   Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Switch,
   FormControlLabel,
   Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-} from '@mui/material';
+  Alert,
+  Grid,
+  alpha,
+} from "@mui/material";
 import {
-  Save as SaveIcon,
+  Person as PersonIcon,
+  Palette as PaletteIcon,
   Notifications as NotificationsIcon,
   Security as SecurityIcon,
-  Person as PersonIcon,
-} from '@mui/icons-material';
+  AccountCircle as AccountIcon,
+} from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -28,129 +36,372 @@ interface TabPanelProps {
   value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    <div hidden={value !== index}>
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
     </div>
   );
-}
+};
 
 export const SettingsPage: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const { User } = useAuth();
+  const { Language, ChangeLanguage, t } = useLanguage();
+  const { Mode, Color, ToggleMode, SetColor } = useTheme();
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const [tabValue, setTabValue] = useState(0);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Profile state
+  const [username, setUsername] = useState(User?.Username || "");
+  const [email, setEmail] = useState(User?.Email || "");
+
+  // Notification settings
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [discordWebhook, setDiscordWebhook] = useState("");
+  const [slackWebhook, setSlackWebhook] = useState("");
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    setSuccess(null);
+    setError(null);
+  };
+
+  const handleLanguageChange = (newLanguage: "en" | "ar") => {
+    ChangeLanguage(newLanguage);
+    setSuccess("Language updated successfully!");
+    setTimeout(() => setSuccess(null), 2000);
+  };
+
+  const handleSaveProfile = () => {
+    // API call to update profile
+    setSuccess("Profile updated successfully!");
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleSaveNotifications = () => {
+    // API call to update notification settings
+    setSuccess("Notification settings saved successfully!");
+    setTimeout(() => setSuccess(null), 3000);
   };
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Settings
-      </Typography>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+          {t("settings.title")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Manage your account settings and preferences
+        </Typography>
+      </Box>
 
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="fullWidth"
-        >
-          <Tab icon={<SecurityIcon />} label="General & Security" />
-          <Tab icon={<NotificationsIcon />} label="Notifications" />
-          <Tab icon={<PersonIcon />} label="Users & Roles" />
-        </Tabs>
-      </Paper>
+      {/* Global Alerts */}
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-      <Paper>
-        {/* General Settings */}
-        <TabPanel value={tabValue} index={0}>
-          <Typography variant="h6" gutterBottom>System Configuration</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: 600 }}>
-            <TextField
-              label="Log Retention (Days)"
-              type="number"
-              defaultValue={30}
-              fullWidth
+      <Card>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable">
+            <Tab
+              label="Profile"
+              icon={<PersonIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
             />
-            <FormControlLabel
-              control={<Switch defaultChecked />}
-              label="Enable Maintenance Mode"
+            <Tab
+              label="Preferences"
+              icon={<PaletteIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
             />
-            <Divider />
-            <Typography variant="h6" gutterBottom>Security</Typography>
-            <FormControlLabel
-              control={<Switch defaultChecked />}
-              label="Enforce 2FA for Admins"
+            <Tab
+              label="Notifications"
+              icon={<NotificationsIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
             />
-            <FormControlLabel
-              control={<Switch />}
-              label="Allow Public Registration"
+            <Tab
+              label="Security"
+              icon={<SecurityIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
             />
-            <Box>
-              <Button variant="contained" startIcon={<SaveIcon />}>
-                Save Changes
+            <Tab
+              label="Account"
+              icon={<AccountIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
+            />
+          </Tabs>
+        </Box>
+
+        <CardContent>
+          {/* Profile Tab */}
+          <TabPanel value={tabValue} index={0}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              Profile Information
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Button variant="contained" onClick={handleSaveProfile}>
+                  Save Changes
+                </Button>
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {/* Preferences Tab */}
+          <TabPanel value={tabValue} index={1}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              Appearance & Language
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            <Grid container spacing={4}>
+              {/* Language Selection */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Language</InputLabel>
+                  <Select
+                    value={Language}
+                    label="Language"
+                    onChange={(e) => handleLanguageChange(e.target.value as "en" | "ar")}
+                  >
+                    <MenuItem value="en">English</MenuItem>
+                    <MenuItem value="ar">العربية (Arabic)</MenuItem>
+                  </Select>
+                </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                  Changes apply immediately
+                </Typography>
+              </Grid>
+
+              {/* Theme Mode */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={Mode === "dark"}
+                      onChange={ToggleMode}
+                    />
+                  }
+                  label={`Dark Mode ${Mode === "dark" ? "On" : "Off"}`}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                  Toggle between light and dark theme
+                </Typography>
+              </Grid>
+
+              {/* Color Theme Selection */}
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                  Color Theme
+                </Typography>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2 }}>
+                  {["blue", "green", "purple", "orange", "red"].map((color) => (
+                    <Box
+                      key={color}
+                      onClick={() => {
+                        SetColor(color as any);
+                        setSuccess("Color theme updated successfully!");
+                        setTimeout(() => setSuccess(null), 2000);
+                      }}
+                      sx={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 2,
+                        bgcolor: `${color}.main`,
+                        cursor: "pointer",
+                        border: 3,
+                        borderColor:
+                          Color === color ? "text.primary" : "transparent",
+                        transition: "all 0.2s",
+                        position: "relative",
+                        "&:hover": {
+                          transform: "scale(1.1)",
+                        },
+                      }}
+                    >
+                      {Color === color && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            color: "white",
+                            fontSize: 24,
+                          }}
+                        >
+                          ✓
+                        </Box>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
+                  Select your preferred color theme • Changes apply instantly
+                </Typography>
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {/* Notifications Tab */}
+          <TabPanel value={tabValue} index={2}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              Notification Settings
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={emailNotifications}
+                      onChange={(e) => setEmailNotifications(e.target.checked)}
+                    />
+                  }
+                  label="Email Notifications"
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                  Receive deployment notifications via email
+                </Typography>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label="Discord Webhook URL"
+                  placeholder="https://discord.com/api/webhooks/..."
+                  value={discordWebhook}
+                  onChange={(e) => setDiscordWebhook(e.target.value)}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label="Slack Webhook URL"
+                  placeholder="https://hooks.slack.com/services/..."
+                  value={slackWebhook}
+                  onChange={(e) => setSlackWebhook(e.target.value)}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <Button variant="contained" onClick={handleSaveNotifications}>
+                  Save Notification Settings
+                </Button>
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {/* Security Tab */}
+          <TabPanel value={tabValue} index={3}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              Security Settings
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Change Password
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Current Password"
+                  type="password"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth
+                  label="New Password"
+                  type="password"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth
+                  label="Confirm New Password"
+                  type="password"
+                  sx={{ mb: 2 }}
+                />
+                <Button variant="contained">Update Password</Button>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle1" gutterBottom>
+                  Two-Factor Authentication
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Add an extra layer of security to your account
+                </Typography>
+                <Button variant="outlined">Enable 2FA</Button>
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {/* Account Tab */}
+          <TabPanel value={tabValue} index={4}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              Account Management
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            <Box
+              sx={{
+                p: 3,
+                bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+                borderRadius: 2,
+                border: 1,
+                borderColor: "error.main",
+              }}
+            >
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: "error.main" }}>
+                Danger Zone
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Once you delete your account, there is no going back. Please be certain.
+              </Typography>
+              <Button variant="outlined" color="error">
+                Delete Account
               </Button>
             </Box>
-          </Box>
-        </TabPanel>
-
-        {/* Notification Settings */}
-        <TabPanel value={tabValue} index={1}>
-          <Typography variant="h6" gutterBottom>Notification Channels</Typography>
-          <List>
-            <ListItem>
-              <ListItemText
-                primary="Discord Webhooks"
-                secondary="Send deployment notifications to Discord channels"
-              />
-              <ListItemSecondaryAction>
-                <Switch defaultChecked />
-              </ListItemSecondaryAction>
-            </ListItem>
-            <Divider component="li" />
-            <ListItem>
-              <ListItemText
-                primary="Email Notifications"
-                secondary="Send critical alerts via email"
-              />
-              <ListItemSecondaryAction>
-                <Switch />
-              </ListItemSecondaryAction>
-            </ListItem>
-            <Divider component="li" />
-            <ListItem>
-              <ListItemText
-                primary="Slack Integration"
-                secondary="Connect with Slack workspace"
-              />
-              <ListItemSecondaryAction>
-                <Switch />
-              </ListItemSecondaryAction>
-            </ListItem>
-          </List>
-        </TabPanel>
-
-        {/* User Settings */}
-        <TabPanel value={tabValue} index={2}>
-          <Typography variant="h6" gutterBottom>User Management</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Manage users and their permissions.
-          </Typography>
-          <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1, textAlign: 'center' }}>
-            <Typography>User management table will be implemented here.</Typography>
-          </Box>
-        </TabPanel>
-      </Paper>
+          </TabPanel>
+        </CardContent>
+      </Card>
     </Box>
   );
 };

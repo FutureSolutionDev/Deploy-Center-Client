@@ -88,20 +88,41 @@ export interface IPipelineStep {
 }
 
 export interface INotificationConfig {
-  Channels: TNotificationChannel[];
-  OnSuccess: boolean;
-  OnFailure: boolean;
-  OnStart: boolean;
+  Discord?: IDiscordConfig;
+  Slack?: ISlackConfig;
+  Email?: IEmailConfig;
+  Telegram?: ITelegramConfig;
+  OnSuccess?: boolean;
+  OnFailure?: boolean;
+  OnStart?: boolean;
 }
 
-export const ENotificationChannel = {
-  Discord: 'discord',
-  Slack: 'slack',
-  Email: 'email',
-  Telegram: 'telegram',
-} as const;
+export interface IDiscordConfig {
+  Enabled: boolean;
+  WebhookUrl: string;
+}
 
-export type TNotificationChannel = typeof ENotificationChannel[keyof typeof ENotificationChannel];
+export interface ISlackConfig {
+  Enabled: boolean;
+  WebhookUrl: string;
+}
+
+export interface IEmailConfig {
+  Enabled: boolean;
+  Host: string;
+  Port: number;
+  Secure: boolean;
+  User: string;
+  Password?: string;
+  From: string;
+  To: string[];
+}
+
+export interface ITelegramConfig {
+  Enabled: boolean;
+  BotToken: string;
+  ChatId: string;
+}
 
 export interface IHealthCheckConfig {
   Enabled: boolean;

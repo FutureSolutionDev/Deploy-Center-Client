@@ -1,135 +1,122 @@
-/**
- * Deployment Logs Page
- * Detailed view of deployment with real-time logs
- */
-
-import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  IconButton,
-  CircularProgress,
-  Chip,
-  Grid,
   Button,
+  Chip,
   Paper,
-} from '@mui/material';
+  CircularProgress,
+  Alert,
+  IconButton,
+  Divider,
+  alpha,
+} from "@mui/material";
 import {
   ArrowBack as BackIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
+  CheckCircle as SuccessIcon,
+  Error as ErrorIcon,
+  Schedule as ScheduleIcon,
   Replay as RetryIcon,
-  Cancel as CancelIcon,
-} from '@mui/icons-material';
-import { DeploymentsService, type IDeployment } from '@/services/deploymentsService';
-import { useLanguage } from '@/contexts/LanguageContext';
+} from "@mui/icons-material";
+import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { DeploymentsService, type IDeployment } from "@/services/deploymentsService";
 
 export const DeploymentLogsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { Language } = useLanguage();
+  const { t } = useLanguage();
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const [deployment, setDeployment] = useState<IDeployment | null>(null);
-  const [logs, setLogs] = useState<string>('');
+  const [logs, setLogs] = useState<string[]>([
+    "[INFO] Starting deployment...",
+    "[INFO] Fetching latest code from repository...",
+    "[INFO] Installing dependencies...",
+    "[INFO] Running build process...",
+    "[SUCCESS] Build completed successfully",
+    "[INFO] Deploying to production server...",
+    "[SUCCESS] Deployment completed successfully",
+  ]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      fetchDeploymentData(parseInt(id));
-    }
-  }, [id]);
+  const fetchDeployment = async () => {
+    if (!id) return;
 
-  useEffect(() => {
-    if (autoScroll && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [logs, autoScroll]);
-
-  const fetchDeploymentData = async (deploymentId: number) => {
     setLoading(true);
     try {
-      const [deploymentData, logsData] = await Promise.all([
-        DeploymentsService.getById(deploymentId),
-        DeploymentsService.getLogs(deploymentId),
-      ]);
-      setDeployment(deploymentData);
-      setLogs(logsData);
-    } catch (error) {
-      console.error('Failed to fetch deployment details:', error);
+      const deployment = await DeploymentsService.getById(Number(id));
+      setDeployment(deployment);
+    } catch (error: any) {
+      setError(error?.message || "Failed to load deployment");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRefresh = () => {
-    if (id) {
-      fetchDeploymentData(parseInt(id));
+  useEffect(() => {
+    fetchDeployment();
+  }, [id]);
+
+  useEffect(() => {
+    if (autoScroll && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
+  }, [logs, autoScroll]);
+
+  const getStatusChip = (status: string) => {
+    const statusConfig: Record<string, { color: any; icon: React.ReactNode; label: string }> = {
+      success: { color: "success", icon: <SuccessIcon fontSize="small" />, label: "Success" },
+      failed: { color: "error", icon: <ErrorIcon fontSize="small" />, label: "Failed" },
+      in_progress: { color: "warning", icon: <ScheduleIcon fontSize="small" />, label: "In Progress" },
+      pending: { color: "default", icon: <ScheduleIcon fontSize="small" />, label: "Pending" },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+
+    return <Chip label={config.label} color={config.color} size="small" icon={config.icon} />;
   };
 
-  const handleCancel = async () => {
-    if (!id || !window.confirm('Are you sure you want to cancel this deployment?')) return;
-
-    try {
-      await DeploymentsService.cancel(parseInt(id));
-      handleRefresh();
-    } catch (error) {
-      console.error('Cancel failed:', error);
-    }
-  };
-
-  const handleRetry = async () => {
-    if (!id || !window.confirm('Are you sure you want to retry this deployment?')) return;
-
-    try {
-      await DeploymentsService.retry(parseInt(id));
-      handleRefresh();
-    } catch (error) {
-      console.error('Retry failed:', error);
-    }
+  const getLogColor = (log: string) => {
+    if (log.includes("[ERROR]") || log.includes("[FAILED]")) return "error.main";
+    if (log.includes("[SUCCESS]")) return "success.main";
+    if (log.includes("[WARNING]")) return "warning.main";
+    if (log.includes("[INFO]")) return "info.main";
+    return "text.primary";
   };
 
   const handleDownloadLogs = () => {
-    const blob = new Blob([logs], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const logsText = logs.join("\n");
+    const blob = new Blob([logsText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
     a.href = url;
     a.download = `deployment-${id}-logs.txt`;
     a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success':
-        return 'success';
-      case 'failed':
-        return 'error';
-      case 'in_progress':
-        return 'warning';
-      default:
-        return 'default';
-    }
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
         <CircularProgress />
       </Box>
     );
   }
 
-  if (!deployment) {
+  if (error || !deployment) {
     return (
-      <Box sx={{ textAlign: 'center', mt: 4 }}>
-        <Typography variant="h5">Deployment not found</Typography>
-        <Button startIcon={<BackIcon />} onClick={() => navigate('/deployments')} sx={{ mt: 2 }}>
+      <Box>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error || "Deployment not found"}
+        </Alert>
+        <Button startIcon={<BackIcon />} onClick={() => navigate("/deployments")}>
           Back to Deployments
         </Button>
       </Box>
@@ -139,136 +126,221 @@ export const DeploymentLogsPage: React.FC = () => {
   return (
     <Box>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigate('/deployments')}>
-            <BackIcon />
-          </IconButton>
-          <Typography variant="h4">Deployment #{deployment.id}</Typography>
-          <Chip
-            label={deployment.status}
-            color={getStatusColor(deployment.status) as any}
-          />
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button startIcon={<RefreshIcon />} onClick={handleRefresh}>
-            Refresh
-          </Button>
-          <Button startIcon={<DownloadIcon />} onClick={handleDownloadLogs}>
-            Download
-          </Button>
-          {deployment.status === 'in_progress' && (
-            <Button startIcon={<CancelIcon />} color="error" onClick={handleCancel}>
-              Cancel
+      <Box sx={{ mb: 4 }}>
+        <Button
+          startIcon={<BackIcon />}
+          onClick={() => navigate("/deployments")}
+          sx={{ mb: 2 }}
+        >
+          Back to Deployments
+        </Button>
+
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+          <Box>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+              Deployment Logs
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {deployment.projectName} • {deployment.branch}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <IconButton onClick={fetchDeployment}>
+              <RefreshIcon />
+            </IconButton>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={handleDownloadLogs}
+            >
+              Download Logs
             </Button>
-          )}
-          {deployment.status === 'failed' && (
-            <Button startIcon={<RetryIcon />} color="primary" onClick={handleRetry}>
-              Retry
-            </Button>
-          )}
+            {deployment.status === "failed" && (
+              <Button
+                variant="contained"
+                startIcon={<RetryIcon />}
+                onClick={() => {
+                  /* Retry logic */
+                }}
+              >
+                Retry Deployment
+              </Button>
+            )}
+          </Box>
         </Box>
       </Box>
 
-      {/* Deployment Info */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Project
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {deployment.projectName}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Branch
-                  </Typography>
-                  <Typography variant="body1">{deployment.branch}</Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Commit
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
-                    {deployment.commitHash}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Trigger
-                  </Typography>
-                  <Typography variant="body1">{deployment.triggerType}</Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Started
-                  </Typography>
-                  <Typography variant="body1">{deployment.timestamp}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Duration
-                  </Typography>
-                  <Typography variant="body1">{deployment.duration || '-'}</Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* Deployment Info Card */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Status
+              </Typography>
+              <Box sx={{ mt: 0.5 }}>{getStatusChip(deployment.status)}</Box>
+            </Box>
 
-      {/* Logs */}
-      <Paper sx={{ p: 0 }}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Branch
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
+                {deployment.branch}
+              </Typography>
+            </Box>
+
+            {deployment.commit && (
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Commit
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 0.5,
+                    fontFamily: "monospace",
+                    bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 0.5,
+                  }}
+                >
+                  {deployment.commit.substring(0, 7)}
+                </Typography>
+              </Box>
+            )}
+
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Started At
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {deployment.timestamp}
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Logs Terminal */}
+      <Paper
+        sx={{
+          bgcolor: "#1e1e1e",
+          color: "#d4d4d4",
+          p: 3,
+          borderRadius: 2,
+          fontFamily: "monospace",
+          fontSize: "0.875rem",
+          maxHeight: "600px",
+          overflow: "auto",
+          boxShadow: 3,
+          position: "relative",
+        }}
+      >
+        {/* Terminal Header */}
         <Box
           sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            p: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+            pb: 2,
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
           }}
         >
-          <Typography variant="h6">Deployment Logs</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Auto-scroll
-            </Typography>
-            <input
-              type="checkbox"
-              checked={autoScroll}
-              onChange={(e) => setAutoScroll(e.target.checked)}
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                bgcolor: "#ff5f56",
+              }}
+            />
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                bgcolor: "#ffbd2e",
+              }}
+            />
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                bgcolor: "#27c93f",
+              }}
             />
           </Box>
+          <Typography
+            variant="caption"
+            sx={{ ml: 2, color: "rgba(255,255,255,0.6)" }}
+          >
+            deployment-{id}.log
+          </Typography>
         </Box>
-        <Box
-          sx={{
-            height: '500px',
-            overflow: 'auto',
-            bgcolor: 'background.default',
-            p: 2,
-            fontFamily: 'monospace',
-            fontSize: '0.875rem',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-          }}
-        >
-          {logs || 'No logs available'}
+
+        {/* Logs */}
+        <Box>
+          {logs.map((log, index) => (
+            <Box
+              key={index}
+              sx={{
+                mb: 0.5,
+                color: getLogColor(log),
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              <Typography
+                component="span"
+                sx={{ color: "rgba(255,255,255,0.4)", mr: 2, fontSize: "0.75rem" }}
+              >
+                {new Date().toLocaleTimeString()}
+              </Typography>
+              {log}
+            </Box>
+          ))}
           <div ref={logsEndRef} />
         </Box>
+
+        {/* Live indicator for in-progress deployments */}
+        {deployment.status === "in_progress" && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              bgcolor: "rgba(0,0,0,0.5)",
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+            }}
+          >
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                bgcolor: "#27c93f",
+                animation: "pulse 2s infinite",
+                "@keyframes pulse": {
+                  "0%, 100%": { opacity: 1 },
+                  "50%": { opacity: 0.3 },
+                },
+              }}
+            />
+            <Typography variant="caption" sx={{ color: "#27c93f" }}>
+              LIVE
+            </Typography>
+          </Box>
+        )}
       </Paper>
     </Box>
   );

@@ -43,13 +43,13 @@ export const LoginPage: React.FC = () => {
 
   const HandleChange =
     (field: keyof ILoginCredentials) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setCredentials((prev) => ({
-        ...prev,
-        [field]: event.target.value,
-      }));
-      setError(null);
-    };
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCredentials((prev) => ({
+          ...prev,
+          [field]: event.target.value,
+        }));
+        setError(null);
+      };
 
   const HandleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -89,8 +89,8 @@ export const LoginPage: React.FC = () => {
     <Box
       sx={{
         minHeight: "100dvh",
+        width: "100dvw",
         height: "100%",
-        minWidth: "100dvh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

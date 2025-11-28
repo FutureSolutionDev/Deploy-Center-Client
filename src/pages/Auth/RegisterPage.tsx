@@ -145,6 +145,7 @@ export const RegisterPage: React.FC = () => {
     <Box
       sx={{
         minHeight: "100dvh",
+        width: "100dvw",
         height: "100%",
         display: "flex",
         alignItems: "center",
@@ -155,7 +156,7 @@ export const RegisterPage: React.FC = () => {
     >
       <Card
         sx={{
-          maxWidth: 500,
+          maxWidth: 450,
           width: "100%",
           boxShadow: 3,
         }}

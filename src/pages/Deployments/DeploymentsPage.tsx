@@ -1,42 +1,53 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
+  Card,
   Typography,
-  Paper,
+  Button,
+  Chip,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  IconButton,
+  Paper,
+  CircularProgress,
   TextField,
   MenuItem,
-  CircularProgress,
-  Pagination,
+  FormControl,
+  InputLabel,
+  Select,
+  alpha,
 } from "@mui/material";
 import {
-  Visibility as ViewIcon,
   Refresh as RefreshIcon,
+  Visibility as ViewIcon,
+  CheckCircle as SuccessIcon,
+  Error as ErrorIcon,
+  Schedule as ScheduleIcon,
+  Rocket as DeployIcon,
 } from "@mui/icons-material";
-import {
-  DeploymentsService,
-  type IDeployment,
-} from "@/services/deploymentsService";
+import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { DeploymentsService, type IDeployment } from "@/services/deploymentsService";
 
 export const DeploymentsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  
   const [deployments, setDeployments] = useState<IDeployment[]>([]);
+  const [filteredDeployments, setFilteredDeployments] = useState<IDeployment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchDeployments = async () => {
     setLoading(true);
     try {
       const data = await DeploymentsService.getAll();
       setDeployments(data);
+      setFilteredDeployments(data);
     } catch (error) {
       console.error("Failed to fetch deployments", error);
     } finally {
@@ -48,124 +59,219 @@ export const DeploymentsPage: React.FC = () => {
     fetchDeployments();
   }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success":
-        return "success";
-      case "failed":
-        return "error";
-      case "in_progress":
-        return "warning";
-      default:
-        return "default";
+  useEffect(() => {
+    let filtered = deployments;
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((d) => d.status === statusFilter);
     }
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (d) =>
+          d.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          d.branch.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredDeployments(filtered);
+  }, [deployments, statusFilter, searchQuery]);
+
+  const getStatusChip = (status: string) => {
+    const statusConfig: Record<
+      string,
+      { color: any; icon: React.ReactNode; label: string }
+    > = {
+      success: {
+        color: "success",
+        icon: <SuccessIcon fontSize="small" />,
+        label: "Success",
+      },
+      failed: {
+        color: "error",
+        icon: <ErrorIcon fontSize="small" />,
+        label: "Failed",
+      },
+      in_progress: {
+        color: "warning",
+        icon: <ScheduleIcon fontSize="small" />,
+        label: "In Progress",
+      },
+      pending: {
+        color: "default",
+        icon: <ScheduleIcon fontSize="small" />,
+        label: "Pending",
+      },
+      queued: {
+        color: "default",
+        icon: <ScheduleIcon fontSize="small" />,
+        label: "Queued",
+      },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+
+    return (
+      <Chip
+        label={config.label}
+        color={config.color}
+        size="small"
+        icon={config.icon}
+      />
+    );
   };
 
-  const filteredDeployments =
-    filterStatus === "all"
-      ? deployments
-      : deployments.filter((d) => d.status === filterStatus);
-
   return (
-    <Box className="dashboard-container sss" sx={{ flex: 1, width: "100%" }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h4">Deployments History</Typography>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            sx={{ width: 150 }}
+    <Box>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start", mb: 3 }}>
+          <Box>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+              {t("deployments.title")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              View and manage all deployments
+            </Typography>
+          </Box>
+          
+          <Button
+            startIcon={<RefreshIcon />}
+            onClick={fetchDeployments}
+            disabled={loading}
           >
-            <MenuItem value="all">All Statuses</MenuItem>
-            <MenuItem value="success">Success</MenuItem>
-            <MenuItem value="failed">Failed</MenuItem>
-            <MenuItem value="in_progress">In Progress</MenuItem>
-          </TextField>
-          <IconButton onClick={fetchDeployments}>
-            <RefreshIcon />
-          </IconButton>
+            {t("common.refresh")}
+          </Button>
+        </Box>
+
+        {/* Filters */}
+        <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+          <TextField
+            placeholder="Search by project or branch..."
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ flexGrow: 1, maxWidth: 400 }}
+          />
+          
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusFilter}
+              label="Status"
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <MenuItem value="all">All Statuses</MenuItem>
+              <MenuItem value="success">Success</MenuItem>
+              <MenuItem value="failed">Failed</MenuItem>
+              <MenuItem value="in_progress">In Progress</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
       </Box>
 
+      {/* Deployments Table */}
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />
         </Box>
+      ) : filteredDeployments.length === 0 ? (
+        <Card sx={{ textAlign: "center", py: 8 }}>
+          <DeployIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+          <Typography variant="h6" gutterBottom>
+            {deployments.length === 0
+              ? t("deployments.noDeployments")
+              : "No deployments match your filters"}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {deployments.length === 0
+              ? "Deploy a project to see it here"
+              : "Try adjusting your search or filters"}
+          </Typography>
+        </Card>
       ) : (
-        <Paper sx={{ width: "100%" }}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Project</TableCell>
-                  <TableCell>Branch</TableCell>
-                  <TableCell>Commit</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Trigger</TableCell>
-                  <TableCell>Time</TableCell>
-                  <TableCell>Duration</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredDeployments.map((deployment) => (
-                  <TableRow key={deployment.id} hover>
-                    <TableCell>#{deployment.id}</TableCell>
-                    <TableCell sx={{ fontWeight: "medium" }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            boxShadow: 2,
+            borderRadius: 2,
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05) }}>
+                <TableCell sx={{ fontWeight: 600 }}>Project</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Commit</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Timestamp</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredDeployments.map((deployment) => (
+                <TableRow
+                  key={deployment.id}
+                  sx={{
+                    "&:hover": {
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
+                    },
+                  }}
+                >
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       {deployment.projectName}
-                    </TableCell>
-                    <TableCell>{deployment.branch}</TableCell>
-                    <TableCell sx={{ fontFamily: "monospace" }}>
-                      {deployment.commitHash}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={deployment.status}
-                        color={getStatusColor(deployment.status) as any}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{deployment.triggerType}</TableCell>
-                    <TableCell>{deployment.timestamp}</TableCell>
-                    <TableCell>{deployment.duration || "-"}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        title="View Logs"
-                        onClick={() =>
-                          navigate(`/deployments/${deployment.id}`)
-                        }
-                      >
-                        <ViewIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredDeployments.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
-                      No deployments found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
-            <Pagination count={1} color="primary" />
-          </Box>
-        </Paper>
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={deployment.branch} size="small" variant="outlined" />
+                  </TableCell>
+                  <TableCell>{getStatusChip(deployment.status)}</TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontFamily: "monospace",
+                        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 0.5,
+                      }}
+                    >
+                      {deployment.commit?.substring(0, 7) || "N/A"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {deployment.timestamp}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="small"
+                      startIcon={<ViewIcon />}
+                      onClick={() => navigate(`/deployments/${deployment.id}`)}
+                    >
+                      View Logs
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* Results Count */}
+      {!loading && filteredDeployments.length > 0 && (
+        <Box sx={{ mt: 2, textAlign: "center" }}>
+          <Typography variant="caption" color="text.secondary">
+            Showing {filteredDeployments.length} of {deployments.length} deployments
+          </Typography>
+        </Box>
       )}
     </Box>
   );

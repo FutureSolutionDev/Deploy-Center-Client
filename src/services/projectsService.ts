@@ -1,17 +1,5 @@
 import ApiInstance from './api';
-
-export interface IProject {
-  id: number;
-  name: string;
-  repoUrl: string;
-  branch: string;
-  type: 'node' | 'static' | 'docker';
-  status: 'active' | 'inactive';
-  lastDeployment?: {
-    status: 'success' | 'failed';
-    timestamp: string;
-  };
-}
+import type { IProject, IProjectStatistics } from '@/types';
 
 export const ProjectsService = {
   getAll: async (): Promise<IProject[]> => {
@@ -21,7 +9,6 @@ export const ProjectsService = {
       return data?.Projects || [];
     } catch (error) {
       console.error('Failed to fetch projects:', error);
-      // Return empty array on error
       return [];
     }
   },
@@ -30,7 +17,7 @@ export const ProjectsService = {
     return ApiInstance.get(`/projects/${id}`).then((res) => res.data.Data?.Project);
   },
 
-  create: async (data: Omit<IProject, 'id'>): Promise<IProject> => {
+  create: async (data: Partial<IProject>): Promise<IProject> => {
     return ApiInstance.post('/projects', data).then((res) => res.data.Data?.Project);
   },
 
@@ -42,8 +29,19 @@ export const ProjectsService = {
     return ApiInstance.delete(`/projects/${id}`).then((res) => res.data);
   },
 
-  deploy: async (id: number, branch?: string): Promise<IProject> => {
+  deploy: async (id: number, branch?: string): Promise<any> => {
     const response = await ApiInstance.post(`/projects/${id}/deploy`, { branch });
     return response.data.Data?.Deployment;
   },
+
+  regenerateWebhook: async (id: number): Promise<string> => {
+    const response = await ApiInstance.post(`/projects/${id}/regenerate-webhook`);
+    return response.data.Data?.WebhookSecret;
+  },
+
+  getStatistics: async (id: number): Promise<IProjectStatistics> => {
+    const response = await ApiInstance.get(`/projects/${id}/statistics`);
+    return response.data.Data?.Statistics;
+  },
 };
+
