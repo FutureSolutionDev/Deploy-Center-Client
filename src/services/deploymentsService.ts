@@ -1,5 +1,5 @@
 import ApiInstance from './api';
-import type { IDeployment } from '@/types';
+import type { IDeployment, IDeploymentStatistics, IQueueStatus } from '@/types';
 
 export const DeploymentsService = {
   getAll: async (): Promise<IDeployment[]> => {
@@ -21,7 +21,7 @@ export const DeploymentsService = {
   },
 
   getByProject: async (projectId: number): Promise<IDeployment[]> => {
-    const response = await ApiInstance.get(`/projects/${projectId}/deployments`);
+    const response = await ApiInstance.get(`/deployments/projects/${projectId}/deployments`);
     const data = response.data.Data;
     return data?.Deployments || [];
   },
@@ -40,5 +40,35 @@ export const DeploymentsService = {
     const response = await ApiInstance.post(`/deployments/${id}/retry`);
     const data = response.data.Data;
     return data?.Deployment;
+  },
+
+  // Statistics APIs
+  getStatistics: async (): Promise<IDeploymentStatistics> => {
+    const response = await ApiInstance.get('/deployments/statistics');
+    const data = response.data.Data;
+    return data?.Statistics;
+  },
+
+  getProjectStatistics: async (projectId: number): Promise<IDeploymentStatistics> => {
+    const response = await ApiInstance.get(`/deployments/statistics?projectId=${projectId}`);
+    const data = response.data.Data;
+    return data?.Statistics;
+  },
+
+  // Queue Management APIs
+  getQueueStatus: async (): Promise<IQueueStatus> => {
+    const response = await ApiInstance.get('/deployments/queue/status');
+    const data = response.data.Data;
+    return data?.QueueStatus;
+  },
+
+  getProjectQueueStatus: async (projectId: number): Promise<IQueueStatus> => {
+    const response = await ApiInstance.get(`/deployments/projects/${projectId}/queue/status`);
+    const data = response.data.Data;
+    return data?.QueueStatus;
+  },
+
+  cancelAllPending: async (projectId: number): Promise<void> => {
+    await ApiInstance.post(`/deployments/projects/${projectId}/queue/cancel-all`);
   },
 };

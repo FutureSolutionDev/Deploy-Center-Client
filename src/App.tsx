@@ -19,6 +19,7 @@ import { DeploymentsPage } from '@/pages/Deployments/DeploymentsPage';
 import { DeploymentLogsPage } from '@/pages/Deployments/DeploymentLogsPage';
 import { ReportsPage } from '@/pages/Reports/ReportsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
+import { Loader } from './components/Common';
 
 /**
  * Protected Route Component
@@ -32,7 +33,7 @@ const ProtectedRoute: React.FC<IProtectedRouteProps> = ({ children }) => {
   const { IsAuthenticated, IsLoading } = useAuth();
 
   if (IsLoading) {
-    return <div>Loading...</div>;
+    return <Loader />
   }
 
   if (!IsAuthenticated) {
@@ -54,7 +55,7 @@ const PublicRoute: React.FC<IPublicRouteProps> = ({ children }) => {
   const { IsAuthenticated, IsLoading } = useAuth();
 
   if (IsLoading) {
-    return <div>Loading...</div>;
+    return <Loader />
   }
 
   if (IsAuthenticated) {
