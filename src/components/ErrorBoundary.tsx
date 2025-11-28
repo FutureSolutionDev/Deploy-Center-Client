@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<IErrorBoundaryProps, IErrorBoundary
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     // Log error details in development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.MODE === 'development') {
       console.error('Error caught by boundary:', error, errorInfo);
     }
 
@@ -77,16 +77,16 @@ export class ErrorBoundary extends Component<IErrorBoundaryProps, IErrorBoundary
             }}
           >
             <ErrorIcon sx={{ fontSize: 80, color: 'error.main', mb: 2 }} />
-            
+
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
               Something went wrong
             </Typography>
-            
+
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
               We're sorry for the inconvenience. An unexpected error occurred while rendering this page.
             </Typography>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.MODE === 'development' && this.state.error && (
               <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
                 <Typography variant="body2" sx={{ fontFamily: 'monospace', mb: 1 }}>
                   <strong>Error:</strong> {this.state.error.toString()}

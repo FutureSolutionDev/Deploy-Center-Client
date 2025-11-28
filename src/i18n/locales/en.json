@@ -191,7 +191,7 @@
     "statuses": {
       "queued": "Queued",
       "pending": "Pending",
-      "in_progress": "In Progress",
+      "inProgress": "In Progress",
       "success": "Success",
       "failed": "Failed",
       "cancelled": "Cancelled",

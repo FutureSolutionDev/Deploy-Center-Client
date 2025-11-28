@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DeploymentsService } from '@/services/deploymentsService';
+import { useSocket, useDeploymentEvents } from '@/hooks/useSocket';
 import type { IDeployment } from '@/types';
 
 export const QueuePage: React.FC = () => {
@@ -64,13 +65,16 @@ export const QueuePage: React.FC = () => {
         }
     };
 
+    // Real-time updates
+    const { isConnected } = useSocket();
+
+    useDeploymentEvents(
+        () => fetchQueue(), // onUpdate
+        () => fetchQueue()  // onComplete
+    );
+
     useEffect(() => {
         fetchQueue();
-
-        // Auto-refresh every 5 seconds
-        const interval = setInterval(fetchQueue, 5000);
-
-        return () => clearInterval(interval);
     }, []);
 
     const handleCancelOne = (deployment: IDeployment) => {
@@ -83,7 +87,7 @@ export const QueuePage: React.FC = () => {
 
         try {
             setCanceling(true);
-            await DeploymentsService.cancelDeployment(selectedDeployment.Id);
+            await DeploymentsService.cancel(selectedDeployment.Id);
             setSuccess(`${t('deployments.cancel')} succeeded`);
             setCancelDialogOpen(false);
             setSelectedDeployment(null);
@@ -112,7 +116,7 @@ export const QueuePage: React.FC = () => {
             await Promise.all(
                 queue
                     .filter((d) => d.Status === 'pending' || d.Status === 'queued')
-                    .map((d) => DeploymentsService.cancelDeployment(d.Id))
+                    .map((d) => DeploymentsService.cancel(d.Id))
             );
             setSuccess(`${t('deployments.cancelAll')} succeeded`);
             setCancelAllDialogOpen(false);
@@ -145,7 +149,7 @@ export const QueuePage: React.FC = () => {
             inProgress: {
                 color: 'warning',
                 icon: <RunningIcon fontSize="small" />,
-                label: t('deployments.statuses.in_progress'),
+                label: t('deployments.statuses.inProgress'),
             },
         };
 
@@ -299,7 +303,7 @@ export const QueuePage: React.FC = () => {
                             {t('deployments.showing')} {queue.length} items in queue
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Auto-refreshes every 5 seconds
+                            {isConnected ? '⚡ Real-time updates active' : '🔌 Connecting...'}
                         </Typography>
                     </Box>
                 </TableContainer>

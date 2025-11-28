@@ -190,7 +190,7 @@
     "statuses": {
       "queued": "في الانتظار",
       "pending": "معلقة",
-      "in_progress": "قيد التنفيذ",
+      "inProgress": "قيد التنفيذ",
       "success": "نجحت",
       "failed": "فشلت",
       "cancelled": "ملغاة",

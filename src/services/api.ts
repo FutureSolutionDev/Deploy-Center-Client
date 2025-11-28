@@ -82,13 +82,13 @@ ApiInstance.interceptors.response.use(
     if (error.response?.status === 403) {
       // Check if it's a CSRF token error
       if (errorMessage.toLowerCase().includes('csrf') || errorMessage.toLowerCase().includes('token')) {
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.MODE === 'development') {
           console.error('CSRF token validation failed - Please refresh the page');
         }
         // Optionally refresh the page to get new CSRF token
         // window.location.reload();
       } else {
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.MODE === 'development') {
           console.error('Access forbidden:', errorMessage);
         }
       }
@@ -96,42 +96,42 @@ ApiInstance.interceptors.response.use(
 
     // Handle 404 Not Found
     if (error.response?.status === 404) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
         console.warn('Resource not found:', error.config?.url);
       }
     }
 
     // Handle 409 Conflict - Idempotency key conflict
     if (error.response?.status === 409) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
         console.warn('Duplicate request detected (Idempotency conflict)');
       }
     }
 
     // Handle 422 Unprocessable Entity - Validation errors
     if (error.response?.status === 422) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
         console.warn('Validation error:', errorMessage);
       }
     }
 
     // Handle 429 Too Many Requests - Rate limiting
     if (error.response?.status === 429) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
         console.warn('Too many requests - Please slow down');
       }
     }
 
     // Handle 500+ Server Errors
     if (error.response && error.response.status >= 500) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
         console.error('Server error:', error.response.data);
       }
     }
 
     // Network Error - Server unreachable
     if (!error.response) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
         console.error('Network error - Server is unreachable');
       }
     }

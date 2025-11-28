@@ -167,7 +167,7 @@ export const ProjectDetailsPage: React.FC = () => {
     const statusConfig: Record<string, { color: any; icon: React.ReactElement }> = {
       success: { color: "success", icon: <SuccessIcon fontSize="small" /> },
       failed: { color: "error", icon: <ErrorIcon fontSize="small" /> },
-      in_progress: { color: "warning", icon: <ScheduleIcon fontSize="small" /> },
+      inProgress: { color: "warning", icon: <ScheduleIcon fontSize="small" /> },
       pending: { color: "default", icon: <ScheduleIcon fontSize="small" /> },
     };
 

@@ -16,7 +16,7 @@ import { DashboardPage } from '@/pages/Dashboard/DashboardPage';
 import { ProjectsPage } from '@/pages/Projects/ProjectsPage';
 import { ProjectDetailsPage } from '@/pages/Projects/ProjectDetailsPage';
 import { DeploymentsPage } from '@/pages/Deployments/DeploymentsPage';
-import { DeploymentLogsPage } from '@/pages/Deployments/DeploymentLogsPage';
+import { DeploymentDetailsPage } from '@/pages/Deployments/DeploymentDetailsPage';
 import { ReportsPage } from '@/pages/Reports/ReportsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
 import { QueuePage } from '@/pages/Queue/QueuePage';
@@ -107,7 +107,7 @@ const AppRoutes: React.FC = () => {
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectDetailsPage />} />
         <Route path="deployments" element={<DeploymentsPage />} />
-        <Route path="deployments/:id" element={<DeploymentLogsPage />} />
+        <Route path="deployments/:id" element={<DeploymentDetailsPage />} />
         <Route path="queue" element={<QueuePage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SettingsPage />} />

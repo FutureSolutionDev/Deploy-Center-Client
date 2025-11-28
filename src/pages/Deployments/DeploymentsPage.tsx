@@ -27,6 +27,8 @@ import {
   Error as ErrorIcon,
   Schedule as ScheduleIcon,
   Rocket as DeployIcon,
+  Replay as RetryIcon,
+  Cancel as CancelIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -53,6 +55,26 @@ export const DeploymentsPage: React.FC = () => {
       console.error("Failed to fetch deployments", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = async (id: number) => {
+    if (!window.confirm(t("deployments.confirmCancel"))) return;
+    try {
+      await DeploymentsService.cancel(id);
+      fetchDeployments();
+    } catch (error) {
+      console.error("Failed to cancel deployment", error);
+    }
+  };
+
+  const handleRetry = async (id: number) => {
+    if (!window.confirm(t("deployments.confirmRetry"))) return;
+    try {
+      await DeploymentsService.retry(id);
+      fetchDeployments();
+    } catch (error) {
+      console.error("Failed to retry deployment", error);
     }
   };
 
@@ -99,7 +121,7 @@ export const DeploymentsPage: React.FC = () => {
       inProgress: {
         color: "warning",
         icon: <ScheduleIcon fontSize="small" />,
-        label: t("deployments.statuses.in_progress"),
+        label: t("deployments.statuses.inProgress"),
       },
       pending: {
         color: "default",
@@ -165,11 +187,11 @@ export const DeploymentsPage: React.FC = () => {
               label="Status"
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-            <MenuItem value="all">{t("deployments.allStatuses")}</MenuItem>
-            <MenuItem value="success">{t("deployments.success")}</MenuItem>
-            <MenuItem value="failed">{t("deployments.failed")}</MenuItem>
-            <MenuItem value="inProgress">{t("deployments.inProgress")}</MenuItem>
-            <MenuItem value="pending">{t("deployments.pending")}</MenuItem>
+              <MenuItem value="all">{t("deployments.allStatuses")}</MenuItem>
+              <MenuItem value="success">{t("deployments.success")}</MenuItem>
+              <MenuItem value="failed">{t("deployments.failed")}</MenuItem>
+              <MenuItem value="inProgress">{t("deployments.inProgress")}</MenuItem>
+              <MenuItem value="pending">{t("deployments.pending")}</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -263,6 +285,30 @@ export const DeploymentsPage: React.FC = () => {
                     >
                       {t("deployments.viewLogs")}
                     </Button>
+
+                    {(deployment.Status === 'queued' || deployment.Status === 'inProgress') && (
+                      <Button
+                        size="small"
+                        color="error"
+                        startIcon={<CancelIcon />}
+                        onClick={() => handleCancel(deployment.Id)}
+                        sx={{ ml: 1 }}
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                    )}
+
+                    {deployment.Status === 'failed' && (
+                      <Button
+                        size="small"
+                        color="warning"
+                        startIcon={<RetryIcon />}
+                        onClick={() => handleRetry(deployment.Id)}
+                        sx={{ ml: 1 }}
+                      >
+                        {t("common.retry")}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
