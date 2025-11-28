@@ -161,7 +161,7 @@ export const ProjectsPage: React.FC = () => {
   return (
     <Box>
       {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
         <Box>
           <Typography variant="h4" gutterBottom>
             {t("projects.title")}
@@ -170,11 +170,12 @@ export const ProjectsPage: React.FC = () => {
             {t("projects.baseInfo")}
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <Button
             startIcon={<RefreshIcon />}
             onClick={fetchProjects}
             disabled={loading}
+            sx={{ height: "2.5rem" }}
           >
             {t("common.refresh")}
           </Button>
@@ -182,6 +183,7 @@ export const ProjectsPage: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
+            sx={{ height: "2.5rem" }}
           >
             {t("projects.createProject")}
           </Button>
