@@ -157,13 +157,14 @@ export const MainLayout: React.FC = () => {
   const isRTL = Language === 'ar';
 
   return (
-    <Box sx={{ display: "flex", direction: isRTL ? 'rtl' : 'ltr' }}>
+    <Box sx={{ display: "flex" }}>
       {/* AppBar */}
       <AppBar
         position="fixed"
         sx={{
-          width: { md: `calc(100dvw - ${DRAWER_WIDTH}px)` },
-          [isRTL ? 'mr' : 'ml']: { md: `${DRAWER_WIDTH}px` },
+          width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          ml: { xs: 0, md: isRTL ? 0 : `${DRAWER_WIDTH}px` },
+          mr: { xs: 0, md: isRTL ? `${DRAWER_WIDTH}px` : 0 },
         }}
       >
         <Toolbar>

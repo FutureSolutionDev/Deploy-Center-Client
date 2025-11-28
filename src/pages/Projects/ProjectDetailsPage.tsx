@@ -41,6 +41,7 @@ import {
   Autorenew as RegenerateIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ProjectsService } from "@/services/projectsService";
 import { DeploymentsService } from "@/services/deploymentsService";
 import type { IProject, IDeployment, IProjectStatistics } from "@/types";
@@ -57,6 +58,7 @@ import {
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
 
   const [project, setProject] = useState<IProject | null>(null);
@@ -87,7 +89,7 @@ export const ProjectDetailsPage: React.FC = () => {
       );
       setStats(statsData);
     } catch (error: any) {
-      setError(error?.message || "Failed to load project details");
+      setError(error?.message || t("projects.failedToLoadDetails"));
     } finally {
       setLoading(false);
     }
@@ -103,13 +105,13 @@ export const ProjectDetailsPage: React.FC = () => {
     try {
       setDeploying(true);
       await ProjectsService.deploy(project.Id);
-      setSuccess("Deployment started successfully!");
+      setSuccess(t("deployments.startedSuccessfully"));
       setTimeout(() => {
         fetchProjectDetails();
         setSuccess(null);
       }, 2000);
     } catch (error: any) {
-      setError(error?.message || "Failed to start deployment");
+      setError(error?.message || t("deployments.failedToStart"));
     } finally {
       setDeploying(false);
     }
@@ -122,23 +124,23 @@ export const ProjectDetailsPage: React.FC = () => {
       await ProjectsService.delete(project.Id);
       navigate("/projects");
     } catch (error: any) {
-      setError(error?.message || "Failed to delete project");
+      setError(error?.message || t("projects.failedToDelete"));
       setDeleteDialogOpen(false);
     }
   };
 
   const handleRegenerateWebhook = async () => {
     if (!project) return;
-    if (!window.confirm("Are you sure? This will invalidate the old webhook secret.")) return;
+    if (!window.confirm(t("projects.webhookRegenerationWarning"))) return;
 
     try {
       setRegeneratingWebhook(true);
       const newSecret = await ProjectsService.regenerateWebhook(project.Id);
       setProject({ ...project, WebhookSecret: newSecret });
-      setSuccess("Webhook secret regenerated!");
+      setSuccess(t("projects.webhookRegenerated"));
       setTimeout(() => setSuccess(null), 3000);
     } catch (error: any) {
-      setError(error?.message || "Failed to regenerate webhook");
+      setError(error?.message || t("projects.failedToRegenerateWebhook"));
     } finally {
       setRegeneratingWebhook(false);
     }
@@ -146,7 +148,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    setSuccess("Copied to clipboard!");
+    setSuccess(t("common.copiedToClipboard"));
     setTimeout(() => setSuccess(null), 2000);
   };
 
@@ -185,7 +187,7 @@ export const ProjectDetailsPage: React.FC = () => {
           {error}
         </Alert>
         <Button startIcon={<BackIcon />} onClick={() => navigate("/projects")}>
-          Back to Projects
+          {t("common.backToProjects")}
         </Button>
       </Box>
     );
@@ -195,10 +197,10 @@ export const ProjectDetailsPage: React.FC = () => {
     return (
       <Box>
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Project not found
+          {t("deployments.notFound")}
         </Alert>
         <Button startIcon={<BackIcon />} onClick={() => navigate("/projects")}>
-          Back to Projects
+          {t("common.backToProjects")}
         </Button>
       </Box>
     );
@@ -213,7 +215,7 @@ export const ProjectDetailsPage: React.FC = () => {
           onClick={() => navigate("/projects")}
           sx={{ mb: 2 }}
         >
-          Back to Projects
+          {t("common.backToProjects")}
         </Button>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
@@ -223,7 +225,7 @@ export const ProjectDetailsPage: React.FC = () => {
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Chip
-                label={project.IsActive ? "Active" : "Inactive"}
+                label={project.IsActive ? t("common.active") : t("common.inactive")}
                 color={project.IsActive ? "success" : "default"}
               />
               <Chip
@@ -243,7 +245,7 @@ export const ProjectDetailsPage: React.FC = () => {
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteDialogOpen(true)}
             >
-              Delete
+              {t("common.delete")}
             </Button>
             <Button
               variant="contained"
@@ -251,7 +253,7 @@ export const ProjectDetailsPage: React.FC = () => {
               onClick={handleDeploy}
               disabled={deploying}
             >
-              {deploying ? "Deploying..." : "Deploy Now"}
+              {deploying ? t("deployments.manualDeploy.deploying") : t("projects.deployNow")}
             </Button>
           </Box>
         </Box>
@@ -275,13 +277,13 @@ export const ProjectDetailsPage: React.FC = () => {
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Project Information
+                {t("projects.projectInfo")}
               </Typography>
               <Divider sx={{ mb: 2 }} />
 
               <Box sx={{ mb: 2 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Repository URL
+                  {t("projects.repoUrl")}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
                   <GitHubIcon sx={{ fontSize: 18, mr: 1, color: "text.secondary" }} />
@@ -291,7 +293,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
               <Box sx={{ mb: 2 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Branch
+                  {t("projects.branch")}
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500, mt: 0.5 }}>
                   {project.Branch}
@@ -300,7 +302,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
               <Box sx={{ mb: 2 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Project Type
+                  {t("projects.projectType")}
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500, mt: 0.5 }}>
                   {project.ProjectType}
@@ -313,17 +315,17 @@ export const ProjectDetailsPage: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Webhook Configuration
+                {t("projects.webhook")}
               </Typography>
               <Divider sx={{ mb: 2 }} />
 
               <Typography variant="body2" color="text.secondary" paragraph>
-                Use this secret to configure webhooks in your repository provider (GitHub, GitLab, etc.).
+                {t("projects.webhook")}
               </Typography>
 
               <TextField
                 fullWidth
-                label="Webhook Secret"
+                label={t("projects.webhookSecret")}
                 type={showWebhook ? "text" : "password"}
                 value={project.WebhookSecret || "Not generated"}
                 InputProps={{
@@ -333,7 +335,7 @@ export const ProjectDetailsPage: React.FC = () => {
                       <IconButton onClick={() => setShowWebhook(!showWebhook)} edge="end">
                         {showWebhook ? <VisibilityOffIcon /> : <VisibilityIcon />}
                       </IconButton>
-                      <Tooltip title="Copy">
+                      <Tooltip title={t("common.copy")}>
                         <IconButton onClick={() => copyToClipboard(project.WebhookSecret)} edge="end">
                           <CopyIcon />
                         </IconButton>
@@ -352,7 +354,7 @@ export const ProjectDetailsPage: React.FC = () => {
                 disabled={regeneratingWebhook}
                 fullWidth
               >
-                Regenerate Secret
+                {t("projects.regenerateSecret")}
               </Button>
             </CardContent>
           </Card>
@@ -365,7 +367,7 @@ export const ProjectDetailsPage: React.FC = () => {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                  Statistics
+                  {t("projects.statistics")}
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
 
@@ -376,7 +378,7 @@ export const ProjectDetailsPage: React.FC = () => {
                         {stats.TotalDeployments}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Total
+                        {t("common.total")}
                       </Typography>
                     </Box>
                   </Grid>
@@ -386,7 +388,7 @@ export const ProjectDetailsPage: React.FC = () => {
                         {stats.SuccessRate}%
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Success Rate
+                        {t("projects.successRate")}
                       </Typography>
                     </Box>
                   </Grid>
@@ -396,7 +398,7 @@ export const ProjectDetailsPage: React.FC = () => {
                         {Math.round(stats.AverageDuration)}s
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Avg Duration
+                        {t("projects.avgDuration")}
                       </Typography>
                     </Box>
                   </Grid>
@@ -409,8 +411,8 @@ export const ProjectDetailsPage: React.FC = () => {
                       <XAxis dataKey="Date" fontSize={12} />
                       <YAxis fontSize={12} />
                       <RechartsTooltip />
-                      <Bar dataKey="Success" stackId="a" fill="#4caf50" name="Success" />
-                      <Bar dataKey="Failed" stackId="a" fill="#f44336" name="Failed" />
+                      <Bar dataKey="Success" stackId="a" fill="#4caf50" name={t("deployments.success")} />
+                      <Bar dataKey="Failed" stackId="a" fill="#f44336" name={t("deployments.failed")} />
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
@@ -422,7 +424,7 @@ export const ProjectDetailsPage: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Recent Deployments
+                {t("dashboard.recentDeployments")}
               </Typography>
               <Divider sx={{ mb: 2 }} />
 
@@ -430,7 +432,7 @@ export const ProjectDetailsPage: React.FC = () => {
                 <Box sx={{ textAlign: "center", py: 4 }}>
                   <DeployIcon sx={{ fontSize: 48, color: "text.disabled", mb: 2 }} />
                   <Typography variant="body2" color="text.secondary">
-                    No deployments yet
+                    {t("deployments.noDeployments")}
                   </Typography>
                 </Box>
               ) : (
@@ -438,10 +440,10 @@ export const ProjectDetailsPage: React.FC = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Branch</TableCell>
-                        <TableCell>Date</TableCell>
-                        <TableCell>Action</TableCell>
+                        <TableCell>{t("deployments.status")}</TableCell>
+                        <TableCell>{t("deployments.branch")}</TableCell>
+                        <TableCell>{t("common.date")}</TableCell>
+                        <TableCell>{t("common.actions")}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -462,7 +464,7 @@ export const ProjectDetailsPage: React.FC = () => {
                               size="small"
                               onClick={() => navigate(`/deployments/${deployment.Id}`)}
                             >
-                              View Logs
+                              {t("deployments.viewLogs")}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -483,22 +485,21 @@ export const ProjectDetailsPage: React.FC = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Delete Project</DialogTitle>
+        <DialogTitle>{t("projects.deleteProject")}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete <strong>{project.Name}</strong>?
-            This will also delete all deployment history. This action cannot be undone.
+            {t("projects.confirmDeleteDesc")}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t("common.cancel")}</Button>
           <Button
             variant="contained"
             color="error"
             onClick={handleDeleteConfirm}
             startIcon={<DeleteIcon />}
           >
-            Delete Project
+            {t("projects.deleteProject")}
           </Button>
         </DialogActions>
       </Dialog>

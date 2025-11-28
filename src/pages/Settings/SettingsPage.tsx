@@ -70,19 +70,19 @@ export const SettingsPage: React.FC = () => {
 
   const handleLanguageChange = (newLanguage: "en" | "ar") => {
     ChangeLanguage(newLanguage);
-    setSuccess("Language updated successfully!");
+    setSuccess(t("settings.languageUpdated"));
     setTimeout(() => setSuccess(null), 2000);
   };
 
   const handleSaveProfile = () => {
     // API call to update profile
-    setSuccess("Profile updated successfully!");
+    setSuccess(t("settings.profileUpdated"));
     setTimeout(() => setSuccess(null), 3000);
   };
 
   const handleSaveNotifications = () => {
     // API call to update notification settings
-    setSuccess("Notification settings saved successfully!");
+    setSuccess(t("settings.notificationsSaved"));
     setTimeout(() => setSuccess(null), 3000);
   };
 
@@ -183,7 +183,7 @@ export const SettingsPage: React.FC = () => {
           {/* Preferences Tab */}
           <TabPanel value={tabValue} index={1}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Appearance & Language
+              {t("settings.appearanceLanguage")}
             </Typography>
             <Divider sx={{ mb: 3 }} />
 
@@ -191,18 +191,18 @@ export const SettingsPage: React.FC = () => {
               {/* Language Selection */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
-                  <InputLabel>Language</InputLabel>
+                  <InputLabel>{t("settings.language")}</InputLabel>
                   <Select
                     value={Language}
-                    label="Language"
+                    label={t("settings.language")}
                     onChange={(e) => handleLanguageChange(e.target.value as "en" | "ar")}
                   >
-                    <MenuItem value="en">English</MenuItem>
-                    <MenuItem value="ar">العربية (Arabic)</MenuItem>
+                    <MenuItem value="en">{t("settings.english")}</MenuItem>
+                    <MenuItem value="ar">{t("settings.arabic")}</MenuItem>
                   </Select>
                 </FormControl>
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                  Changes apply immediately
+                  {t("settings.changesApplyImmediately")}
                 </Typography>
               </Grid>
 
@@ -215,17 +215,17 @@ export const SettingsPage: React.FC = () => {
                       onChange={ToggleMode}
                     />
                   }
-                  label={`Dark Mode ${Mode === "dark" ? "On" : "Off"}`}
+                  label={Mode === "dark" ? t("settings.darkModeOn") : t("settings.darkModeOff")}
                 />
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-                  Toggle between light and dark theme
+                  {t("settings.toggleTheme")}
                 </Typography>
               </Grid>
 
               {/* Color Theme Selection */}
               <Grid size={{ xs: 12 }}>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                  Color Theme
+                  {t("settings.colorTheme")}
                 </Typography>
                 <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2 }}>
                   {["blue", "green", "purple", "orange", "red"].map((color) => (
@@ -233,7 +233,7 @@ export const SettingsPage: React.FC = () => {
                       key={color}
                       onClick={() => {
                         SetColor(color as "blue" | "green" | "purple" | "orange" | "red");
-                        setSuccess("Color theme updated successfully!");
+                        setSuccess(t("settings.colorThemeUpdated"));
                         setTimeout(() => setSuccess(null), 2000);
                       }}
                       sx={{
@@ -270,7 +270,7 @@ export const SettingsPage: React.FC = () => {
                   ))}
                 </Box>
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
-                  Select your preferred color theme • Changes apply instantly
+                  {t("settings.selectPreferredColor")}
                 </Typography>
               </Grid>
             </Grid>
@@ -279,7 +279,7 @@ export const SettingsPage: React.FC = () => {
           {/* Notifications Tab */}
           <TabPanel value={tabValue} index={2}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Notification Settings
+              {t("settings.notificationSettings")}
             </Typography>
             <Divider sx={{ mb: 3 }} />
 
@@ -292,18 +292,18 @@ export const SettingsPage: React.FC = () => {
                       onChange={(e) => setEmailNotifications(e.target.checked)}
                     />
                   }
-                  label="Email Notifications"
+                  label={t("settings.emailNotifications")}
                 />
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                  Receive deployment notifications via email
+                  {t("settings.receiveEmailNotifications")}
                 </Typography>
               </Grid>
 
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label="Discord Webhook URL"
-                  placeholder="https://discord.com/api/webhooks/..."
+                  label={t("settings.discordWebhook")}
+                  placeholder={t("settings.discordWebhookPlaceholder")}
                   value={discordWebhook}
                   onChange={(e) => setDiscordWebhook(e.target.value)}
                 />
@@ -312,8 +312,8 @@ export const SettingsPage: React.FC = () => {
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label="Slack Webhook URL"
-                  placeholder="https://hooks.slack.com/services/..."
+                  label={t("settings.slackWebhook")}
+                  placeholder={t("settings.slackWebhookPlaceholder")}
                   value={slackWebhook}
                   onChange={(e) => setSlackWebhook(e.target.value)}
                 />
@@ -321,7 +321,7 @@ export const SettingsPage: React.FC = () => {
 
               <Grid size={{ xs: 12 }}>
                 <Button variant="contained" onClick={handleSaveNotifications}>
-                  Save Notification Settings
+                  {t("settings.saveNotificationSettings")}
                 </Button>
               </Grid>
             </Grid>
@@ -330,45 +330,45 @@ export const SettingsPage: React.FC = () => {
           {/* Security Tab */}
           <TabPanel value={tabValue} index={3}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Security Settings
+              {t("settings.securitySettings")}
             </Typography>
             <Divider sx={{ mb: 3 }} />
 
             <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
                 <Typography variant="subtitle1" gutterBottom>
-                  Change Password
+                  {t("settings.changePassword")}
                 </Typography>
                 <TextField
                   fullWidth
-                  label="Current Password"
+                  label={t("settings.currentPassword")}
                   type="password"
                   sx={{ mb: 2 }}
                 />
                 <TextField
                   fullWidth
-                  label="New Password"
+                  label={t("settings.newPassword")}
                   type="password"
                   sx={{ mb: 2 }}
                 />
                 <TextField
                   fullWidth
-                  label="Confirm New Password"
+                  label={t("settings.confirmNewPassword")}
                   type="password"
                   sx={{ mb: 2 }}
                 />
-                <Button variant="contained">Update Password</Button>
+                <Button variant="contained">{t("settings.updatePassword")}</Button>
               </Grid>
 
               <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="subtitle1" gutterBottom>
-                  Two-Factor Authentication
+                  {t("settings.twoFactorAuth")}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Add an extra layer of security to your account
+                  {t("settings.twoFactorDesc")}
                 </Typography>
-                <Button variant="outlined">Enable 2FA</Button>
+                <Button variant="outlined">{t("settings.enable2fa")}</Button>
               </Grid>
             </Grid>
           </TabPanel>
@@ -376,7 +376,7 @@ export const SettingsPage: React.FC = () => {
           {/* Account Tab */}
           <TabPanel value={tabValue} index={4}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Account Management
+              {t("settings.accountManagement")}
             </Typography>
             <Divider sx={{ mb: 3 }} />
 
@@ -390,13 +390,13 @@ export const SettingsPage: React.FC = () => {
               }}
             >
               <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: "error.main" }}>
-                Danger Zone
+                {t("settings.dangerZone")}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Once you delete your account, there is no going back. Please be certain.
+                {t("settings.deleteWarning")}
               </Typography>
               <Button variant="outlined" color="error">
-                Delete Account
+                {t("settings.deleteAccount")}
               </Button>
             </Box>
           </TabPanel>

@@ -186,12 +186,9 @@ export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue',
         },
       },
       MuiDrawer: {
-        defaultProps: {
-          anchor: locale === 'ar' ? 'right' : 'left',
-        },
         styleOverrides: {
           paper: {
-            // RTL handled by anchor prop
+            // RTL handled by anchor prop in component
           },
         },
       },

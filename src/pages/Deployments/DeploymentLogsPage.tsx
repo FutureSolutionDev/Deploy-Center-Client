@@ -22,12 +22,14 @@ import {
   Replay as RetryIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { DeploymentsService } from "@/services/deploymentsService";
 import type { IDeployment } from "@/types";
 
 export const DeploymentLogsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const [deployment, setDeployment] = useState<IDeployment | null>(null);
@@ -52,7 +54,7 @@ export const DeploymentLogsPage: React.FC = () => {
       const deployment = await DeploymentsService.getById(Number(id));
       setDeployment(deployment);
     } catch (error: unknown) {
-      setError((error as any)?.message || "Failed to load deployment");
+      setError((error as any)?.message || t("deployments.failedToLoad"));
     } finally {
       setLoading(false);
     }
@@ -70,10 +72,10 @@ export const DeploymentLogsPage: React.FC = () => {
 
   const getStatusChip = (status: string) => {
     const statusConfig: Record<string, { color: string; icon: React.ReactElement; label: string }> = {
-      success: { color: "success", icon: <SuccessIcon fontSize="small" />, label: "Success" },
-      failed: { color: "error", icon: <ErrorIcon fontSize="small" />, label: "Failed" },
-      inProgress: { color: "warning", icon: <ScheduleIcon fontSize="small" />, label: "In Progress" },
-      pending: { color: "default", icon: <ScheduleIcon fontSize="small" />, label: "Pending" },
+      success: { color: "success", icon: <SuccessIcon fontSize="small" />, label: t("deployments.success") },
+      failed: { color: "error", icon: <ErrorIcon fontSize="small" />, label: t("deployments.failed") },
+      inProgress: { color: "warning", icon: <ScheduleIcon fontSize="small" />, label: t("deployments.inProgress") },
+      pending: { color: "default", icon: <ScheduleIcon fontSize="small" />, label: t("deployments.pending") },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -112,10 +114,10 @@ export const DeploymentLogsPage: React.FC = () => {
     return (
       <Box>
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error || "Deployment not found"}
+          {error || t("deployments.notFound")}
         </Alert>
         <Button startIcon={<BackIcon />} onClick={() => navigate("/deployments")}>
-          Back to Deployments
+          {t("common.backToDeployments")}
         </Button>
       </Box>
     );
@@ -130,13 +132,13 @@ export const DeploymentLogsPage: React.FC = () => {
           onClick={() => navigate("/deployments")}
           sx={{ mb: 2 }}
         >
-          Back to Deployments
+          {t("common.backToDeployments")}
         </Button>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
           <Box>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-              Deployment Logs
+              {t("deployments.logsTitle", { id })}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {deployment.ProjectName} • {deployment.Branch}
@@ -152,7 +154,7 @@ export const DeploymentLogsPage: React.FC = () => {
               startIcon={<DownloadIcon />}
               onClick={handleDownloadLogs}
             >
-              Download Logs
+              {t("logs.downloadLogs")}
             </Button>
             {deployment.Status === "failed" && (
               <Button
@@ -162,7 +164,7 @@ export const DeploymentLogsPage: React.FC = () => {
                   /* Retry logic */
                 }}
               >
-                Retry Deployment
+                {t("deployments.retryDeployment")}
               </Button>
             )}
           </Box>
@@ -175,14 +177,14 @@ export const DeploymentLogsPage: React.FC = () => {
           <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Status
+                {t("deployments.status")}
               </Typography>
               <Box sx={{ mt: 0.5 }}>{getStatusChip(deployment.Status)}</Box>
             </Box>
 
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Branch
+                {t("deployments.branch")}
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
                 {deployment.Branch}
@@ -192,7 +194,7 @@ export const DeploymentLogsPage: React.FC = () => {
             {deployment.Commit && (
               <Box>
                 <Typography variant="caption" color="text.secondary">
-                  Commit
+                  {t("deployments.commit")}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -212,7 +214,7 @@ export const DeploymentLogsPage: React.FC = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Started At
+                {t("deployments.startedAt")}
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {new Date(deployment.CreatedAt).toLocaleString()}
@@ -335,7 +337,7 @@ export const DeploymentLogsPage: React.FC = () => {
               }}
             />
             <Typography variant="caption" sx={{ color: "#27c93f" }}>
-              LIVE
+              {t("deployments.liveIndicator")}
             </Typography>
           </Box>
         )}
