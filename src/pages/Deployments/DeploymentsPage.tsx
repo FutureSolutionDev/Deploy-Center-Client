@@ -89,27 +89,27 @@ export const DeploymentsPage: React.FC = () => {
       success: {
         color: "success",
         icon: <SuccessIcon fontSize="small" />,
-        label: "Success",
+        label: t("deployments.statuses.success"),
       },
       failed: {
         color: "error",
         icon: <ErrorIcon fontSize="small" />,
-        label: "Failed",
+        label: t("deployments.statuses.failed"),
       },
       inProgress: {
         color: "warning",
         icon: <ScheduleIcon fontSize="small" />,
-        label: "In Progress",
+        label: t("deployments.statuses.in_progress"),
       },
       pending: {
         color: "default",
         icon: <ScheduleIcon fontSize="small" />,
-        label: "Pending",
+        label: t("deployments.statuses.pending"),
       },
       queued: {
         color: "default",
         icon: <ScheduleIcon fontSize="small" />,
-        label: "Queued",
+        label: t("deployments.statuses.queued"),
       },
     };
 
@@ -151,7 +151,7 @@ export const DeploymentsPage: React.FC = () => {
         {/* Filters */}
         <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
           <TextField
-            placeholder="Search by project or branch..."
+            placeholder={t("deployments.searchPlaceholder")}
             size="small"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -159,17 +159,17 @@ export const DeploymentsPage: React.FC = () => {
           />
 
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Status</InputLabel>
+            <InputLabel>{t("deployments.statusLabel")}</InputLabel>
             <Select
               value={statusFilter}
               label="Status"
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <MenuItem value="all">All Statuses</MenuItem>
-              <MenuItem value="success">Success</MenuItem>
-              <MenuItem value="failed">Failed</MenuItem>
-              <MenuItem value="inProgress">In Progress</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="all">{t("deployments.allStatuses")}</MenuItem>
+            <MenuItem value="success">{t("deployments.success")}</MenuItem>
+            <MenuItem value="failed">{t("deployments.failed")}</MenuItem>
+            <MenuItem value="inProgress">{t("deployments.inProgress")}</MenuItem>
+            <MenuItem value="pending">{t("deployments.pending")}</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -188,12 +188,12 @@ export const DeploymentsPage: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             {deployments.length === 0
               ? t("deployments.noDeployments")
-              : "No deployments match your filters"}
+              : t("deployments.noDeploymentsMatch")}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {deployments.length === 0
-              ? "Deploy a project to see it here"
-              : "Try adjusting your search or filters"}
+              ? t("deployments.deployToSee")
+              : t("deployments.adjustFilters")}
           </Typography>
         </Card>
       )}
@@ -209,12 +209,12 @@ export const DeploymentsPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05) }}>
-                <TableCell sx={{ fontWeight: 600 }}>Project</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Commit</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Timestamp</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{t("deployments.project")}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{t("deployments.branch")}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{t("common.status")}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{t("deployments.commit")}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{t("deployments.timestamp")}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{t("common.actions")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -261,7 +261,7 @@ export const DeploymentsPage: React.FC = () => {
                       startIcon={<ViewIcon />}
                       onClick={() => navigate(`/deployments/${deployment.Id}`)}
                     >
-                      View Logs
+                      {t("deployments.viewLogs")}
                     </Button>
                   </TableCell>
                 </TableRow>

@@ -94,7 +94,7 @@ export const SettingsPage: React.FC = () => {
           {t("settings.title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Manage your account settings and preferences
+          {t("settings.subtitle")}
         </Typography>
       </Box>
 
@@ -114,31 +114,31 @@ export const SettingsPage: React.FC = () => {
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable">
             <Tab
-              label="Profile"
+              label={t("settings.profile")}
               icon={<PersonIcon />}
               iconPosition="start"
               sx={{ minHeight: 64 }}
             />
             <Tab
-              label="Preferences"
+              label={t("settings.preferences")}
               icon={<PaletteIcon />}
               iconPosition="start"
               sx={{ minHeight: 64 }}
             />
             <Tab
-              label="Notifications"
+              label={t("settings.notifications")}
               icon={<NotificationsIcon />}
               iconPosition="start"
               sx={{ minHeight: 64 }}
             />
             <Tab
-              label="Security"
+              label={t("settings.security")}
               icon={<SecurityIcon />}
               iconPosition="start"
               sx={{ minHeight: 64 }}
             />
             <Tab
-              label="Account"
+              label={t("settings.account")}
               icon={<AccountIcon />}
               iconPosition="start"
               sx={{ minHeight: 64 }}
@@ -150,7 +150,7 @@ export const SettingsPage: React.FC = () => {
           {/* Profile Tab */}
           <TabPanel value={tabValue} index={0}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Profile Information
+              {t("settings.profileInformation")}
             </Typography>
             <Divider sx={{ mb: 3 }} />
 
@@ -158,7 +158,7 @@ export const SettingsPage: React.FC = () => {
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
-                  label="Username"
+                  label={t("settings.username")}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -166,7 +166,7 @@ export const SettingsPage: React.FC = () => {
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
-                  label="Email"
+                  label={t("settings.email")}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -174,7 +174,7 @@ export const SettingsPage: React.FC = () => {
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Button variant="contained" onClick={handleSaveProfile}>
-                  Save Changes
+                  {t("settings.saveChanges")}
                 </Button>
               </Grid>
             </Grid>

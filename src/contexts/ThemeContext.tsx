@@ -41,7 +41,11 @@ export const ThemeContextProvider: React.FC<IThemeProviderProps> = ({
     const stored = localStorage.getItem(THEME_COLOR_KEY);
     return (stored as TThemeColor) || 'blue';
   });
-
+  console.log({
+    Mode,
+    Color,
+    language
+  })
   // Create MUI theme based on current settings
   const MuiTheme: Theme = useMemo(() => {
     return CreateTheme(Mode, Color, language);

@@ -123,6 +123,48 @@ export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue',
           input: {
             ...(locale === 'ar' && {
               textAlign: 'right',
+              direction: 'rtl',
+            }),
+          },
+          inputAdornedStart: {
+            ...(locale === 'ar' && {
+              paddingRight: '14px',
+            }),
+          },
+          inputAdornedEnd: {
+            ...(locale === 'ar' && {
+              paddingLeft: '14px',
+            }),
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          input: {
+            ...(locale === 'ar' && {
+              textAlign: 'right',
+              paddingLeft: '14px',
+              paddingRight: '14px',
+            }),
+          },
+        },
+      },
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            ...(locale === 'ar' && {
+              '& .MuiInputBase-root': {
+                textAlign: 'right',
+              },
+              '& .MuiInputLabel-root': {
+                right: 20,
+                left: 'auto',
+                transformOrigin: 'top right',
+              },
+              '& .MuiInputLabel-shrink': {
+                transform: locale === 'ar' ? 'translate(0, -9px) scale(0.75)' : undefined,
+                transformOrigin: locale === 'ar' ? 'top right' : 'top left',
+              },
             }),
           },
         },
