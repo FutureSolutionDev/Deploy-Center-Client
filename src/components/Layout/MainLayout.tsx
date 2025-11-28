@@ -154,14 +154,16 @@ export const MainLayout: React.FC = () => {
     </Box>
   );
 
+  const isRTL = Language === 'ar';
+
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", direction: isRTL ? 'rtl' : 'ltr' }}>
       {/* AppBar */}
       <AppBar
         position="fixed"
         sx={{
           width: { md: `calc(100dvw - ${DRAWER_WIDTH}px)` },
-          ml: { md: `${DRAWER_WIDTH}px` },
+          [isRTL ? 'mr' : 'ml']: { md: `${DRAWER_WIDTH}px` },
         }}
       >
         <Toolbar>
@@ -170,7 +172,7 @@ export const MainLayout: React.FC = () => {
             aria-label="open drawer"
             edge="start"
             onClick={HandleDrawerToggle}
-            sx={{ mr: 2, display: { md: "none" } }}
+            sx={{ [isRTL ? 'ml' : 'mr']: 2, display: { md: "none" } }}
           >
             <MenuIcon />
           </IconButton>
@@ -226,6 +228,7 @@ export const MainLayout: React.FC = () => {
         {/* Mobile drawer */}
         <Drawer
           variant="temporary"
+          anchor={isRTL ? "right" : "left"}
           open={MobileOpen}
           onClose={HandleDrawerToggle}
           ModalProps={{
@@ -245,6 +248,7 @@ export const MainLayout: React.FC = () => {
         {/* Desktop drawer */}
         <Drawer
           variant="permanent"
+          anchor={isRTL ? "right" : "left"}
           sx={{
             display: { xs: "none", md: "block" },
             "& .MuiDrawer-paper": {

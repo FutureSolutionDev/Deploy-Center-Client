@@ -218,6 +218,34 @@ export interface IProjectStatistics {
   SuccessRate: number;
 }
 
+// Deployment Statistics
+export interface IDeploymentStatistics {
+  Total: number;
+  Success: number;
+  Failed: number;
+  Pending: number;
+  InProgress: number;
+  Cancelled: number;
+  SuccessRate: number;
+  AverageDuration: number;
+  TotalDuration: number;
+  DeploymentsToday: number;
+  DeploymentsThisWeek: number;
+  DeploymentsThisMonth: number;
+}
+
+// Queue Status
+export interface IQueueStatus {
+  TotalQueued: number;
+  QueuedByProject: Array<{
+    ProjectId: number;
+    ProjectName: string;
+    QueuedCount: number;
+  }>;
+  CurrentlyRunning: number;
+  EstimatedWaitTime: number;
+}
+
 export interface IDeploymentByDay {
   Date: string;
   Total: number;

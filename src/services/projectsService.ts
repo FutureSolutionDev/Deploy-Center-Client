@@ -30,7 +30,7 @@ export const ProjectsService = {
   },
 
   deploy: async (id: number, data?: IDeploymentRequest): Promise<IDeployment> => {
-    const response = await ApiInstance.post(`/projects/${id}/deploy`, data || {});
+    const response = await ApiInstance.post(`/deployments/projects/${id}/deploy`, data || {});
     return response.data.Data?.Deployment;
   },
 

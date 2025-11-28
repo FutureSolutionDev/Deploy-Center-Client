@@ -186,12 +186,12 @@ export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue',
         },
       },
       MuiDrawer: {
+        defaultProps: {
+          anchor: locale === 'ar' ? 'right' : 'left',
+        },
         styleOverrides: {
           paper: {
-            ...(locale === 'ar' && {
-              right: 0,
-              left: 'auto',
-            }),
+            // RTL handled by anchor prop
           },
         },
       },
@@ -199,6 +199,48 @@ export const CreateTheme = (mode: 'light' | 'dark', color: TThemeColor = 'blue',
         styleOverrides: {
           root: {
             direction: locale === 'ar' ? 'rtl' : 'ltr',
+          },
+        },
+      },
+      MuiListItemIcon: {
+        styleOverrides: {
+          root: {
+            ...(locale === 'ar' && {
+              marginRight: 0,
+              marginLeft: 16,
+            }),
+          },
+        },
+      },
+      MuiListItemText: {
+        styleOverrides: {
+          root: {
+            textAlign: locale === 'ar' ? 'right' : 'left',
+          },
+        },
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            ...(locale === 'ar' && {
+              textAlign: 'right',
+            }),
+          },
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            ...(locale === 'ar' && {
+              '&.MuiIconButton-edgeStart': {
+                marginLeft: -12,
+                marginRight: 8,
+              },
+              '&.MuiIconButton-edgeEnd': {
+                marginLeft: 8,
+                marginRight: -12,
+              },
+            }),
           },
         },
       },

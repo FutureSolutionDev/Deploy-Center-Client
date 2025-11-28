@@ -5,8 +5,10 @@
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode, useMemo } from 'react';
 import { ThemeProvider as MuiThemeProvider, type Theme } from '@mui/material/styles';
+import { CacheProvider } from '@emotion/react';
 import { CreateTheme, type TThemeColor, ThemeColors } from '@/theme';
 import type { TThemeMode } from '@/types';
+import { cacheRtl, cacheLtr } from '@/utils/rtlCache';
 
 interface IThemeContextValue {
   Mode: TThemeMode;
@@ -41,11 +43,6 @@ export const ThemeContextProvider: React.FC<IThemeProviderProps> = ({
     const stored = localStorage.getItem(THEME_COLOR_KEY);
     return (stored as TThemeColor) || 'blue';
   });
-  console.log({
-    Mode,
-    Color,
-    language
-  })
   // Create MUI theme based on current settings
   const MuiTheme: Theme = useMemo(() => {
     return CreateTheme(Mode, Color, language);
@@ -84,7 +81,9 @@ export const ThemeContextProvider: React.FC<IThemeProviderProps> = ({
 
   return (
     <ThemeContext.Provider value={value}>
-      <MuiThemeProvider theme={MuiTheme}>{children}</MuiThemeProvider>
+      <CacheProvider value={language === 'ar' ? cacheRtl : cacheLtr}>
+        <MuiThemeProvider theme={MuiTheme}>{children}</MuiThemeProvider>
+      </CacheProvider>
     </ThemeContext.Provider>
   );
 };
