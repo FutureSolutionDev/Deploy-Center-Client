@@ -30,12 +30,13 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DeploymentsService, type IDeployment } from "@/services/deploymentsService";
+import { DeploymentsService } from "@/services/deploymentsService";
+import type { IDeployment } from "@/types";
 
 export const DeploymentsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  
+
   const [deployments, setDeployments] = useState<IDeployment[]>([]);
   const [filteredDeployments, setFilteredDeployments] = useState<IDeployment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,15 +65,16 @@ export const DeploymentsPage: React.FC = () => {
 
     // Filter by status
     if (statusFilter !== "all") {
-      filtered = filtered.filter((d) => d.status === statusFilter);
+      filtered = filtered.filter((d) => d.Status === statusFilter);
     }
 
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
+
         (d) =>
-          d.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.branch.toLowerCase().includes(searchQuery.toLowerCase())
+          (d.ProjectName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          d.Branch.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -82,7 +84,7 @@ export const DeploymentsPage: React.FC = () => {
   const getStatusChip = (status: string) => {
     const statusConfig: Record<
       string,
-      { color: any; icon: React.ReactNode; label: string }
+      { color: string; icon: React.ReactElement; label: string }
     > = {
       success: {
         color: "success",
@@ -94,7 +96,7 @@ export const DeploymentsPage: React.FC = () => {
         icon: <ErrorIcon fontSize="small" />,
         label: "Failed",
       },
-      in_progress: {
+      inProgress: {
         color: "warning",
         icon: <ScheduleIcon fontSize="small" />,
         label: "In Progress",
@@ -118,7 +120,7 @@ export const DeploymentsPage: React.FC = () => {
         label={config.label}
         color={config.color}
         size="small"
-        icon={config.icon}
+        icon={config.icon || undefined}
       />
     );
   };
@@ -136,7 +138,7 @@ export const DeploymentsPage: React.FC = () => {
               View and manage all deployments
             </Typography>
           </Box>
-          
+
           <Button
             startIcon={<RefreshIcon />}
             onClick={fetchDeployments}
@@ -155,7 +157,7 @@ export const DeploymentsPage: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             sx={{ flexGrow: 1, maxWidth: 400 }}
           />
-          
+
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Status</InputLabel>
             <Select
@@ -166,7 +168,7 @@ export const DeploymentsPage: React.FC = () => {
               <MenuItem value="all">All Statuses</MenuItem>
               <MenuItem value="success">Success</MenuItem>
               <MenuItem value="failed">Failed</MenuItem>
-              <MenuItem value="in_progress">In Progress</MenuItem>
+              <MenuItem value="inProgress">In Progress</MenuItem>
               <MenuItem value="pending">Pending</MenuItem>
             </Select>
           </FormControl>
@@ -174,11 +176,13 @@ export const DeploymentsPage: React.FC = () => {
       </Box>
 
       {/* Deployments Table */}
-      {loading ? (
+      {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />
         </Box>
-      ) : filteredDeployments.length === 0 ? (
+      )}
+
+      {!loading && filteredDeployments.length === 0 && (
         <Card sx={{ textAlign: "center", py: 8 }}>
           <DeployIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
           <Typography variant="h6" gutterBottom>
@@ -192,7 +196,9 @@ export const DeploymentsPage: React.FC = () => {
               : "Try adjusting your search or filters"}
           </Typography>
         </Card>
-      ) : (
+      )}
+
+      {!loading && filteredDeployments.length > 0 && (
         <TableContainer
           component={Paper}
           sx={{
@@ -214,7 +220,7 @@ export const DeploymentsPage: React.FC = () => {
             <TableBody>
               {filteredDeployments.map((deployment) => (
                 <TableRow
-                  key={deployment.id}
+                  key={deployment.Id}
                   sx={{
                     "&:hover": {
                       bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
@@ -223,13 +229,13 @@ export const DeploymentsPage: React.FC = () => {
                 >
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {deployment.projectName}
+                      {deployment.ProjectName}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip label={deployment.branch} size="small" variant="outlined" />
+                    <Chip label={deployment.Branch} size="small" variant="outlined" />
                   </TableCell>
-                  <TableCell>{getStatusChip(deployment.status)}</TableCell>
+                  <TableCell>{getStatusChip(deployment.Status)}</TableCell>
                   <TableCell>
                     <Typography
                       variant="caption"
@@ -241,19 +247,19 @@ export const DeploymentsPage: React.FC = () => {
                         borderRadius: 0.5,
                       }}
                     >
-                      {deployment.commit?.substring(0, 7) || "N/A"}
+                      {deployment.Commit?.substring(0, 7) || "N/A"}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {deployment.timestamp}
+                      {new Date(deployment.CreatedAt).toLocaleString()}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Button
                       size="small"
                       startIcon={<ViewIcon />}
-                      onClick={() => navigate(`/deployments/${deployment.id}`)}
+                      onClick={() => navigate(`/deployments/${deployment.Id}`)}
                     >
                       View Logs
                     </Button>

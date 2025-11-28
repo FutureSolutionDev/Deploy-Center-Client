@@ -10,14 +10,14 @@ import {
     Container,
     Alert,
 } from '@mui/material';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { IProject, IProjectConfig } from '@/types';
+
+import type { IProject, IProjectConfig } from '@/types';
 import { Step1BasicInfo } from './Step1BasicInfo';
 import { Step2Configuration } from './Step2Configuration';
 import { Step3Pipeline } from './Step3Pipeline';
 import { Step4Notifications } from './Step4Notifications';
 
-interface ProjectWizardProps {
+interface IProjectWizardProps {
     initialData?: Partial<IProject>;
     onClose: () => void;
     onSubmit: (data: Partial<IProject>) => Promise<void>;
@@ -25,12 +25,12 @@ interface ProjectWizardProps {
 
 const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Notifications'];
 
-export const ProjectWizard: React.FC<ProjectWizardProps> = ({
+export const ProjectWizard: React.FC<IProjectWizardProps> = ({
     initialData,
     onClose,
     onSubmit,
 }) => {
-    const { t } = useLanguage();
+
     const [activeStep, setActiveStep] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -70,8 +70,8 @@ export const ProjectWizard: React.FC<ProjectWizardProps> = ({
         try {
             await onSubmit(formData);
             onClose();
-        } catch (err: any) {
-            setError(err.message || 'Failed to save project');
+        } catch (err: unknown) {
+            setError((err as any).message || 'Failed to save project');
         } finally {
             setLoading(false);
         }

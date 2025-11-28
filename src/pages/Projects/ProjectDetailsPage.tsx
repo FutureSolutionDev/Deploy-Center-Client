@@ -17,7 +17,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  alpha,
   Table,
   TableBody,
   TableCell,
@@ -29,7 +28,6 @@ import {
 } from "@mui/material";
 import {
   ArrowBack as BackIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Rocket as DeployIcon,
   GitHub as GitHubIcon,
@@ -43,7 +41,6 @@ import {
   Autorenew as RegenerateIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { ProjectsService } from "@/services/projectsService";
 import { DeploymentsService } from "@/services/deploymentsService";
 import type { IProject, IDeployment, IProjectStatistics } from "@/types";
@@ -55,13 +52,12 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+
 
   const [project, setProject] = useState<IProject | null>(null);
   const [deployments, setDeployments] = useState<IDeployment[]>([]);
@@ -87,7 +83,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
       setProject(projectData);
       setDeployments(
-        deploymentsData.filter((d) => d.projectId === Number(id) || d.projectName === projectData.name)
+        deploymentsData.filter((d) => d.ProjectId === Number(id) || d.ProjectName === projectData.Name)
       );
       setStats(statsData);
     } catch (error: any) {
@@ -106,7 +102,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
     try {
       setDeploying(true);
-      await ProjectsService.deploy(project.id);
+      await ProjectsService.deploy(project.Id);
       setSuccess("Deployment started successfully!");
       setTimeout(() => {
         fetchProjectDetails();
@@ -123,7 +119,7 @@ export const ProjectDetailsPage: React.FC = () => {
     if (!project) return;
 
     try {
-      await ProjectsService.delete(project.id);
+      await ProjectsService.delete(project.Id);
       navigate("/projects");
     } catch (error: any) {
       setError(error?.message || "Failed to delete project");
@@ -137,7 +133,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
     try {
       setRegeneratingWebhook(true);
-      const newSecret = await ProjectsService.regenerateWebhook(project.id);
+      const newSecret = await ProjectsService.regenerateWebhook(project.Id);
       setProject({ ...project, WebhookSecret: newSecret });
       setSuccess("Webhook secret regenerated!");
       setTimeout(() => setSuccess(null), 3000);
@@ -155,7 +151,7 @@ export const ProjectDetailsPage: React.FC = () => {
   };
 
   const getStatusChip = (status: string) => {
-    const statusConfig: Record<string, { color: any; icon: React.ReactNode }> = {
+    const statusConfig: Record<string, { color: any; icon: React.ReactElement }> = {
       success: { color: "success", icon: <SuccessIcon fontSize="small" /> },
       failed: { color: "error", icon: <ErrorIcon fontSize="small" /> },
       in_progress: { color: "warning", icon: <ScheduleIcon fontSize="small" /> },
@@ -169,7 +165,7 @@ export const ProjectDetailsPage: React.FC = () => {
         label={status}
         color={config.color}
         size="small"
-        icon={config.icon}
+        icon={config.icon || undefined}
       />
     );
   };
@@ -451,7 +447,7 @@ export const ProjectDetailsPage: React.FC = () => {
                     <TableBody>
                       {deployments.slice(0, 5).map((deployment) => (
                         <TableRow
-                          key={deployment.id}
+                          key={deployment.Id}
                           sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                         >
                           <TableCell>{getStatusChip(deployment.Status)}</TableCell>

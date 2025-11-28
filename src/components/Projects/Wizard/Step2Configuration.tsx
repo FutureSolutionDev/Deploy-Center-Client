@@ -8,14 +8,14 @@ import {
     Chip,
     Autocomplete,
 } from '@mui/material';
-import { IProjectConfig } from '@/types';
+import type { IProjectConfig } from '@/types';
 
-interface Step2Props {
+interface IStep2Props {
     config: IProjectConfig;
     onChange: (config: Partial<IProjectConfig>) => void;
-}
+}   
 
-export const Step2Configuration: React.FC<Step2Props> = ({ config, onChange }) => {
+export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Typography variant="h6" gutterBottom>

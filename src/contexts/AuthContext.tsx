@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         // Try to fetch profile - if cookie exists and valid, this will succeed
         const profile = await AuthService.GetProfile();
         setUser(profile);
-      } catch (error) {
+      } catch (_error: unknown) {
         // No valid cookie or session - user is not authenticated
         setUser(null);
       } finally {

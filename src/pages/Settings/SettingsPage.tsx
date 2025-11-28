@@ -30,13 +30,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
-interface TabPanelProps {
+interface ITabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
+const TabPanel: React.FC<ITabPanelProps> = ({ children, value, index }) => {
   return (
     <div hidden={value !== index}>
       {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
@@ -232,15 +232,15 @@ export const SettingsPage: React.FC = () => {
                     <Box
                       key={color}
                       onClick={() => {
-                        SetColor(color as any);
+                        SetColor(color as string);
                         setSuccess("Color theme updated successfully!");
                         setTimeout(() => setSuccess(null), 2000);
                       }}
                       sx={{
-                        width: 60,
-                        height: 60,
+                        width: 30,
+                        height: 30,
                         borderRadius: 2,
-                        bgcolor: `${color}.main`,
+                        bgcolor: `${color}`,
                         cursor: "pointer",
                         border: 3,
                         borderColor:

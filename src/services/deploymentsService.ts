@@ -1,17 +1,5 @@
 import ApiInstance from './api';
-
-export interface IDeployment {
-  id: number;
-  projectId: number;
-  projectName: string;
-  branch: string;
-  commit?: string;
-  commitHash: string;
-  status: 'pending' | 'in_progress' | 'success' | 'failed';
-  triggerType: 'webhook' | 'manual';
-  timestamp: string;
-  duration?: string;
-}
+import type { IDeployment } from '@/types';
 
 export const DeploymentsService = {
   getAll: async (): Promise<IDeployment[]> => {

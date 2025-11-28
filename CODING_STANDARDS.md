@@ -9,6 +9,7 @@ This document outlines the coding standards and conventions used in both Server 
 All properties, variables, functions, and interfaces follow **PascalCase** naming convention:
 
 #### ✅ Correct Examples
+
 ```typescript
 // Interfaces
 export interface IApiResponse<T> {
@@ -51,6 +52,7 @@ interface IButtonProps {
 ```
 
 #### ❌ Incorrect Examples
+
 ```typescript
 // DO NOT USE camelCase
 interface IApiResponse<T> {

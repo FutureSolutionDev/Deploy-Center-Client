@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Alert,
   IconButton,
-  Divider,
   alpha,
 } from "@mui/material";
 import {
@@ -23,17 +22,16 @@ import {
   Replay as RetryIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { DeploymentsService, type IDeployment } from "@/services/deploymentsService";
+import { DeploymentsService } from "@/services/deploymentsService";
+import type { IDeployment } from "@/types";
 
 export const DeploymentLogsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const [deployment, setDeployment] = useState<IDeployment | null>(null);
-  const [logs, setLogs] = useState<string[]>([
+  const [logs] = useState<string[]>([
     "[INFO] Starting deployment...",
     "[INFO] Fetching latest code from repository...",
     "[INFO] Installing dependencies...",
@@ -44,7 +42,7 @@ export const DeploymentLogsPage: React.FC = () => {
   ]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll] = useState(true);
 
   const fetchDeployment = async () => {
     if (!id) return;
@@ -53,7 +51,7 @@ export const DeploymentLogsPage: React.FC = () => {
     try {
       const deployment = await DeploymentsService.getById(Number(id));
       setDeployment(deployment);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(error?.message || "Failed to load deployment");
     } finally {
       setLoading(false);
@@ -71,16 +69,16 @@ export const DeploymentLogsPage: React.FC = () => {
   }, [logs, autoScroll]);
 
   const getStatusChip = (status: string) => {
-    const statusConfig: Record<string, { color: any; icon: React.ReactNode; label: string }> = {
+    const statusConfig: Record<string, { color: string; icon: React.ReactElement; label: string }> = {
       success: { color: "success", icon: <SuccessIcon fontSize="small" />, label: "Success" },
       failed: { color: "error", icon: <ErrorIcon fontSize="small" />, label: "Failed" },
-      in_progress: { color: "warning", icon: <ScheduleIcon fontSize="small" />, label: "In Progress" },
+      inProgress: { color: "warning", icon: <ScheduleIcon fontSize="small" />, label: "In Progress" },
       pending: { color: "default", icon: <ScheduleIcon fontSize="small" />, label: "Pending" },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
 
-    return <Chip label={config.label} color={config.color} size="small" icon={config.icon} />;
+    return <Chip label={config.label} color={config.color} size="small" icon={config.icon || undefined} />;
   };
 
   const getLogColor = (log: string) => {
@@ -141,7 +139,7 @@ export const DeploymentLogsPage: React.FC = () => {
               Deployment Logs
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {deployment.projectName} • {deployment.branch}
+              {deployment.ProjectName} • {deployment.Branch}
             </Typography>
           </Box>
 
@@ -156,7 +154,7 @@ export const DeploymentLogsPage: React.FC = () => {
             >
               Download Logs
             </Button>
-            {deployment.status === "failed" && (
+            {deployment.Status === "failed" && (
               <Button
                 variant="contained"
                 startIcon={<RetryIcon />}
@@ -179,7 +177,7 @@ export const DeploymentLogsPage: React.FC = () => {
               <Typography variant="caption" color="text.secondary">
                 Status
               </Typography>
-              <Box sx={{ mt: 0.5 }}>{getStatusChip(deployment.status)}</Box>
+              <Box sx={{ mt: 0.5 }}>{getStatusChip(deployment.Status)}</Box>
             </Box>
 
             <Box>
@@ -187,11 +185,11 @@ export const DeploymentLogsPage: React.FC = () => {
                 Branch
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
-                {deployment.branch}
+                {deployment.Branch}
               </Typography>
             </Box>
 
-            {deployment.commit && (
+            {deployment.Commit && (
               <Box>
                 <Typography variant="caption" color="text.secondary">
                   Commit
@@ -207,7 +205,7 @@ export const DeploymentLogsPage: React.FC = () => {
                     borderRadius: 0.5,
                   }}
                 >
-                  {deployment.commit.substring(0, 7)}
+                  {deployment.Commit.substring(0, 7)}
                 </Typography>
               </Box>
             )}
@@ -217,7 +215,7 @@ export const DeploymentLogsPage: React.FC = () => {
                 Started At
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {deployment.timestamp}
+                {new Date(deployment.CreatedAt).toLocaleString()}
               </Typography>
             </Box>
           </Box>
@@ -308,7 +306,7 @@ export const DeploymentLogsPage: React.FC = () => {
         </Box>
 
         {/* Live indicator for in-progress deployments */}
-        {deployment.status === "in_progress" && (
+        {deployment.Status === "inProgress" && (
           <Box
             sx={{
               position: "absolute",

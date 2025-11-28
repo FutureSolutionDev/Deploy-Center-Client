@@ -58,6 +58,7 @@ export type TProjectType = typeof EProjectType[keyof typeof EProjectType];
 export interface IProject {
   Id: number;
   Name: string;
+  Description?: string;
   RepoUrl: string;
   Branch: string;
   ProjectPath: string;
@@ -135,7 +136,7 @@ export interface IHealthCheckConfig {
 export const EDeploymentStatus = {
   Queued: 'queued',
   Pending: 'pending',
-  InProgress: 'in_progress',
+  InProgress: 'inProgress',
   Success: 'success',
   Failed: 'failed',
   Cancelled: 'cancelled',
@@ -152,9 +153,19 @@ export const ETriggerType = {
 
 export type TTriggerType = typeof ETriggerType[keyof typeof ETriggerType];
 
+// Deployment Request (for manual deployments)
+export interface IDeploymentRequest {
+  ProjectId: number;
+  Branch?: string;
+  CommitHash?: string;
+  CommitMessage?: string;
+}
+
+
 export interface IDeployment {
   Id: number;
   ProjectId: number;
+  ProjectName?: string;
   Project?: IProject;
   Status: TDeploymentStatus;
   TriggerType: TTriggerType;

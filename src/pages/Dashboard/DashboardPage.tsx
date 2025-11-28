@@ -17,7 +17,8 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectsService } from '@/services/projectsService';
-import { DeploymentsService, type IDeployment } from '@/services/deploymentsService';
+import { DeploymentsService } from '@/services/deploymentsService';
+import type { IDeployment } from '@/types';
 
 interface IStatCard {
   Title: string;
@@ -45,8 +46,8 @@ export const DashboardPage: React.FC = () => {
 
         const totalProjects = projects.length;
         const totalDeployments = deployments.length;
-        const successDeployments = deployments.filter(d => d.status === 'success').length;
-        const failedDeployments = deployments.filter(d => d.status === 'failed').length;
+        const successDeployments = deployments.filter(d => d.Status === 'success').length;
+        const failedDeployments = deployments.filter(d => d.Status === 'failed').length;
 
         setStats([
           {
@@ -168,7 +169,7 @@ export const DashboardPage: React.FC = () => {
         <Box sx={{ mt: 2 }}>
           {recentDeployments.map((deployment) => (
             <Box
-              key={deployment.id}
+              key={deployment.Id}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -181,15 +182,15 @@ export const DashboardPage: React.FC = () => {
             >
               <Box>
                 <Typography variant="body1" fontWeight="medium">
-                  {deployment.projectName}
+                  {deployment.ProjectName}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {deployment.branch} • {deployment.timestamp}
+                  {deployment.Branch} • {new Date(deployment.CreatedAt).toLocaleString()}
                 </Typography>
               </Box>
               <Chip
-                label={deployment.status}
-                color={GetStatusColor(deployment.status)}
+                label={deployment.Status}
+                color={GetStatusColor(deployment.Status)}
                 size="small"
               />
             </Box>

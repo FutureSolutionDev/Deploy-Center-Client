@@ -33,8 +33,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProjectsService } from "@/services/projectsService";
-import type { IProject } from "@/types";
+import type { IProject, IDeploymentRequest } from "@/types";
 import { ProjectWizard } from "@/components/Projects/Wizard/ProjectWizard";
+import { DeploymentModal } from "@/components/Projects/DeploymentModal";
 
 export const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -49,6 +50,8 @@ export const ProjectsPage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deployDialogOpen, setDeployDialogOpen] = useState(false);
+  const [deployingProject, setDeployingProject] = useState<IProject | null>(null);
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -133,14 +136,23 @@ export const ProjectsPage: React.FC = () => {
     }
   };
 
-  const handleDeploy = async (project: IProject) => {
+  const handleOpenDeploy = (project: IProject) => {
+    setDeployingProject(project);
+    setDeployDialogOpen(true);
+  };
+
+  const handleDeploy = async (data: IDeploymentRequest) => {
     try {
-      await ProjectsService.deploy(project.Id);
-      setSuccess(`Deployment started for ${project.Name}`);
+      await ProjectsService.deploy(data.ProjectId, data);
+      setSuccess(`Deployment started successfully`);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (error: any) {
-      setError(error?.message || "Failed to trigger deployment");
-      setTimeout(() => setError(null), 3000);
+      setDeployDialogOpen(false);
+    } catch (error: unknown) {
+      const errorMessage =
+        error && typeof error === 'object' && 'message' in error
+          ? String(error.message)
+          : 'Failed to trigger deployment';
+      throw new Error(errorMessage);
     }
   };
 

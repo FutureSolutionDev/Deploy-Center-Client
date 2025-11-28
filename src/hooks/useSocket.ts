@@ -6,16 +6,15 @@
 import { useEffect } from 'react';
 import SocketService, { type TSocketEvent } from '@/services/socketService';
 
-export const useSocket = (event: TSocketEvent, callback: (data: any) => void, deps: any[] = []) => {
+export const useSocket = (event: TSocketEvent, callback: (data: unknown) => void, _deps: unknown[] = []) => {
   useEffect(() => {
     // Subscribe to event
     const unsubscribe = SocketService.on(event, callback);
-
     // Cleanup on unmount
     return () => {
       unsubscribe();
     };
-  }, [event, ...deps]);
+  }, [callback, event]);
 };
 
 export const useSocketConnection = () => {

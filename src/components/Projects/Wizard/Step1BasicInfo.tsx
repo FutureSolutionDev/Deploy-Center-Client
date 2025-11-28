@@ -8,14 +8,15 @@ import {
     MenuItem,
     Typography,
 } from '@mui/material';
-import { IProject, EProjectType } from '@/types';
+import { EProjectType } from '@/types';
+import type { IProject } from '@/types';
 
-interface Step1Props {
+interface IStep1Props {
     data: Partial<IProject>;
     onChange: (data: Partial<IProject>) => void;
 }
 
-export const Step1BasicInfo: React.FC<Step1Props> = ({ data, onChange }) => {
+export const Step1BasicInfo: React.FC<IStep1Props> = ({ data, onChange }) => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -54,7 +55,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({ data, onChange }) => {
                 <Select
                     value={data.ProjectType}
                     label="Project Type"
-                    onChange={(e) => onChange({ ProjectType: e.target.value as any })}
+                    onChange={(e) => onChange({ ProjectType: e.target.value as string })}
                 >
                     <MenuItem value={EProjectType.NodeJS}>Node.js</MenuItem>
                     <MenuItem value={EProjectType.React}>React</MenuItem>

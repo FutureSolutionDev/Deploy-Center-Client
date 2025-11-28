@@ -244,9 +244,9 @@ export const ReportsPage: React.FC = () => {
                                         height: 200,
                                         borderRadius: "50%",
                                         background: `conic-gradient(
-                      ${(theme: any) => theme.palette.success.main} 0% 70%, 
-                      ${(theme: any) => theme.palette.error.main} 70% 85%, 
-                      ${(theme: any) => theme.palette.warning.main} 85% 100%
+                                        ${(theme: any) => theme.palette.success.main} 0% 70%, 
+                                        ${(theme: any) => theme.palette.error.main} 70% 85%, 
+                                        ${(theme: any) => theme.palette.warning.main} 85% 100%
                     )`,
                                     }}
                                 />

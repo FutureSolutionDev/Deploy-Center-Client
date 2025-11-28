@@ -29,6 +29,7 @@ import {
   Dashboard as DashboardIcon,
   FolderCopy as ProjectsIcon,
   Rocket as DeploymentsIcon,
+  ReceiptLong as ReportsIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   AccountCircle,
@@ -67,6 +68,12 @@ const MenuItems: IMenuItem[] = [
     TitleAr: "النشر",
     Path: "/deployments",
     Icon: <DeploymentsIcon />,
+  },
+  {
+    Title: "Reports",
+    TitleAr: "التقارير",
+    Path: "/reports",
+    Icon: <ReportsIcon />,
   },
   {
     Title: "Settings",

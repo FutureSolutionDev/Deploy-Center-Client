@@ -28,12 +28,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { IRegisterData } from "@/types";
 
+interface IRegisterFormData extends IRegisterData {
+  ConfirmPassword: string;
+}
+
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { Register } = useAuth();
   const { t } = useLanguage();
 
-  const [FormData, setFormData] = useState<IRegisterData>({
+  const [FormData, setFormData] = useState<IRegisterFormData>({
     Username: "",
     Email: "",
     Password: "",
@@ -47,14 +51,14 @@ export const RegisterPage: React.FC = () => {
   const [Success, setSuccess] = useState(false);
 
   const HandleChange =
-    (field: keyof IRegisterData) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: event.target.value,
-      }));
-      setError(null);
-    };
+    (field: keyof IRegisterFormData) =>
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData((prev) => ({
+          ...prev,
+          [field]: event.target.value,
+        }));
+        setError(null);
+      };
 
   const GetPasswordStrength = (password: string): number => {
     let strength = 0;
@@ -271,7 +275,7 @@ export const RegisterPage: React.FC = () => {
               }
               helperText={
                 FormData.ConfirmPassword !== "" &&
-                FormData.Password !== FormData.ConfirmPassword
+                  FormData.Password !== FormData.ConfirmPassword
                   ? "Passwords do not match"
                   : ""
               }

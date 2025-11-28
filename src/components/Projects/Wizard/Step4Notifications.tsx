@@ -11,23 +11,23 @@ import {
     Grid,
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
-import { INotificationConfig } from '@/types';
+import type { INotificationConfig } from '@/types';
 
-interface Step4Props {
+interface IStep4Props {
     notifications: INotificationConfig;
     onChange: (notifications: INotificationConfig) => void;
 }
 
-export const Step4Notifications: React.FC<Step4Props> = ({ notifications, onChange }) => {
-    const updateChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email', data: any) => {
+export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onChange }) => {
+    const updateChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email', data: string) => {
         onChange({
             ...notifications,
-            [channel]: { ...(notifications[channel as keyof INotificationConfig] as any), ...data },
+            [channel]: { ...(notifications[channel as keyof INotificationConfig] as string), ...data },
         });
     };
 
     const toggleChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email') => {
-        const current = notifications[channel as keyof INotificationConfig] as any;
+        const current = notifications[channel as keyof INotificationConfig] as string;
         updateChannel(channel, { Enabled: !current?.Enabled });
     };
 

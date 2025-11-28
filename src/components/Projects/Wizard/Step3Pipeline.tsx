@@ -10,14 +10,14 @@ import {
     Grid,
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, ArrowUpward, ArrowDownward } from '@mui/icons-material';
-import { IPipelineStep } from '@/types';
+import type { IPipelineStep } from '@/types';
 
-interface Step3Props {
+interface IStep3Props {
     pipeline: IPipelineStep[];
     onChange: (pipeline: IPipelineStep[]) => void;
 }
 
-export const Step3Pipeline: React.FC<Step3Props> = ({ pipeline, onChange }) => {
+export const Step3Pipeline: React.FC<IStep3Props> = ({ pipeline, onChange }) => {
     const addStep = () => {
         onChange([
             ...pipeline,
@@ -31,7 +31,7 @@ export const Step3Pipeline: React.FC<Step3Props> = ({ pipeline, onChange }) => {
         onChange(newPipeline);
     };
 
-    const updateStep = (index: number, field: keyof IPipelineStep, value: any) => {
+    const updateStep = (index: number, field: keyof IPipelineStep, value: unknown) => {
         const newPipeline = [...pipeline];
         newPipeline[index] = { ...newPipeline[index], [field]: value };
         onChange(newPipeline);

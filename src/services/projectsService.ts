@@ -1,5 +1,5 @@
 import ApiInstance from './api';
-import type { IProject, IProjectStatistics } from '@/types';
+import type { IProject, IProjectStatistics, IDeployment, IDeploymentRequest } from '@/types';
 
 export const ProjectsService = {
   getAll: async (): Promise<IProject[]> => {
@@ -29,9 +29,19 @@ export const ProjectsService = {
     return ApiInstance.delete(`/projects/${id}`).then((res) => res.data);
   },
 
-  deploy: async (id: number, branch?: string): Promise<any> => {
-    const response = await ApiInstance.post(`/projects/${id}/deploy`, { branch });
+  deploy: async (id: number, data?: IDeploymentRequest): Promise<IDeployment> => {
+    const response = await ApiInstance.post(`/projects/${id}/deploy`, data || {});
     return response.data.Data?.Deployment;
+  },
+
+  getBranches: async (id: number): Promise<string[]> => {
+    try {
+      const response = await ApiInstance.get(`/projects/${id}/branches`);
+      return response.data.Data?.Branches || ['main', 'master', 'develop'];
+    } catch (_error) {
+      // Fallback to common branches if API fails
+      return ['main', 'master', 'develop'];
+    }
   },
 
   regenerateWebhook: async (id: number): Promise<string> => {
@@ -44,4 +54,5 @@ export const ProjectsService = {
     return response.data.Data?.Statistics;
   },
 };
+
 
