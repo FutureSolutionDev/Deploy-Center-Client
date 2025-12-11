@@ -135,6 +135,7 @@
   },
   "deployments": {
     "title": "Deployments",
+    "confirmRetry": "Are you sure you want to retry this deployment?",
     "subtitle": "View and manage all deployments",
     "description": "View and manage all deployments",
     "deploy": "Deploy",
