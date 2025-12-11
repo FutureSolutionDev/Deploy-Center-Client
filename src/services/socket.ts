@@ -19,10 +19,10 @@ class SocketService {
       return this.socket;
     }
 
-    this.socket = io(Config.Api.BaseUrl, {
+    this.socket = io(Config.Socket.Url, {
       withCredentials: true,
       autoConnect: true,
-      path: '/socket.io/',
+      path: Config.Socket.Path,
       transports: ['websocket', 'polling'],
     });
 

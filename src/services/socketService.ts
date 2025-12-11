@@ -3,9 +3,9 @@
  * Handles real-time updates via Socket.IO
  */
 
-import { io, Socket } from 'socket.io-client';
-import { Config } from '@/utils/config';
-import Cookies from 'js-cookie';
+import { io, Socket } from "socket.io-client";
+import { Config } from "@/utils/config";
+import Cookies from "js-cookie";
 
 class SocketService {
   private socket: Socket | null = null;
@@ -20,28 +20,29 @@ class SocketService {
     }
 
     // Get auth token from cookie
-    const token = Cookies.get('auth_token');
+    const token = Cookies.get("auth_token");
 
     this.socket = io(Config.Socket.Url, {
       auth: {
         token,
       },
+      path: Config.Socket.Path,
       reconnection: true,
       reconnectionAttempts: Config.Socket.ReconnectAttempts,
       reconnectionDelay: Config.Socket.ReconnectDelay,
-      transports: ['websocket', 'polling'],
+      transports: ["websocket", "polling"],
     });
 
-    this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket?.id);
+    this.socket.on("connect", () => {
+      console.log("Socket connected:", this.socket?.id);
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+    this.socket.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+    this.socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
     });
 
     // Listen for all registered events
@@ -107,7 +108,7 @@ class SocketService {
     if (this.socket?.connected) {
       this.socket.emit(event, data);
     } else {
-      console.warn('Socket not connected, cannot emit event:', event);
+      console.warn("Socket not connected, cannot emit event:", event);
     }
   }
 
@@ -132,22 +133,19 @@ export default new SocketService();
 // Event types
 export const SocketEvents = {
   // Deployment events
-  DEPLOYMENT_STARTED: 'deployment:started',
-  DEPLOYMENT_PROGRESS: 'deployment:progress',
-  DEPLOYMENT_COMPLETED: 'deployment:completed',
-  DEPLOYMENT_FAILED: 'deployment:failed',
-  DEPLOYMENT_CANCELLED: 'deployment:cancelled',
-
+  DeploymentStarted: "deployment:started",
+  DeploymentProgress: "deployment:progress",
+  DeploymentCompleted: "deployment:completed",
+  DeploymentFailed: "deployment:failed",
+  DeploymentCancelled: "deployment:cancelled",
   // Project events
-  PROJECT_CREATED: 'project:created',
-  PROJECT_UPDATED: 'project:updated',
-  PROJECT_DELETED: 'project:deleted',
-
+  ProjectCreated: "project:created",
+  ProjectUpdated: "project:updated",
+  ProjectDeleted: "project:deleted",
   // Log events
-  LOG_UPDATE: 'log:update',
-
+  LogUpdate: "log:update",
   // System events
-  NOTIFICATION: 'notification',
+  Notification: "notification",
 } as const;
 
-export type TSocketEvent = typeof SocketEvents[keyof typeof SocketEvents];
+export type TSocketEvent = (typeof SocketEvents)[keyof typeof SocketEvents];

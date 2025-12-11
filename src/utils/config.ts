@@ -31,6 +31,7 @@ export const Config = {
   // Real-time
   Socket: {
     Url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001',
+    Path: "/v1/ws",
     ReconnectAttempts: 5,
     ReconnectDelay: 3000,
   },
