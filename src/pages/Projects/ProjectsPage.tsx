@@ -56,7 +56,7 @@ export const ProjectsPage: React.FC = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const data = await ProjectsService.getAll();
+      const data = await ProjectsService.getAll(true);
       setProjects(data);
     } catch (error) {
       console.error("Failed to fetch projects", error);
@@ -207,113 +207,117 @@ export const ProjectsPage: React.FC = () => {
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />
         </Box>
-      ) : projects.length === 0 ? (
-        <Card sx={{ textAlign: "center", py: 8 }}>
-          <CardContent>
-            <GitHubIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
-              {t("projects.noProjects")}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Create your first project to get started
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenDialog()}
-            >
-              {t("projects.createProject")}
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <Grid container spacing={3}>
-          {projects.map((project) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={project.Id}>
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  transition: "all 0.3s",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: 6,
-                  },
-                }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box
+      ) :
+        <>
+          {projects.length === 0 ? (
+            <Card sx={{ textAlign: "center", py: 8 }}>
+              <CardContent>
+                <GitHubIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  {t("projects.noProjects")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Create your first project to get started
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleOpenDialog()}
+                >
+                  {t("projects.createProject")}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Grid container spacing={3}>
+              {projects.map((project) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={project.Id}>
+                  <Card
                     sx={{
+                      height: "100%",
                       display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "start",
-                      mb: 2,
+                      flexDirection: "column",
+                      transition: "all 0.3s",
+                      "&:hover": {
+                        transform: "translateY(-4px)",
+                        boxShadow: 6,
+                      },
                     }}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {project.Name}
-                    </Typography>
-                    <Chip
-                      label={project.IsActive ? t("common.active") : t("common.inactive")}
-                      color={project.IsActive ? "success" : "default"}
-                      size="small"
-                    />
-                  </Box>
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "start",
+                          mb: 2,
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          {project.Name}
+                        </Typography>
+                        <Chip
+                          label={project.IsActive ? t("common.active") : t("common.inactive")}
+                          color={project.IsActive ? "success" : "default"}
+                          size="small"
+                        />
+                      </Box>
 
-                  <Box sx={{ mb: 2 }}>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        mb: 1,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      <GitHubIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                      {project.RepoUrl}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Branch: <strong>{project.Branch}</strong> • Type:{" "}
-                      <strong>{project.ProjectType}</strong>
-                    </Typography>
-                  </Box>
-                </CardContent>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            mb: 1,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          <GitHubIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                          {project.RepoUrl}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Branch: <strong>{project.Branch}</strong> • Type:{" "}
+                          <strong>{project.ProjectType}</strong>
+                        </Typography>
+                      </Box>
+                    </CardContent>
 
-                <CardActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
-                  <Box>
-                    <Button
-                      size="small"
-                      startIcon={<ViewIcon />}
-                      onClick={() => navigate(`/projects/${project.Id}`)}
-                    >
-                      {t("projects.viewDetails")}
-                    </Button>
-                    <Button
-                      size="small"
-                      startIcon={<DeployIcon />}
-                      onClick={() => handleOpenDeploy(project)}
-                      color="primary"
-                    >
-                      {t("projects.deploy")}
-                    </Button>
-                  </Box>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, project)}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </CardActions>
-              </Card>
+                    <CardActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
+                      <Box>
+                        <Button
+                          size="small"
+                          startIcon={<ViewIcon />}
+                          onClick={() => navigate(`/projects/${project.Id}`)}
+                        >
+                          {t("projects.viewDetails")}
+                        </Button>
+                        <Button
+                          size="small"
+                          startIcon={<DeployIcon />}
+                          onClick={() => handleOpenDeploy(project)}
+                          color="primary"
+                        >
+                          {t("projects.deploy")}
+                        </Button>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleMenuOpen(e, project)}
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
-      )}
+          )}
+        </>
+      }
 
       {/* Action Menu */}
       <Menu

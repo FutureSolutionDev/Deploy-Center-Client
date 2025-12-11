@@ -124,7 +124,11 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
             case 3:
                 return (
                     <Step4Notifications
-                        notifications={formData.Config!.Notifications!}
+                        notifications={formData.Config?.Notifications || {
+                            OnSuccess: true,
+                            OnFailure: true,
+                            OnStart: false,
+                        }}
                         onChange={(notifications) => updateConfig({ Notifications: notifications })}
                     />
                 );

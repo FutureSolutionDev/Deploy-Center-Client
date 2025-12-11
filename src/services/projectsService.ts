@@ -2,9 +2,9 @@ import ApiInstance from './api';
 import type { IProject, IProjectStatistics, IDeployment, IDeploymentRequest } from '@/types';
 
 export const ProjectsService = {
-  getAll: async (): Promise<IProject[]> => {
+  getAll: async (includeInactive: boolean = false): Promise<IProject[]> => {
     try {
-      const response = await ApiInstance.get('/projects');
+      const response = await ApiInstance.get('/projects', { params: { includeInactive } });
       const data = response.data.Data;
       return data?.Projects || [];
     } catch (error) {
