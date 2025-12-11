@@ -182,7 +182,6 @@ export const ProjectDetailsPage: React.FC = () => {
       />
     );
   };
-
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
@@ -220,11 +219,11 @@ export const ProjectDetailsPage: React.FC = () => {
   return (
     <Box>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 2 }}>
         <Button
           startIcon={<BackIcon />}
           onClick={() => navigate("/projects")}
-          sx={{ mb: 2 }}
+          sx={{ mb: 0.5 }}
         >
           {t("common.backToProjects")}
         </Button>
@@ -272,27 +271,27 @@ export const ProjectDetailsPage: React.FC = () => {
 
       {/* Alerts */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
           {success}
         </Alert>
       )}
 
-      <Grid container spacing={3}>
+      <Grid container spacing={1}>
         {/* Left Column - Project Info & Webhook */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ mb: 3 }}>
+          <Card sx={{ mb: 1 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 {t("projects.projectInfo")}
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: 0.5 }} />
 
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ mb: 0.5 }}>
                 <Typography variant="caption" color="text.secondary">
                   {t("projects.repoUrl")}
                 </Typography>
@@ -302,7 +301,7 @@ export const ProjectDetailsPage: React.FC = () => {
                 </Box>
               </Box>
 
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ mb: 0.5 }}>
                 <Typography variant="caption" color="text.secondary">
                   {t("projects.branch")}
                 </Typography>
@@ -311,7 +310,7 @@ export const ProjectDetailsPage: React.FC = () => {
                 </Typography>
               </Box>
 
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ mb: 0.5 }}>
                 <Typography variant="caption" color="text.secondary">
                   {t("projects.projectType")}
                 </Typography>
@@ -328,8 +327,7 @@ export const ProjectDetailsPage: React.FC = () => {
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 {t("projects.webhook")}
               </Typography>
-              <Divider sx={{ mb: 2 }} />
-
+              <Divider sx={{ mb: 0.5 }} />
               <Typography variant="body2" color="text.secondary" paragraph>
                 {t("projects.webhook")}
               </Typography>
@@ -354,7 +352,7 @@ export const ProjectDetailsPage: React.FC = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ mb: 2 }}
+                sx={{ mb: 0.5 }}
               />
 
               <Button
@@ -375,14 +373,14 @@ export const ProjectDetailsPage: React.FC = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           {/* Statistics */}
           {stats && (
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb: 1 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                   {t("projects.statistics")}
                 </Typography>
-                <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 0.5 }} />
 
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={2} sx={{ mb: 1 }}>
                   <Grid size={{ xs: 4 }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h4" color="primary.main">
@@ -415,18 +413,25 @@ export const ProjectDetailsPage: React.FC = () => {
                   </Grid>
                 </Grid>
 
-                <Box sx={{ height: 200, width: '100%' }}>
-                  <ResponsiveContainer>
-                    <BarChart data={stats.DeploymentsByDay}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="Date" fontSize={12} />
-                      <YAxis fontSize={12} />
-                      <RechartsTooltip />
-                      <Bar dataKey="Success" stackId="a" fill="#4caf50" name={t("deployments.success")} />
-                      <Bar dataKey="Failed" stackId="a" fill="#f44336" name={t("deployments.failed")} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
+                {stats?.DeploymentsByDay?.length > 0 && (
+                  <Box sx={{ width: '100%', height: 100, minHeight: 100 }}>
+                    <ResponsiveContainer
+                      aspect={3}
+                      width={400}
+                      height={400}
+                    >
+                      <BarChart
+                        data={stats.DeploymentsByDay}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="Date" fontSize={9} />
+                        <YAxis fontSize={9} />
+                        <RechartsTooltip />
+                        <Bar dataKey="Success" stackId="a" fill="#4caf50" />
+                        <Bar dataKey="Failed" stackId="a" fill="#f44336" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           )}
@@ -437,19 +442,26 @@ export const ProjectDetailsPage: React.FC = () => {
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 {t("dashboard.recentDeployments")}
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: 0.5 }} />
 
               {deployments.length === 0 ? (
                 <Box sx={{ textAlign: "center", py: 4 }}>
-                  <DeployIcon sx={{ fontSize: 48, color: "text.disabled", mb: 2 }} />
+                  <DeployIcon sx={{ fontSize: 48, color: "text.disabled", mb: 0.5 }} />
                   <Typography variant="body2" color="text.secondary">
                     {t("deployments.noDeployments")}
                   </Typography>
                 </Box>
               ) : (
-                <TableContainer component={Paper} variant="outlined">
+                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 240 }} >
                   <Table size="small">
-                    <TableHead>
+                    <TableHead
+                      sx={{
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        backgroundColor: 'background.paper',
+                      }}
+                    >
                       <TableRow>
                         <TableCell>{t("deployments.status")}</TableCell>
                         <TableCell>{t("deployments.branch")}</TableCell>
