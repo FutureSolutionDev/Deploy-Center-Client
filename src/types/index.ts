@@ -51,7 +51,7 @@ export const EProjectType = {
   React: 'react',
   Static: 'static',
   Docker: 'docker',
-  NextJS: 'next',
+  NextJS: 'nextjs',
   Other: 'other',
 } as const;
 
