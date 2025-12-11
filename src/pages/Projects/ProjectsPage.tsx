@@ -29,6 +29,7 @@ import {
   Delete as DeleteIcon,
   Rocket as DeployIcon,
   Visibility as ViewIcon,
+  PowerSettingsNew as ToggleIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -153,6 +154,22 @@ export const ProjectsPage: React.FC = () => {
           ? String(error.message)
           : 'Failed to trigger deployment';
       throw new Error(errorMessage);
+    }
+  };
+
+  const handleToggleActive = async () => {
+    if (!selectedProject) return;
+
+    try {
+      await ProjectsService.update(selectedProject.Id, {
+        IsActive: !selectedProject.IsActive
+      });
+      setSuccess(`Project ${selectedProject.IsActive ? 'deactivated' : 'activated'} successfully`);
+      fetchProjects();
+    } catch (error: any) {
+      setError(error?.message || 'Failed to update project');
+    } finally {
+      handleMenuClose();
     }
   };
 
@@ -330,6 +347,17 @@ export const ProjectsPage: React.FC = () => {
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>{t("common.edit")}</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleToggleActive}>
+          <ListItemIcon>
+            <ToggleIcon
+              fontSize="small"
+              color={selectedProject?.IsActive ? "error" : "success"}
+            />
+          </ListItemIcon>
+          <ListItemText>
+            {selectedProject?.IsActive ? t("common.deactivate") : t("common.activate")}
+          </ListItemText>
         </MenuItem>
         <MenuItem onClick={handleDeleteClick}>
           <ListItemIcon>

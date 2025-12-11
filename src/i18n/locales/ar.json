@@ -437,6 +437,8 @@
     "disabled": "معطل",
     "active": "نشط",
     "inactive": "غير نشط",
+    "activate": "تفعيل",
+    "deactivate": "إلغاء التفعيل",
     "status": "الحالة",
     "actions": "الإجراءات",
     "details": "التفاصيل",
