@@ -19,18 +19,36 @@ interface IStep4Props {
 }
 
 export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onChange }) => {
+    const [expandedPanels, setExpandedPanels] = React.useState<Record<string, boolean>>({
+        discord: false,
+        slack: false,
+        telegram: false,
+        email: false,
+    });
+
     const updateChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email', data: Record<string, any>) => {
-        const currentConfig = notifications[channel.toLowerCase() as keyof INotificationConfig] as any || {};
+        const currentConfig = notifications[channel as keyof INotificationConfig] as any || {};
         onChange({
             ...notifications,
-            [channel.toLowerCase()]: { ...currentConfig, ...data },
+            [channel]: { ...currentConfig, ...data },
         });
     };
 
-    const toggleChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email') => {
-        const currentConfig = notifications[channel.toLowerCase() as keyof INotificationConfig] as any;
+    const toggleChannel = (channel: 'Discord' | 'Slack' | 'Telegram' | 'Email', event: React.ChangeEvent<HTMLInputElement>) => {
+        event.stopPropagation();
+        const currentConfig = notifications[channel as keyof INotificationConfig] as any;
         const enabled = currentConfig?.Enabled || false;
         updateChannel(channel, { Enabled: !enabled });
+
+        // Expand panel if enabling
+        const channelKey = channel.toLowerCase();
+        if (!enabled) {
+            setExpandedPanels(prev => ({ ...prev, [channelKey]: true }));
+        }
+    };
+
+    const togglePanel = (channel: string) => {
+        setExpandedPanels(prev => ({ ...prev, [channel]: !prev[channel] }));
     };
 
     return (
@@ -69,13 +87,13 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
             </Box>
 
             {/* Discord */}
-            <Accordion expanded={notifications.Discord?.Enabled}>
+            <Accordion expanded={expandedPanels.discord} onChange={() => togglePanel('discord')}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={notifications.Discord?.Enabled || false}
-                                onChange={() => toggleChannel('Discord')}
+                                onChange={(e) => toggleChannel('Discord', e)}
                             />
                         }
                         label="Discord"
@@ -88,18 +106,19 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
                         label="Webhook URL"
                         value={notifications.Discord?.WebhookUrl || ''}
                         onChange={(e) => updateChannel('Discord', { WebhookUrl: e.target.value })}
+                        placeholder="https://discord.com/api/webhooks/..."
                     />
                 </AccordionDetails>
             </Accordion>
 
             {/* Slack */}
-            <Accordion expanded={notifications.Slack?.Enabled}>
+            <Accordion expanded={expandedPanels.slack} onChange={() => togglePanel('slack')}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={notifications.Slack?.Enabled || false}
-                                onChange={() => toggleChannel('Slack')}
+                                onChange={(e) => toggleChannel('Slack', e)}
                             />
                         }
                         label="Slack"
@@ -112,18 +131,19 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
                         label="Webhook URL"
                         value={notifications.Slack?.WebhookUrl || ''}
                         onChange={(e) => updateChannel('Slack', { WebhookUrl: e.target.value })}
+                        placeholder="https://hooks.slack.com/services/..."
                     />
                 </AccordionDetails>
             </Accordion>
 
             {/* Telegram */}
-            <Accordion expanded={notifications.Telegram?.Enabled}>
+            <Accordion expanded={expandedPanels.telegram} onChange={() => togglePanel('telegram')}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={notifications.Telegram?.Enabled || false}
-                                onChange={() => toggleChannel('Telegram')}
+                                onChange={(e) => toggleChannel('Telegram', e)}
                             />
                         }
                         label="Telegram"
@@ -138,6 +158,7 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
                                 label="Bot Token"
                                 value={notifications.Telegram?.BotToken || ''}
                                 onChange={(e) => updateChannel('Telegram', { BotToken: e.target.value })}
+                                placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
@@ -146,6 +167,7 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
                                 label="Chat ID"
                                 value={notifications.Telegram?.ChatId || ''}
                                 onChange={(e) => updateChannel('Telegram', { ChatId: e.target.value })}
+                                placeholder="-1001234567890"
                             />
                         </Grid>
                     </Grid>
@@ -153,13 +175,13 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
             </Accordion>
 
             {/* Email */}
-            <Accordion expanded={notifications.Email?.Enabled}>
+            <Accordion expanded={expandedPanels.email} onChange={() => togglePanel('email')}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={notifications.Email?.Enabled || false}
-                                onChange={() => toggleChannel('Email')}
+                                onChange={(e) => toggleChannel('Email', e)}
                             />
                         }
                         label="Email"

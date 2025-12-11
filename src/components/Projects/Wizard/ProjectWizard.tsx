@@ -39,9 +39,11 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
         Name: '',
         Description: '',
         RepoUrl: '',
+        Branch: 'master',
+        ProjectPath: '',
         ProjectType: 'nodejs',
         Config: {
-            Branch: 'main',
+            Branch: 'master',
             AutoDeploy: true,
             Environment: 'production',
             DeployOnPaths: [],
@@ -68,7 +70,15 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
         setLoading(true);
         setError(null);
         try {
-            await onSubmit(formData);
+            // Ensure Branch is synced between root and Config
+            const dataToSubmit = {
+                ...formData,
+                Config: {
+                    ...formData.Config!,
+                    Branch: formData.Branch || 'master',
+                },
+            };
+            await onSubmit(dataToSubmit);
             onClose();
         } catch (err: unknown) {
             setError((err as any).message || 'Failed to save project');

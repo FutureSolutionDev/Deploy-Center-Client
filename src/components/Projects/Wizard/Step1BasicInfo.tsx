@@ -44,10 +44,30 @@ export const Step1BasicInfo: React.FC<IStep1Props> = ({ data, onChange }) => {
             <TextField
                 fullWidth
                 label="Repository URL"
-                value={data.RepoUrl}
+                value={data.RepoUrl || ''}
                 onChange={(e) => onChange({ RepoUrl: e.target.value })}
                 required
                 placeholder="https://github.com/username/repo.git"
+            />
+
+            <TextField
+                fullWidth
+                label="Branch"
+                value={data.Branch || ''}
+                onChange={(e) => onChange({ Branch: e.target.value })}
+                required
+                placeholder="master or main"
+                helperText="Branch to deploy from"
+            />
+
+            <TextField
+                fullWidth
+                label="Project Path"
+                value={data.ProjectPath || ''}
+                onChange={(e) => onChange({ ProjectPath: e.target.value })}
+                required
+                placeholder="/www/wwwroot/your-project"
+                helperText="Absolute path where the project is located on the server"
             />
 
             <FormControl fullWidth>

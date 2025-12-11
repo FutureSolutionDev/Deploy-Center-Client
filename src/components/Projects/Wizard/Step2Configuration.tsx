@@ -24,14 +24,6 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
 
             <TextField
                 fullWidth
-                label="Branch"
-                value={config.Branch}
-                onChange={(e) => onChange({ Branch: e.target.value })}
-                helperText="Branch to deploy from (e.g., main, master)"
-            />
-
-            <TextField
-                fullWidth
                 label="Environment"
                 value={config.Environment || 'production'}
                 onChange={(e) => onChange({ Environment: e.target.value })}

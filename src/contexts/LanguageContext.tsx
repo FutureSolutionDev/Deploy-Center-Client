@@ -30,17 +30,23 @@ export const LanguageProvider: React.FC<ILanguageProviderProps> = ({ children })
     return (stored as TLanguage) || 'en';
   });
 
-  // Use React state management
+  // Use React state management with page reload to ensure RTL cache is cleared
   const ChangeLanguage = (lang: TLanguage): void => {
     setLanguage(lang);
     localStorage.setItem(LANGUAGE_KEY, lang);
     i18n.changeLanguage(lang);
+
+    // Force page reload to clear emotion cache and apply RTL properly
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
-  // Set document language on mount and language change
+  // Set document language and direction on mount and language change
   useEffect(() => {
+    const direction = language === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
-    // Always LTR - no direction changes needed
+    document.documentElement.dir = direction;
   }, [language]);
 
   const value: ILanguageContextValue = {
