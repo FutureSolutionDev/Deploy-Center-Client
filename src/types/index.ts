@@ -42,15 +42,17 @@ export interface IRegisterData {
 
 export interface IAuthResponse {
   User: IUser;
-  Tokens: IAuthTokens;
+  Tokens?: IAuthTokens; // Optional because server uses httpOnly cookies
 }
 
 // Project Types
 export const EProjectType = {
-  NodeJS: 'nodejs',
+  NodeJS: 'node',
   React: 'react',
   Static: 'static',
   Docker: 'docker',
+  NextJS: 'next',
+  Other: 'other',
 } as const;
 
 export type TProjectType = typeof EProjectType[keyof typeof EProjectType];

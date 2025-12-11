@@ -67,18 +67,19 @@ class AuthService {
 
   /**
    * Refresh access token
+   * Note: Server prefers refresh_token from httpOnly cookie
+   * Body parameter is fallback for backward compatibility
    */
-  async RefreshToken(refreshToken: string): Promise<IAuthResponse> {
-    const response = await ApiInstance.post<IApiResponse<IAuthResponse>>(
+  async RefreshToken(refreshToken?: string): Promise<void> {
+    const payload = refreshToken ? { RefreshToken: refreshToken } : {};
+    const response = await ApiInstance.post<IApiResponse<void>>(
       '/auth/refresh',
-      { RefreshToken: refreshToken }
+      payload
     );
 
-    if (response.data.Data) {
-      return response.data.Data;
+    if (!response.data.Success) {
+      throw new Error(response.data.Message || 'Token refresh failed');
     }
-
-    throw new Error(response.data.Message || 'Token refresh failed');
   }
 
   /**

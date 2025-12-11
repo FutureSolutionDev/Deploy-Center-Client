@@ -59,22 +59,91 @@ ApiInstance.interceptors.request.use(
   }
 );
 
+// Track if we're currently refreshing to prevent multiple refresh calls
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: AxiosError | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
 // Response Interceptor - Handle errors globally
 ApiInstance.interceptors.response.use(
   (response: AxiosResponse<IApiResponse>) => {
     return response;
   },
   async (error: AxiosError<IApiError>) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const errorMessage = error.response?.data?.Message || 'An unexpected error occurred';
 
-    // Handle 401 Unauthorized - User not authenticated
-    if (error.response?.status === 401) {
-      // Clear any client-side non-sensitive data
-      localStorage.removeItem('user_preferences');
+    // Handle 401 Unauthorized - Try to refresh token first
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      // Skip refresh for login/register/refresh endpoints to avoid infinite loop
+      if (
+        originalRequest.url?.includes('/auth/login') ||
+        originalRequest.url?.includes('/auth/register') ||
+        originalRequest.url?.includes('/auth/refresh')
+      ) {
+        // Clear any client-side non-sensitive data
+        localStorage.removeItem('user_preferences');
 
-      // Redirect to login if not already there
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+        // Redirect to login if not already there
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return ApiInstance(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Try to refresh the token using the refresh_token cookie
+        await ApiInstance.post('/auth/refresh', {});
+
+        // Token refreshed successfully, process queued requests
+        processQueue(null);
+        isRefreshing = false;
+
+        // Retry the original request
+        return ApiInstance(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, clear queue and redirect to login
+        processQueue(refreshError as AxiosError);
+        isRefreshing = false;
+
+        // Clear any client-side non-sensitive data
+        localStorage.removeItem('user_preferences');
+
+        // Redirect to login if not already there
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+
+        return Promise.reject(refreshError);
       }
     }
 

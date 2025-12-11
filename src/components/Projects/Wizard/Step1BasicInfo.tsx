@@ -79,8 +79,10 @@ export const Step1BasicInfo: React.FC<IStep1Props> = ({ data, onChange }) => {
                 >
                     <MenuItem value={EProjectType.NodeJS}>Node.js</MenuItem>
                     <MenuItem value={EProjectType.React}>React</MenuItem>
+                    <MenuItem value={EProjectType.NextJS}>Next.js</MenuItem>
                     <MenuItem value={EProjectType.Static}>Static Site</MenuItem>
                     <MenuItem value={EProjectType.Docker}>Docker</MenuItem>
+                    <MenuItem value={EProjectType.Other}>Other</MenuItem>
                 </Select>
             </FormControl>
         </Box>
