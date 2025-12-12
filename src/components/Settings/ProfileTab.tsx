@@ -1,0 +1,97 @@
+import React from "react";
+import { Box, Button, Divider, TextField, Typography, Grid } from "@mui/material";
+
+interface IProfileTabProps {
+  fullName: string;
+  username: string;
+  email: string;
+  lastLogin?: Date;
+  memberSince?: Date;
+  disabled?: boolean;
+  onFullNameChange: (value: string) => void;
+  onUsernameChange: (value: string) => void;
+  onEmailChange: (value: string) => void;
+  onSave: () => void;
+  t: (key: string) => string;
+}
+
+export const ProfileTab: React.FC<IProfileTabProps> = ({
+  fullName,
+  username,
+  email,
+  lastLogin,
+  memberSince,
+  disabled,
+  onFullNameChange,
+  onUsernameChange,
+  onEmailChange,
+  onSave,
+  t,
+}) => {
+  return (
+    <>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+        {t("settings.profileInformation")}
+      </Typography>
+      <Divider sx={{ mb: 3 }} />
+
+      <Grid container spacing={3}>
+        <Grid xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t("settings.fullName")}
+            value={fullName}
+            disabled={disabled}
+            onChange={(e) => onFullNameChange(e.target.value)}
+          />
+        </Grid>
+        <Grid xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t("settings.username")}
+            value={username}
+            disabled={disabled}
+            onChange={(e) => onUsernameChange(e.target.value)}
+          />
+        </Grid>
+        <Grid xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t("settings.email")}
+            type="email"
+            value={email}
+            disabled={disabled}
+            onChange={(e) => onEmailChange(e.target.value)}
+          />
+        </Grid>
+        <Grid xs={12} md={6} display="flex" alignItems="center">
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              {t("settings.lastLogin")}
+            </Typography>
+            <Typography variant="body1" fontWeight={600}>
+              {lastLogin ? new Date(lastLogin).toLocaleString() : t("settings.notAvailable")}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid xs={12} md={6} display="flex" alignItems="center">
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              {t("settings.memberSince")}
+            </Typography>
+            <Typography variant="body1" fontWeight={600}>
+              {memberSince ? new Date(memberSince).toLocaleDateString() : t("settings.notAvailable")}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid xs={12}>
+          <Button variant="contained" onClick={onSave} disabled={disabled}>
+            {t("settings.saveChanges")}
+          </Button>
+        </Grid>
+      </Grid>
+    </>
+  );
+};
+
+export default ProfileTab;
