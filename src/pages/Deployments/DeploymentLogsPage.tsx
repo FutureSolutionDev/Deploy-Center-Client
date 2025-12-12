@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Box,
   Card,
@@ -33,20 +33,12 @@ export const DeploymentLogsPage: React.FC = () => {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const [deployment, setDeployment] = useState<IDeployment | null>(null);
-  const [logs] = useState<string[]>([
-    "[INFO] Starting deployment...",
-    "[INFO] Fetching latest code from repository...",
-    "[INFO] Installing dependencies...",
-    "[INFO] Running build process...",
-    "[SUCCESS] Build completed successfully",
-    "[INFO] Deploying to production server...",
-    "[SUCCESS] Deployment completed successfully",
-  ]);
+  const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoScroll] = useState(true);
 
-  const fetchDeployment = async () => {
+  const fetchDeployment = useCallback(async () => {
     if (!id) return;
 
     setLoading(true);
@@ -58,11 +50,44 @@ export const DeploymentLogsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
+
+  const fetchLogs = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      const logsText = await DeploymentsService.getLogs(Number(id));
+
+      // Split logs by newline and filter empty lines
+      const logsArray = logsText
+        .split('\n')
+        .filter((line) => line.trim().length > 0);
+
+      setLogs(logsArray);
+    } catch (error: unknown) {
+      console.error('Failed to fetch logs:', error);
+      // Don't show error for logs, just keep existing logs
+    }
+  }, [id]);
 
   useEffect(() => {
     fetchDeployment();
-  }, [id]);
+    fetchLogs();
+
+    // Auto-refresh logs every 3 seconds if deployment is in progress
+    let interval: NodeJS.Timeout | null = null;
+
+    if (deployment?.Status === 'inProgress') {
+      interval = setInterval(() => {
+        fetchLogs();
+        fetchDeployment();
+      }, 3000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [id, deployment?.Status, fetchDeployment, fetchLogs]);
 
   useEffect(() => {
     if (autoScroll && logsEndRef.current) {
@@ -160,8 +185,15 @@ export const DeploymentLogsPage: React.FC = () => {
               <Button
                 variant="contained"
                 startIcon={<RetryIcon />}
-                onClick={() => {
-                  /* Retry logic */
+                onClick={async () => {
+                  try {
+                    await DeploymentsService.retry(Number(id));
+                    // Refresh deployment and logs after retry
+                    fetchDeployment();
+                    fetchLogs();
+                  } catch (error) {
+                    console.error('Failed to retry deployment:', error);
+                  }
                 }}
               >
                 {t("deployments.retryDeployment")}
@@ -285,25 +317,25 @@ export const DeploymentLogsPage: React.FC = () => {
 
         {/* Logs */}
         <Box>
-          {logs.map((log, index) => (
-            <Box
-              key={index}
-              sx={{
-                mb: 0.5,
-                color: getLogColor(log),
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            >
-              <Typography
-                component="span"
-                sx={{ color: "rgba(255,255,255,0.4)", mr: 2, fontSize: "0.75rem" }}
+          {logs.length === 0 ? (
+            <Typography sx={{ color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>
+              {t("deployments.noLogsAvailable") || "No logs available yet..."}
+            </Typography>
+          ) : (
+            logs.map((log, index) => (
+              <Box
+                key={index}
+                sx={{
+                  mb: 0.5,
+                  color: getLogColor(log),
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
               >
-                {new Date().toLocaleTimeString()}
-              </Typography>
-              {log}
-            </Box>
-          ))}
+                {log}
+              </Box>
+            ))
+          )}
           <div ref={logsEndRef} />
         </Box>
 

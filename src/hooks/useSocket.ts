@@ -1,31 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { socketService } from '../services/socket';
 import type { IDeployment } from '../types';
 
+// Single shared socket connection state
+let sharedSocket: any = null;
+let connectionListeners: Set<(connected: boolean) => void> = new Set();
+
 export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
+  const isInitialized = useRef(false);
 
   useEffect(() => {
-    const socket = socketService.connect();
+    // Only initialize socket once globally
+    if (!sharedSocket) {
+      sharedSocket = socketService.connect();
 
-    const onConnect = () => setIsConnected(true);
-    const onDisconnect = () => setIsConnected(false);
+      const onConnect = () => {
+        connectionListeners.forEach(listener => listener(true));
+      };
 
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
+      const onDisconnect = () => {
+        connectionListeners.forEach(listener => listener(false));
+      };
 
-    // Initial check
-    setTimeout(() => {
-      setIsConnected(socket.connected);
-    }, 0);
+      sharedSocket.on('connect', onConnect);
+      sharedSocket.on('disconnect', onDisconnect);
+
+      // Initial check
+      setTimeout(() => {
+        connectionListeners.forEach(listener => listener(sharedSocket.connected));
+      }, 0);
+    }
+
+    // Subscribe this component to connection updates
+    connectionListeners.add(setIsConnected);
+
+    // Set initial state
+    setIsConnected(sharedSocket?.connected || false);
 
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
+      // Unsubscribe when component unmounts
+      connectionListeners.delete(setIsConnected);
     };
   }, []);
 
-  return { isConnected, socket: socketService.getSocket() };
+  return { isConnected, socket: sharedSocket };
 };
 
 export const useDeploymentUpdates = (projectId?: number) => {

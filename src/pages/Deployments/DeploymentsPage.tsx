@@ -33,6 +33,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DeploymentsService } from "@/services/deploymentsService";
+import { useSocket, useDeploymentEvents } from "@/hooks/useSocket";
 import type { IDeployment } from "@/types";
 
 export const DeploymentsPage: React.FC = () => {
@@ -44,6 +45,14 @@ export const DeploymentsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Real-time updates via Socket.IO
+  const { isConnected } = useSocket();
+
+  useDeploymentEvents(
+    () => fetchDeployments(), // onUpdate
+    () => fetchDeployments()  // onComplete
+  );
 
   const fetchDeployments = async () => {
     setLoading(true);
@@ -140,7 +149,7 @@ export const DeploymentsPage: React.FC = () => {
     return (
       <Chip
         label={config.label}
-        color={config.color as any}
+        color={config.color as string}
         size="small"
         icon={config.icon || undefined}
       />
@@ -234,12 +243,12 @@ export const DeploymentsPage: React.FC = () => {
         >
           <Table>
             <TableHead
-            sx={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 1,
-              backgroundColor: 'background.paper',
-            }}
+              sx={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 1,
+                backgroundColor: 'background.paper',
+              }}
             >
               <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05) }}>
                 <TableCell sx={{ fontWeight: 600 }}>{t("deployments.project")}</TableCell>
@@ -328,11 +337,14 @@ export const DeploymentsPage: React.FC = () => {
         </TableContainer>
       )}
 
-      {/* Results Count */}
+      {/* Results Count + Connection Status */}
       {!loading && filteredDeployments.length > 0 && (
-        <Box sx={{ mt: 2, textAlign: "center" }}>
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2 }}>
           <Typography variant="caption" color="text.secondary">
             Showing {filteredDeployments.length} of {deployments.length} deployments
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {isConnected ? '⚡ Real-time updates active' : '🔌 Connecting...'}
           </Typography>
         </Box>
       )}
