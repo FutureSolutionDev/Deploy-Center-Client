@@ -2,13 +2,13 @@
  * Main App Component
  * Root component with routing and context providers
  */
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeContextProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { UserSettingsProvider } from '@/contexts/UserSettingsContext';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { LoginPage } from '@/pages/Auth/LoginPage';
 import { RegisterPage } from '@/pages/Auth/RegisterPage';
@@ -130,10 +130,12 @@ const App: React.FC = () => {
       <ErrorBoundary>
         <LanguageProvider>
           <AuthProvider>
-            <ThemeContextProvider>
-              <CssBaseline />
-              <AppRoutes />
-            </ThemeContextProvider>
+            <UserSettingsProvider>
+              <ThemeContextProvider>
+                <CssBaseline />
+                <AppRoutes />
+              </ThemeContextProvider>
+            </UserSettingsProvider>
           </AuthProvider>
         </LanguageProvider>
       </ErrorBoundary>

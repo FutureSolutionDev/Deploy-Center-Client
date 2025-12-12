@@ -7,9 +7,9 @@
 import { useMemo } from 'react';
 import { parseISO } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUserSettings } from '@/contexts/UserSettingsContext';
 
-export type TDateFormatType = 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY';
+export type TDateFormatType = 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'DD-MM-YYYY';
 export type TTimeFormatType = '12h' | '24h';
 
 interface IDateFormatterOptions {
@@ -18,12 +18,12 @@ interface IDateFormatterOptions {
 }
 
 export const useDateFormatter = () => {
-  const { User } = useAuth();
-console.log("User", User);
+  const { Settings, IsLoading } = useUserSettings();
+
   // Get user preferences from settings, with fallbacks
-  const timezone = User?.Timezone || 'UTC';
-  const dateFormat: TDateFormatType = (User?.DateFormat as TDateFormatType) || 'DD-MM-YYYY';
-  const timeFormat: TTimeFormatType = (User?.TimeFormat as TTimeFormatType) || '12h';
+  const timezone = Settings?.Timezone || 'UTC';
+  const dateFormat: TDateFormatType = Settings?.DateFormat || 'DD-MM-YYYY';
+  const timeFormat: TTimeFormatType = Settings?.TimeFormat || '12h';
 
   // Convert date format to date-fns format string
   const dateFormatString = useMemo(() => {
@@ -35,6 +35,7 @@ console.log("User", User);
       case 'DD-MM-YYYY':
         return 'dd-MM-yyyy';
       case 'YYYY-MM-DD':
+        return 'yyyy-MM-dd';
       default:
         return 'yyyy-MM-dd';
     }
@@ -202,5 +203,6 @@ console.log("User", User);
     timezone,
     dateFormat,
     timeFormat,
+    IsLoading,
   };
 };
