@@ -47,6 +47,11 @@ export const SettingsPage: React.FC = () => {
   const [savingNotifications, setSavingNotifications] = useState<boolean>(false);
   const [savingPreferences, setSavingPreferences] = useState<boolean>(false);
   const [savingPassword, setSavingPassword] = useState<boolean>(false);
+  const [twoFactorLoading, setTwoFactorLoading] = useState<boolean>(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(false);
+  const [twoFactorQr, setTwoFactorQr] = useState<string | null>(null);
+  const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [apiKeys, setApiKeys] = useState<IApiKey[]>([]);
   const [sessions, setSessions] = useState<IUserSession[]>([]);
 
@@ -112,11 +117,12 @@ export const SettingsPage: React.FC = () => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const [profile, settings, apiKeysResponse, sessionsResponse] = await Promise.all([
+        const [profile, settings, apiKeysResponse, sessionsResponse, twoFAStatus] = await Promise.all([
           UserSettingsService.getProfile(),
           UserSettingsService.getSettings(),
           UserSettingsService.listApiKeys(),
           UserSettingsService.listSessions(),
+          UserSettingsService.get2FAStatus(),
         ]);
 
         const user: IUser | undefined = profile?.User;
@@ -143,6 +149,10 @@ export const SettingsPage: React.FC = () => {
 
         setApiKeys(apiKeysResponse || []);
         setSessions(sessionsResponse || []);
+        setTwoFactorEnabled(!!twoFAStatus?.enabled);
+        setTwoFactorQr(null);
+        setTwoFactorSecret(null);
+        setBackupCodes([]);
       } catch (err) {
         console.error("Failed to load settings", err);
         showError(t("settings.loadError"));
@@ -242,6 +252,69 @@ export const SettingsPage: React.FC = () => {
     } catch (err) {
       console.error("Test notification failed", err);
       showError(t("settings.saveFailed"));
+    }
+  };
+
+  const handleGenerate2FA = async () => {
+    try {
+      setTwoFactorLoading(true);
+      const result = await UserSettingsService.generate2FA();
+      setTwoFactorSecret(result.secret);
+      setTwoFactorQr(result.qrCodeUrl);
+      setBackupCodes([]);
+    } catch (err) {
+      console.error("Generate 2FA failed", err);
+      showError(t("settings.saveFailed"));
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  const handleEnable2FA = async (code: string) => {
+    try {
+      setTwoFactorLoading(true);
+      const result = await UserSettingsService.enable2FA(code);
+      setBackupCodes(result.backupCodes || []);
+      setTwoFactorEnabled(true);
+      setTwoFactorQr(null);
+      setTwoFactorSecret(null);
+      showSuccess(t("settings.2faEnabled"));
+    } catch (err) {
+      console.error("Enable 2FA failed", err);
+      showError(t("settings.saveFailed"));
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  const handleDisable2FA = async (code: string) => {
+    try {
+      setTwoFactorLoading(true);
+      await UserSettingsService.disable2FA(code);
+      setTwoFactorEnabled(false);
+      setTwoFactorQr(null);
+      setTwoFactorSecret(null);
+      setBackupCodes([]);
+      showSuccess(t("settings.2faDisabled"));
+    } catch (err) {
+      console.error("Disable 2FA failed", err);
+      showError(t("settings.saveFailed"));
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  const handleRegenerateBackupCodes = async () => {
+    try {
+      setTwoFactorLoading(true);
+      const codes = await UserSettingsService.regenerateBackupCodes();
+      setBackupCodes(codes || []);
+      showSuccess(t("settings.backupCodesRegenerated"));
+    } catch (err) {
+      console.error("Regenerate backup codes failed", err);
+      showError(t("settings.saveFailed"));
+    } finally {
+      setTwoFactorLoading(false);
     }
   };
 
@@ -407,7 +480,7 @@ export const SettingsPage: React.FC = () => {
               disabled={isLoading}
               saving={savingPreferences}
               onLanguageChange={handleLanguageChange}
-              onToggleMode={ToggleMode}
+              onToggleMode={handleToggleMode}
               onColorSelect={handleColorSelect}
               onTimezoneChange={setTimezone}
               onDateFormatChange={setDateFormat}
@@ -466,10 +539,19 @@ export const SettingsPage: React.FC = () => {
               newPassword={newPassword}
               confirmPassword={confirmPassword}
               disabled={isLoading || savingPassword}
+              twoFactorEnabled={twoFactorEnabled}
+              twoFactorLoading={twoFactorLoading}
+              qrCodeUrl={twoFactorQr}
+              secret={twoFactorSecret}
+              backupCodes={backupCodes}
               onCurrentPasswordChange={setCurrentPassword}
               onNewPasswordChange={setNewPassword}
               onConfirmPasswordChange={setConfirmPassword}
               onChangePassword={handleChangePassword}
+              onGenerate2FA={handleGenerate2FA}
+              onEnable2FA={handleEnable2FA}
+              onDisable2FA={handleDisable2FA}
+              onRegenerateBackupCodes={handleRegenerateBackupCodes}
               t={t}
             />
           </TabPanel>

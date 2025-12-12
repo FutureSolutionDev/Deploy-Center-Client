@@ -72,10 +72,10 @@ export const UserSettingsService = {
 
   regenerateBackupCodes: async (): Promise<string[]> => {
     const response = await ApiInstance.post('/users/me/2fa/backup-codes/regenerate');
-    return response.data.Data;
+    return response.data.Data?.backupCodes || [];
   },
 
-  get2FAStatus: async (): Promise<{ enabled: boolean; enabledAt?: Date }> => {
+  get2FAStatus: async (): Promise<{ enabled: boolean; enabledAt?: Date | null }> => {
     const response = await ApiInstance.get('/users/me/2fa/status');
     return response.data.Data;
   },
