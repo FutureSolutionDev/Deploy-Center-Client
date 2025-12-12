@@ -223,13 +223,24 @@ export const DeploymentsPage: React.FC = () => {
       {!loading && filteredDeployments.length > 0 && (
         <TableContainer
           component={Paper}
+          elevation={2}
+          variant="outlined"
           sx={{
             boxShadow: 2,
             borderRadius: 2,
+            maxHeight: '60dvh',
+            overflow: "auto",
           }}
         >
           <Table>
-            <TableHead>
+            <TableHead
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 1,
+              backgroundColor: 'background.paper',
+            }}
+            >
               <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05) }}>
                 <TableCell sx={{ fontWeight: 600 }}>{t("deployments.project")}</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>{t("deployments.branch")}</TableCell>
