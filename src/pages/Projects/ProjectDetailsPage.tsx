@@ -46,6 +46,7 @@ import { ProjectsService } from "@/services/projectsService";
 import { DeploymentsService } from "@/services/deploymentsService";
 import type { IProject, IDeployment, IProjectStatistics, IDeploymentRequest } from "@/types";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
+import { SshKeyManagement } from "@/components/Projects/SshKeyManagement";
 import {
   BarChart,
   Bar,
@@ -367,6 +368,9 @@ export const ProjectDetailsPage: React.FC = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {/* SSH Key Management */}
+          <SshKeyManagement project={project} onUpdate={fetchProjectDetails} />
         </Grid>
 
         {/* Right Column - Statistics & History */}

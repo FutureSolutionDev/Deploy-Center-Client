@@ -53,6 +53,77 @@ export const ProjectsService = {
     const response = await ApiInstance.get(`/projects/${id}/statistics`);
     return response.data.Data?.Statistics;
   },
+
+  // ========================================
+  // SSH KEY MANAGEMENT METHODS
+  // ========================================
+
+  /**
+   * Generate SSH key for project
+   * POST /api/projects/:id/ssh-key
+   */
+  generateSshKey: async (
+    id: number,
+    options?: { keyType?: 'ed25519' | 'rsa' }
+  ): Promise<{
+    PublicKey: string;
+    Fingerprint: string;
+    KeyType: 'ed25519' | 'rsa';
+  }> => {
+    const response = await ApiInstance.post(`/projects/${id}/ssh-key`, options || {});
+    return response.data.Data;
+  },
+
+  /**
+   * Regenerate (rotate) SSH key for project
+   * PUT /api/projects/:id/ssh-key
+   */
+  regenerateSshKey: async (id: number): Promise<{
+    PublicKey: string;
+    Fingerprint: string;
+    KeyType: 'ed25519' | 'rsa';
+  }> => {
+    const response = await ApiInstance.put(`/projects/${id}/ssh-key`);
+    return response.data.Data;
+  },
+
+  /**
+   * Delete SSH key from project
+   * DELETE /api/projects/:id/ssh-key
+   */
+  deleteSshKey: async (id: number): Promise<void> => {
+    await ApiInstance.delete(`/projects/${id}/ssh-key`);
+  },
+
+  /**
+   * Get SSH public key info
+   * GET /api/projects/:id/ssh-key
+   */
+  getSshPublicKey: async (id: number): Promise<{
+    PublicKey: string;
+    Fingerprint: string;
+    KeyType: string;
+    CreatedAt: Date;
+    RotatedAt: Date | null;
+  } | null> => {
+    try {
+      const response = await ApiInstance.get(`/projects/${id}/ssh-key`);
+      return response.data.Data;
+    } catch (error) {
+      if ((error as { response?: { status?: number } })?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Toggle SSH key usage
+   * PATCH /api/projects/:id/ssh-key/toggle
+   */
+  toggleSshKeyUsage: async (id: number, enabled: boolean): Promise<void> => {
+    await ApiInstance.patch(`/projects/${id}/ssh-key/toggle`, { enabled });
+  },
 };
 
 

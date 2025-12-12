@@ -70,6 +70,18 @@ export interface IProject {
   Config: IProjectConfig;
   CreatedAt: Date;
   UpdatedAt: Date;
+
+  // SSH Key Management Fields
+  UseSshKey: boolean;
+  SshKeyEncrypted?: string | null;
+  SshKeyIv?: string | null;
+  SshKeyAuthTag?: string | null;
+  SshPublicKey?: string | null;
+  SshKeyFingerprint?: string | null;
+  SshKeyType?: 'ed25519' | 'rsa' | null;
+  SshKeyCreatedAt?: Date | null;
+  SshKeyRotatedAt?: Date | null;
+  GitHubDeployKeyId?: number | null;
 }
 
 export interface IProjectConfig {
