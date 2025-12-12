@@ -89,8 +89,8 @@ class AuthService {
       payload
     );
 
-    // Check for success (some APIs return different response structures)
-    if (response.data.Success === false) {
+    // If server signals error via message/code, throw
+    if (response.data?.Message && response.data.Code && response.data.Code >= 400) {
       throw new Error(response.data.Message || 'Token refresh failed');
     }
   }

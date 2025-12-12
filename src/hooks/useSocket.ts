@@ -43,7 +43,7 @@ export const useSocket = () => {
     };
   }, []);
 
-  return { IsConnected, socket: SharedSocket };
+  return { IsConnected, isConnected: IsConnected, socket: SharedSocket };
 };
 
 export const useDeploymentUpdates = (projectId?: number) => {

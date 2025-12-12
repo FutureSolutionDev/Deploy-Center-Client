@@ -1,5 +1,6 @@
 import React from "react";
-import { Box, Button, Divider, TextField, Typography, Grid } from "@mui/material";
+import Grid from "@mui/material/GridLegacy";
+import { Box, Button, Divider, TextField, Typography } from "@mui/material";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
 
 interface IProfileTabProps {

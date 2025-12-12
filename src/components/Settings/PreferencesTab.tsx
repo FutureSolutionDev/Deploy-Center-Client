@@ -1,5 +1,6 @@
 import React from "react";
-import { Grid, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
+import Grid from "@mui/material/GridLegacy";
+import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
 
 interface IPreferencesTabProps {
   language: "en" | "ar";

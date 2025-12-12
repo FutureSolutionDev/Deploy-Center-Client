@@ -1,5 +1,6 @@
 import React from "react";
-import { Grid, Button, Divider, FormControlLabel, Switch, TextField, Typography } from "@mui/material";
+import Grid from "@mui/material/GridLegacy";
+import { Button, Divider, FormControlLabel, Switch, TextField, Typography } from "@mui/material";
 
 interface INotificationsTabProps {
   emailNotifications: boolean;

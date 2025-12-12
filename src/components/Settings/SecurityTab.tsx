@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Alert, Box, Button, Divider, Stack, TextField, Typography, Grid } from "@mui/material";
+import Grid from "@mui/material/GridLegacy";
+import { Alert, Box, Button, Divider, Stack, TextField, Typography } from "@mui/material";
 
 interface ISecurityTabProps {
   currentPassword: string;
