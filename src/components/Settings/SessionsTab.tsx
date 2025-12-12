@@ -14,6 +14,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { useDateFormatter } from "@/hooks/useDateFormatter";
 import type { IUserSession } from "@/types";
 
 interface ISessionsTabProps {
@@ -31,6 +32,7 @@ export const SessionsTab: React.FC<ISessionsTabProps> = ({
   onRevokeAll,
   t,
 }) => {
+  const { formatDateTime } = useDateFormatter();
   const [selectedSessionToKeep, setSelectedSessionToKeep] = useState<number | null>(
     sessions[0]?.Id ?? null
   );
@@ -91,7 +93,7 @@ export const SessionsTab: React.FC<ISessionsTabProps> = ({
                 </TableCell>
                 <TableCell>
                   {session.LastActivityAt
-                    ? new Date(session.LastActivityAt).toLocaleString()
+                    ? formatDateTime(session.LastActivityAt)
                     : t("settings.notAvailable")}
                 </TableCell>
                 <TableCell align="right">

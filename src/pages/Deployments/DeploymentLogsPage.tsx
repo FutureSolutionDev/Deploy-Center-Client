@@ -24,12 +24,14 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { DeploymentsService } from "@/services/deploymentsService";
+import { useDateFormatter } from "@/hooks/useDateFormatter";
 import type { IDeployment } from "@/types";
 
 export const DeploymentLogsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const [deployment, setDeployment] = useState<IDeployment | null>(null);
@@ -249,7 +251,7 @@ export const DeploymentLogsPage: React.FC = () => {
                 {t("deployments.startedAt")}
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {new Date(deployment.CreatedAt).toLocaleString()}
+                {formatDateTime(deployment.CreatedAt)}
               </Typography>
             </Box>
           </Box>

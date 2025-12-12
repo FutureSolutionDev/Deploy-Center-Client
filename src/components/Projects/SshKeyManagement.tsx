@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProjectsService } from '@/services/projectsService';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { IProject } from '@/types';
 
 interface ISshKeyManagementProps {
@@ -39,6 +40,7 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
   onUpdate,
 }) => {
   const { t } = useLanguage();
+  const { formatDateTime } = useDateFormatter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -154,10 +156,6 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
     }
   };
 
-  const formatDate = (date: Date | string | null) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleString();
-  };
 
   return (
     <Card
@@ -255,12 +253,12 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
                   </Box>
 
                   <Typography variant="body2" color="text.secondary">
-                    <strong>{t('projects.created') || 'Created'}:</strong> {formatDate(sshKeyInfo.CreatedAt)}
+                    <strong>{t('projects.created') || 'Created'}:</strong> {formatDateTime(sshKeyInfo.CreatedAt)}
                   </Typography>
 
                   {sshKeyInfo.RotatedAt && (
                     <Typography variant="body2" color="text.secondary">
-                      <strong>{t('projects.lastRotated') || 'Last Rotated'}:</strong> {formatDate(sshKeyInfo.RotatedAt)}
+                      <strong>{t('projects.lastRotated') || 'Last Rotated'}:</strong> {formatDateTime(sshKeyInfo.RotatedAt)}
                     </Typography>
                   )}
                 </Stack>

@@ -44,6 +44,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProjectsService } from "@/services/projectsService";
 import { DeploymentsService } from "@/services/deploymentsService";
+import { useDateFormatter } from "@/hooks/useDateFormatter";
 import type { IProject, IDeployment, IProjectStatistics, IDeploymentRequest } from "@/types";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
 import { SshKeyManagement } from "@/components/Projects/SshKeyManagement";
@@ -61,7 +62,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-
+  const { formatDateTime } = useDateFormatter();
 
   const [project, setProject] = useState<IProject | null>(null);
   const [deployments, setDeployments] = useState<IDeployment[]>([]);
@@ -483,7 +484,7 @@ export const ProjectDetailsPage: React.FC = () => {
                           <TableCell>{deployment.Branch}</TableCell>
                           <TableCell>
                             <Typography variant="caption">
-                              {new Date(deployment.CreatedAt).toLocaleString()}
+                              {formatDateTime(deployment.CreatedAt)}
                             </Typography>
                           </TableCell>
                           <TableCell>

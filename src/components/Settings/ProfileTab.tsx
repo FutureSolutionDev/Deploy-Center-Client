@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Button, Divider, TextField, Typography, Grid } from "@mui/material";
+import { useDateFormatter } from "@/hooks/useDateFormatter";
 
 interface IProfileTabProps {
   fullName: string;
@@ -28,6 +29,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
   onSave,
   t,
 }) => {
+  const { formatDateTime, formatDate } = useDateFormatter();
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -70,7 +72,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
               {t("settings.lastLogin")}
             </Typography>
             <Typography variant="body1" fontWeight={600}>
-              {lastLogin ? new Date(lastLogin).toLocaleString() : t("settings.notAvailable")}
+              {lastLogin ? formatDateTime(lastLogin) : t("settings.notAvailable")}
             </Typography>
           </Box>
         </Grid>
@@ -80,7 +82,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
               {t("settings.memberSince")}
             </Typography>
             <Typography variant="body1" fontWeight={600}>
-              {memberSince ? new Date(memberSince).toLocaleDateString() : t("settings.notAvailable")}
+              {memberSince ? formatDate(memberSince) : t("settings.notAvailable")}
             </Typography>
           </Box>
         </Grid>

@@ -29,12 +29,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import { DeploymentsService } from '@/services/deploymentsService';
 import { useDeploymentUpdates, useDeploymentEvents } from '@/hooks/useSocket';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { IDeployment } from '@/types';
 
 export const DeploymentDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { formatDateTime } = useDateFormatter();
     const logsEndRef = useRef<HTMLDivElement>(null);
 
     const [deployment, setDeployment] = useState<IDeployment | null>(null);
@@ -229,7 +231,7 @@ export const DeploymentDetailsPage: React.FC = () => {
                                 </Box>
                                 <Box>
                                     <Typography variant="caption" color="text.secondary">Date</Typography>
-                                    <Typography variant="body1">{new Date(deployment.CreatedAt).toLocaleString()}</Typography>
+                                    <Typography variant="body1">{formatDateTime(deployment.CreatedAt)}</Typography>
                                 </Box>
                             </Box>
                         </CardContent>

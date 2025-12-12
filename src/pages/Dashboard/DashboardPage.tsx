@@ -18,6 +18,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectsService } from '@/services/projectsService';
 import { DeploymentsService } from '@/services/deploymentsService';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { IDeployment } from '@/types';
 
 interface IStatCard {
@@ -31,6 +32,7 @@ interface IStatCard {
 export const DashboardPage: React.FC = () => {
   const { t } = useLanguage();
   const { User } = useAuth();
+  const { formatDateTime } = useDateFormatter();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<IStatCard[]>([]);
   const [recentDeployments, setRecentDeployments] = useState<IDeployment[]>([]);
@@ -185,7 +187,7 @@ export const DashboardPage: React.FC = () => {
                   {deployment.ProjectName}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {deployment.Branch} • {new Date(deployment.CreatedAt).toLocaleString()}
+                  {deployment.Branch} • {formatDateTime(deployment.CreatedAt)}
                 </Typography>
               </Box>
               <Chip

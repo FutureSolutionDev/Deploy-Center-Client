@@ -32,10 +32,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { DeploymentsService } from '@/services/deploymentsService';
 import { useSocket, useDeploymentEvents } from '@/hooks/useSocket';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { IDeployment } from '@/types';
 
 export const QueuePage: React.FC = () => {
     const { t } = useTranslation();
+    const { formatDateTime } = useDateFormatter();
 
     const [queue, setQueue] = useState<IDeployment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -269,7 +271,7 @@ export const QueuePage: React.FC = () => {
                                     <TableCell>{getStatusChip(deployment.Status)}</TableCell>
                                     <TableCell>
                                         <Typography variant="body2">
-                                            {new Date(deployment?.CreatedAt).toLocaleString()}
+                                            {formatDateTime(deployment?.CreatedAt)}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>

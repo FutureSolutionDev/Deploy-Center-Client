@@ -34,11 +34,13 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DeploymentsService } from "@/services/deploymentsService";
 import { useSocket, useDeploymentEvents } from "@/hooks/useSocket";
+import { useDateFormatter } from "@/hooks/useDateFormatter";
 import type { IDeployment } from "@/types";
 
 export const DeploymentsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { formatDateTime } = useDateFormatter();
 
   const [deployments, setDeployments] = useState<IDeployment[]>([]);
   const [filteredDeployments, setFilteredDeployments] = useState<IDeployment[]>([]);
@@ -294,7 +296,7 @@ export const DeploymentsPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {new Date(deployment.CreatedAt).toLocaleString()}
+                      {formatDateTime(deployment.CreatedAt)}
                     </Typography>
                   </TableCell>
                   <TableCell>

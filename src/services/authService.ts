@@ -23,12 +23,7 @@ class AuthService {
       credentials
     );
 
-    console.error('🔍 AuthService - Full response:', response);
-    console.error('🔍 AuthService - response.data:', response.data);
-
     const data = response.data.Data;
-    console.error('🔍 AuthService - data:', data);
-    console.error('🔍 AuthService - data?.TwoFactorRequired:', data?.TwoFactorRequired);
 
     if (data?.TwoFactorRequired) {
       const challenge = {
@@ -36,16 +31,13 @@ class AuthService {
         UserId: (data as any).UserId,
         Username: (data as any).Username,
       };
-      console.error('🔍 AuthService - Returning 2FA challenge:', challenge);
       return challenge;
     }
 
     if (data?.User) {
-      console.error('🔍 AuthService - Returning auth response with user');
       return data as IAuthResponse;
     }
 
-    console.error('🔍 AuthService - Login failed, throwing error');
     throw new Error(response.data.Message || 'Login failed');
   }
 

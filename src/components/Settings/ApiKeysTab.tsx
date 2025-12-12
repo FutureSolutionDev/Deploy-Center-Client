@@ -25,6 +25,7 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import { useDateFormatter } from "@/hooks/useDateFormatter";
 import type { IApiKey } from "@/types";
 
 export interface ICreateApiKeyInput {
@@ -58,6 +59,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
   availableScopes,
   t,
 }) => {
+  const { formatDateTime } = useDateFormatter();
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newScopes, setNewScopes] = useState<string[]>(["deployments:read"]);
@@ -123,8 +125,8 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
                     ))}
                   </Box>
                 </TableCell>
-                <TableCell>{new Date(key.CreatedAt).toLocaleString()}</TableCell>
-                <TableCell>{key.LastUsedAt ? new Date(key.LastUsedAt).toLocaleString() : t("settings.notAvailable")}</TableCell>
+                <TableCell>{formatDateTime(key.CreatedAt)}</TableCell>
+                <TableCell>{key.LastUsedAt ? formatDateTime(key.LastUsedAt) : t("settings.notAvailable")}</TableCell>
                 <TableCell align="right">
                   <Tooltip title={t("settings.revoke")}>
                     <Button
