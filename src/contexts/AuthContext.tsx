@@ -18,6 +18,7 @@ interface IAuthContextValue {
   User: IUser | null;
   IsAuthenticated: boolean;
   IsLoading: boolean;
+  HasSession: boolean;
   Login: (credentials: ILoginCredentials) => Promise<IAuthResponse | ITwoFactorChallenge>;
   Verify2FA: (userId: number, code: string) => Promise<IAuthResponse>;
   Register: (data: IRegisterData) => Promise<void>;
@@ -34,24 +35,34 @@ interface IAuthProviderProps {
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [User, setUser] = useState<IUser | null>(null);
   const [IsLoading, setIsLoading] = useState<boolean>(true);
+  const [HasSession, setHasSession] = useState<boolean>(() => !sessionStorage.getItem('dc_no_session'));
 
   // Initialize auth state by checking if user is authenticated via cookie
   useEffect(() => {
+    if (!HasSession) {
+      setIsLoading(false);
+      return;
+    }
+
     const InitializeAuth = async () => {
       try {
         // Try to fetch profile - if cookie exists and valid, this will succeed
         const profile = await AuthService.GetProfile();
         setUser(profile);
+        setHasSession(true);
+        sessionStorage.removeItem('dc_no_session');
       } catch (_error: unknown) {
         // No valid cookie or session - user is not authenticated
         setUser(null);
+        setHasSession(false);
+        sessionStorage.setItem('dc_no_session', '1');
       } finally {
         setIsLoading(false);
       }
     };
 
     InitializeAuth();
-  }, []);
+  }, [HasSession]);
 
   const Login = async (credentials: ILoginCredentials): Promise<IAuthResponse | ITwoFactorChallenge> => {
     try {
@@ -61,6 +72,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       // We only need to update the user state
       if ('User' in response) {
         setUser(response.User);
+        setHasSession(true);
+        sessionStorage.removeItem('dc_no_session');
       }
       // For 2FA, don't update user state - wait for verification
       return response;
@@ -75,6 +88,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       const response = await AuthService.Verify2FA(userId, code);
       setUser(response.User);
+      setHasSession(true);
+      sessionStorage.removeItem('dc_no_session');
       return response;
     } catch (error) {
       console.error('2FA verification error:', error);
@@ -109,6 +124,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     } finally {
       // Clear user state regardless of API response
       setUser(null);
+      setHasSession(false);
+      sessionStorage.setItem('dc_no_session', '1');
     }
   };
 
@@ -128,6 +145,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     User,
     IsAuthenticated: !!User,
     IsLoading,
+    HasSession,
     Login,
     Verify2FA,
     Register,
