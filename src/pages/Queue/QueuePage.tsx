@@ -260,16 +260,16 @@ export const QueuePage: React.FC = () => {
                                     <TableCell>{index + 1}</TableCell>
                                     <TableCell>
                                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                            {deployment.ProjectName}
+                                            {deployment?.Project?.Name}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Typography variant="body2">{deployment.Branch}</Typography>
+                                        <Typography variant="body2">{deployment?.Branch}</Typography>
                                     </TableCell>
                                     <TableCell>{getStatusChip(deployment.Status)}</TableCell>
                                     <TableCell>
                                         <Typography variant="body2">
-                                            {new Date(deployment.CreatedAt).toLocaleString()}
+                                            {new Date(deployment?.CreatedAt).toLocaleString()}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>

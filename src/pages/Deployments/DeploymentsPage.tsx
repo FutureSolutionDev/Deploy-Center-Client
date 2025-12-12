@@ -262,11 +262,11 @@ export const DeploymentsPage: React.FC = () => {
                 >
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {deployment.ProjectName}
+                      {deployment?.Project?.Name}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip label={deployment.Branch} size="small" variant="outlined" />
+                    <Chip label={deployment?.Branch} size="small" variant="outlined" />
                   </TableCell>
                   <TableCell>{getStatusChip(deployment.Status)}</TableCell>
                   <TableCell>
@@ -280,7 +280,7 @@ export const DeploymentsPage: React.FC = () => {
                         borderRadius: 0.5,
                       }}
                     >
-                      {deployment.Commit?.substring(0, 7) || "N/A"}
+                      {deployment.CommitHash?.substring(0, 7) || "N/A"}
                     </Typography>
                   </TableCell>
                   <TableCell>
