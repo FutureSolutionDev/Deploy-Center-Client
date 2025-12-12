@@ -151,7 +151,7 @@ export const DeploymentsPage: React.FC = () => {
     return (
       <Chip
         label={config.label}
-        color={config.color as string}
+        color={config.color as any}
         size="small"
         icon={config.icon || undefined}
       />
@@ -291,7 +291,7 @@ export const DeploymentsPage: React.FC = () => {
                         borderRadius: 0.5,
                       }}
                     >
-                      {deployment.CommitHash?.substring(0, 7) || "N/A"}
+                      {(deployment as any).CommitHash?.substring(0, 7) || "N/A"}
                     </Typography>
                   </TableCell>
                   <TableCell>

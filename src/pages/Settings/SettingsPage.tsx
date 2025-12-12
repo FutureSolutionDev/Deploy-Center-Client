@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Box, Card, CardContent, Tab, Tabs, Typography } from "@mui/material";
+import {
+  Alert, Box, Card, CardContent, Tab, Tabs, Typography
+} from "@mui/material";
 import {
   AccountCircle as AccountIcon,
   Notifications as NotificationsIcon,
@@ -389,7 +391,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleColorSelect = (value: string) => {
-    SetColor(value as string);
+    SetColor(value as any);
     void savePreferencesPartial({ ColorTheme: value });
   };
 

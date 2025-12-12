@@ -1,50 +1,49 @@
-import { useEffect, useState, useRef } from 'react';
-import { socketService } from '../services/socket';
-import type { IDeployment } from '../types';
+import { useEffect, useState } from "react";
+import { socketService } from "../services/socket";
+import type { IDeployment } from "../types";
 
 // Single shared socket connection state
-let sharedSocket: any = null;
-let connectionListeners: Set<(connected: boolean) => void> = new Set();
+let SharedSocket: any = null;
+const ConnectionListeners: Set<(connected: boolean) => void> = new Set();
 
 export const useSocket = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const isInitialized = useRef(false);
+  const [IsConnected, SetIsConnected] = useState(
+    () => SharedSocket?.connected || false
+  );
 
   useEffect(() => {
     // Only initialize socket once globally
-    if (!sharedSocket) {
-      sharedSocket = socketService.connect();
+    if (!SharedSocket) {
+      SharedSocket = socketService.connect();
 
       const onConnect = () => {
-        connectionListeners.forEach(listener => listener(true));
+        ConnectionListeners.forEach((listener) => listener(true));
       };
 
       const onDisconnect = () => {
-        connectionListeners.forEach(listener => listener(false));
+        ConnectionListeners.forEach((listener) => listener(false));
       };
 
-      sharedSocket.on('connect', onConnect);
-      sharedSocket.on('disconnect', onDisconnect);
-
+      SharedSocket.on("connect", onConnect);
+      SharedSocket.on("disconnect", onDisconnect);
       // Initial check
       setTimeout(() => {
-        connectionListeners.forEach(listener => listener(sharedSocket.connected));
+        ConnectionListeners.forEach((listener) =>
+          listener(SharedSocket.connected)
+        );
       }, 0);
     }
-
     // Subscribe this component to connection updates
-    connectionListeners.add(setIsConnected);
-
-    // Set initial state
-    setIsConnected(sharedSocket?.connected || false);
+    ConnectionListeners.add(SetIsConnected);
+    // Set initial state - handled by useState initializer
 
     return () => {
       // Unsubscribe when component unmounts
-      connectionListeners.delete(setIsConnected);
+      ConnectionListeners.delete(SetIsConnected);
     };
   }, []);
 
-  return { isConnected, socket: sharedSocket };
+  return { IsConnected, socket: SharedSocket };
 };
 
 export const useDeploymentUpdates = (projectId?: number) => {
@@ -80,12 +79,12 @@ export const useDeploymentEvents = (
       if (onComplete) onComplete(deployment);
     };
 
-    socket.on('deployment:updated', handleUpdate);
-    socket.on('deployment:completed', handleComplete);
+    socket.on("deployment:updated", handleUpdate);
+    socket.on("deployment:completed", handleComplete);
 
     return () => {
-      socket.off('deployment:updated', handleUpdate);
-      socket.off('deployment:completed', handleComplete);
+      socket.off("deployment:updated", handleUpdate);
+      socket.off("deployment:completed", handleComplete);
     };
   }, [socket, onUpdate, onComplete]);
 };

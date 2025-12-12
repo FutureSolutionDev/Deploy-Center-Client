@@ -14,7 +14,6 @@ import {
     Alert,
     IconButton,
     Tooltip,
-    alpha,
 } from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
@@ -63,7 +62,7 @@ export const DeploymentDetailsPage: React.FC = () => {
             if (!id) return;
             const data = await DeploymentsService.getById(Number(id));
             setDeployment(data);
-        } catch (err) {
+        } catch (_err) {
             setError('Failed to load deployment details');
         } finally {
             setLoading(false);
@@ -75,7 +74,7 @@ export const DeploymentDetailsPage: React.FC = () => {
             if (!id) return;
             const logData = await DeploymentsService.getLogs(Number(id));
             setLogs(logData);
-        } catch (err) {
+        } catch (_err) {
             console.error('Failed to load logs');
         }
     };

@@ -77,7 +77,7 @@ export const DeploymentLogsPage: React.FC = () => {
     fetchLogs();
 
     // Auto-refresh logs every 3 seconds if deployment is in progress
-    let interval: NodeJS.Timeout | null = null;
+    let interval: number | null = null;
 
     if (deployment?.Status === 'inProgress') {
       interval = setInterval(() => {

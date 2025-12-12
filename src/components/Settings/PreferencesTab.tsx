@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid,Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
+import { Grid, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
 
 interface IPreferencesTabProps {
   language: "en" | "ar";
@@ -56,7 +56,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
       </Typography>
 
       <Grid container spacing={4}>
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.language")}</InputLabel>
             <Select
@@ -71,7 +71,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
           </FormControl>
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <FormControlLabel
             control={<Switch checked={mode === "dark"} onChange={onToggleMode} disabled={saving || disabled} />}
             label={mode === "dark" ? t("settings.darkModeOn") : t("settings.darkModeOff")}
@@ -81,7 +81,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
           </Typography>
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.timezone")}</InputLabel>
             <Select
@@ -99,7 +99,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
           </FormControl>
         </Grid>
 
-        <Grid xs={12} md={3}>
+        <Grid item xs={12} md={3}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.dateFormat")}</InputLabel>
             <Select
@@ -117,7 +117,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
           </FormControl>
         </Grid>
 
-        <Grid xs={12} md={3}>
+        <Grid item xs={12} md={3}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.timeFormat")}</InputLabel>
             <Select
@@ -135,7 +135,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
           </FormControl>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
             {t("settings.colorTheme")}
           </Typography>
@@ -182,7 +182,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
           </Typography>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <Button variant="contained" onClick={onSave} disabled={saving || disabled}>
             {t("settings.saveChanges")}
           </Button>

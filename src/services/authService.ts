@@ -26,7 +26,7 @@ class AuthService {
     const data = response.data.Data;
 
     if (data?.TwoFactorRequired) {
-      const challenge = {
+      const challenge: ITwoFactorChallenge = {
         TwoFactorRequired: true,
         UserId: (data as any).UserId,
         Username: (data as any).Username,
@@ -89,7 +89,8 @@ class AuthService {
       payload
     );
 
-    if (!response.data.Success) {
+    // Check for success (some APIs return different response structures)
+    if (response.data.Success === false) {
       throw new Error(response.data.Message || 'Token refresh failed');
     }
   }

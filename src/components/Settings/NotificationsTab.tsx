@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid,Button, Divider, FormControlLabel, Switch, TextField, Typography } from "@mui/material";
+import { Grid, Button, Divider, FormControlLabel, Switch, TextField, Typography } from "@mui/material";
 
 interface INotificationsTabProps {
   emailNotifications: boolean;
@@ -50,7 +50,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
       <Divider sx={{ mb: 3 }} />
 
       <Grid container spacing={3}>
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <FormControlLabel
             control={
               <Switch
@@ -66,7 +66,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
           </Typography>
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <FormControlLabel
             control={
               <Switch
@@ -79,7 +79,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
           />
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <FormControlLabel
             control={
               <Switch
@@ -92,7 +92,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
           />
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <FormControlLabel
             control={
               <Switch
@@ -105,7 +105,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
           />
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <FormControlLabel
             control={
               <Switch
@@ -118,7 +118,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
           />
         </Grid>
 
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <TextField
             fullWidth
             label={t("settings.discordWebhook")}
@@ -129,7 +129,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
           />
         </Grid>
 
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <TextField
             fullWidth
             label={t("settings.slackWebhook")}
@@ -140,7 +140,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
           />
         </Grid>
 
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <Button variant="contained" onClick={onSave} disabled={disabled}>
             {t("settings.saveNotificationSettings")}
           </Button>

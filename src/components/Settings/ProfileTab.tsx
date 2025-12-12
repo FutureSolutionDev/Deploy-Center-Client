@@ -38,7 +38,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
       <Divider sx={{ mb: 3 }} />
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <TextField
             fullWidth
             label={t("settings.fullName")}
@@ -47,7 +47,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             onChange={(e) => onFullNameChange(e.target.value)}
           />
         </Grid>
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <TextField
             fullWidth
             label={t("settings.username")}
@@ -56,7 +56,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             onChange={(e) => onUsernameChange(e.target.value)}
           />
         </Grid>
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <TextField
             fullWidth
             label={t("settings.email")}
@@ -66,7 +66,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             onChange={(e) => onEmailChange(e.target.value)}
           />
         </Grid>
-        <Grid xs={12} md={6} display="flex" alignItems="center">
+        <Grid item xs={12} md={6} display="flex" alignItems="center">
           <Box>
             <Typography variant="body2" color="text.secondary">
               {t("settings.lastLogin")}
@@ -76,7 +76,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             </Typography>
           </Box>
         </Grid>
-        <Grid xs={12} md={6} display="flex" alignItems="center">
+        <Grid item xs={12} md={6} display="flex" alignItems="center">
           <Box>
             <Typography variant="body2" color="text.secondary">
               {t("settings.memberSince")}
@@ -86,7 +86,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             </Typography>
           </Box>
         </Grid>
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <Button variant="contained" onClick={onSave} disabled={disabled}>
             {t("settings.saveChanges")}
           </Button>

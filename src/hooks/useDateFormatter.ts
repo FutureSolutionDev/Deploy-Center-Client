@@ -9,7 +9,7 @@ import { parseISO } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 import { useUserSettings } from '@/contexts/UserSettingsContext';
 
-export type TDateFormatType = 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'DD-MM-YYYY';
+export type TDateFormatType = 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY';
 export type TTimeFormatType = '12h' | '24h';
 
 interface IDateFormatterOptions {
@@ -22,7 +22,7 @@ export const useDateFormatter = () => {
 
   // Get user preferences from settings, with fallbacks
   const timezone = Settings?.Timezone || 'UTC';
-  const dateFormat: TDateFormatType = Settings?.DateFormat || 'DD-MM-YYYY';
+  const dateFormat: TDateFormatType = Settings?.DateFormat || 'YYYY-MM-DD';
   const timeFormat: TTimeFormatType = Settings?.TimeFormat || '12h';
 
   // Convert date format to date-fns format string
