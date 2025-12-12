@@ -25,17 +25,21 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { ILoginCredentials } from "@/types";
+import type { ILoginCredentials, ITwoFactorChallenge } from "@/types";
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { Login } = useAuth();
+  const { Login, Verify2FA } = useAuth();
   const { t } = useLanguage();
 
   const [Credentials, setCredentials] = useState<ILoginCredentials>({
     Username: "",
     Password: "",
+    TotpCode: "",
   });
+  const [RequireTotp, setRequireTotp] = useState(false);
+  const [PendingUserId, setPendingUserId] = useState<number | null>(null);
+  const [Info, setInfo] = useState<string | null>(null);
 
   const [ShowPassword, setShowPassword] = useState(false);
   const [Loading, setLoading] = useState(false);
@@ -54,6 +58,7 @@ export const LoginPage: React.FC = () => {
   const HandleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setInfo(null);
 
     // Validation
     if (!Credentials.Username.trim()) {
@@ -66,15 +71,62 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    if (RequireTotp) {
+      if (!Credentials.TotpCode) {
+        setError(t("auth.totpRequired"));
+        return;
+      }
+
+      if (!PendingUserId) {
+        setError(t("auth.loginFailed"));
+        return;
+      }
+
+      try {
+        setLoading(true);
+        await Verify2FA(PendingUserId, Credentials.TotpCode);
+        navigate("/dashboard");
+      } catch (error: unknown) {
+        const errorMessage =
+          error && typeof error === "object" && "message" in error
+            ? String(error.message)
+            : t("auth.loginFailed");
+
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       setLoading(true);
-      await Login(Credentials);
+      const response = await Login(Credentials);
+
+      if ("TwoFactorRequired" in response && response.TwoFactorRequired) {
+        const challenge = response as ITwoFactorChallenge;
+        setRequireTotp(true);
+        setPendingUserId(challenge.UserId);
+        setInfo(t("auth.totpPrompt"));
+        setError(null);
+        return;
+      }
+
       navigate("/dashboard");
     } catch (error: unknown) {
       const errorMessage =
         error && typeof error === "object" && "message" in error
           ? String(error.message)
           : t("auth.loginFailed");
+
+      const lower = errorMessage.toLowerCase();
+      if (lower.includes("two-factor") || lower.includes("2fa")) {
+        setRequireTotp(true);
+        setInfo(t("auth.totpPrompt"));
+        setError(null);
+        return;
+      }
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -120,6 +172,11 @@ export const LoginPage: React.FC = () => {
               {Error}
             </Alert>
           )}
+          {Info && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              {Info}
+            </Alert>
+          )}
 
           <form onSubmit={HandleSubmit}>
             <TextField
@@ -156,6 +213,18 @@ export const LoginPage: React.FC = () => {
                 ),
               }}
             />
+
+            {RequireTotp && (
+              <TextField
+                fullWidth
+                label={t("auth.totpCode")}
+                value={Credentials.TotpCode || ""}
+                onChange={HandleChange("TotpCode")}
+                margin="normal"
+                autoComplete="one-time-code"
+                disabled={Loading}
+              />
+            )}
 
             <Button
               fullWidth

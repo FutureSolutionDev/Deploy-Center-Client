@@ -6,13 +6,20 @@
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import AuthService from '@/services/authService';
-import type { IUser, ILoginCredentials, IRegisterData } from '@/types';
+import type {
+  IUser,
+  ILoginCredentials,
+  IRegisterData,
+  IAuthResponse,
+  ITwoFactorChallenge,
+} from '@/types';
 
 interface IAuthContextValue {
   User: IUser | null;
   IsAuthenticated: boolean;
   IsLoading: boolean;
-  Login: (credentials: ILoginCredentials) => Promise<void>;
+  Login: (credentials: ILoginCredentials) => Promise<IAuthResponse | ITwoFactorChallenge>;
+  Verify2FA: (userId: number, code: string) => Promise<IAuthResponse>;
   Register: (data: IRegisterData) => Promise<void>;
   Logout: () => Promise<void>;
   RefreshUser: () => Promise<void>;
@@ -46,16 +53,33 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     InitializeAuth();
   }, []);
 
-  const Login = async (credentials: ILoginCredentials): Promise<void> => {
+  const Login = async (credentials: ILoginCredentials): Promise<IAuthResponse | ITwoFactorChallenge> => {
     try {
       setIsLoading(true);
       const response = await AuthService.Login(credentials);
 
       // Cookie is set automatically by the backend (httpOnly)
       // We only need to update the user state
-      setUser(response.User);
+      if ('User' in response) {
+        setUser(response.User);
+      }
+      return response;
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const Verify2FA = async (userId: number, code: string): Promise<IAuthResponse> => {
+    try {
+      setIsLoading(true);
+      const response = await AuthService.Verify2FA(userId, code);
+      setUser(response.User);
+      return response;
+    } catch (error) {
+      console.error('2FA verification error:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -107,6 +131,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     IsAuthenticated: !!User,
     IsLoading,
     Login,
+    Verify2FA,
     Register,
     Logout,
     RefreshUser,

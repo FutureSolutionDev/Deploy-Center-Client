@@ -37,6 +37,13 @@ export interface IAuthTokens {
 export interface ILoginCredentials {
   Username: string;
   Password: string;
+  TotpCode?: string;
+}
+
+export interface ITwoFactorChallenge {
+  TwoFactorRequired: true;
+  UserId: number;
+  Username: string;
 }
 
 export interface IRegisterData {

@@ -9,21 +9,32 @@ import type {
   IRegisterData,
   IAuthResponse,
   IUser,
-  IApiResponse
+  IApiResponse,
+  ITwoFactorChallenge
 } from '@/types';
 
 class AuthService {
   /**
    * Login user with credentials
    */
-  async Login(credentials: ILoginCredentials): Promise<IAuthResponse> {
-    const response = await ApiInstance.post<IApiResponse<IAuthResponse>>(
+  async Login(credentials: ILoginCredentials): Promise<IAuthResponse | ITwoFactorChallenge> {
+    const response = await ApiInstance.post<IApiResponse<IAuthResponse & Partial<ITwoFactorChallenge>>>(
       '/auth/login',
       credentials
     );
 
-    if (response.data.Data) {
-      return response.data.Data;
+    const data = response.data.Data;
+
+    if (data?.TwoFactorRequired) {
+      return {
+        TwoFactorRequired: true,
+        UserId: (data as any).UserId,
+        Username: (data as any).Username,
+      };
+    }
+
+    if (data?.User) {
+      return data as IAuthResponse;
     }
 
     throw new Error(response.data.Message || 'Login failed');
