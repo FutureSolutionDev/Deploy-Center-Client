@@ -35,10 +35,20 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material'],
-          'chart-vendor': ['recharts'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-router-dom') || id.includes('react-dom') || id.includes('react')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@mui/material')) return 'mui-core';
+            if (id.includes('@mui/icons-material')) return 'mui-icons';
+            if (id.includes('recharts')) return 'chart-vendor';
+            if (id.includes('date-fns')) return 'date-vendor';
+            if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n-vendor';
+            if (id.includes('socket.io-client')) return 'socket-vendor';
+            if (id.includes('axios') || id.includes('js-cookie') || id.includes('jwt-decode')) return 'http-utils';
+          }
+          return undefined;
         },
       },
     },
