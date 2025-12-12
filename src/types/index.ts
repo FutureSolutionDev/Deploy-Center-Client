@@ -20,6 +20,11 @@ export interface IUser {
   IsActive: boolean;
   TwoFactorEnabled: boolean;
   LastLogin?: Date;
+  FullName?: string | null;
+  AvatarUrl?: string | null;
+  AccountStatus?: 'active' | 'suspended' | 'deleted';
+  LastPasswordChangeAt?: Date | null;
+  Settings?: IUserSettings;
   CreatedAt: Date;
   UpdatedAt: Date;
 }
@@ -43,6 +48,84 @@ export interface IRegisterData {
 export interface IAuthResponse {
   User: IUser;
   Tokens?: IAuthTokens; // Optional because server uses httpOnly cookies
+}
+
+// User Settings & Preferences
+export interface IUserSettings {
+  Id: number;
+  UserId: number;
+  EmailNotifications: boolean;
+  DiscordWebhookUrl?: string | null;
+  SlackWebhookUrl?: string | null;
+  NotifyOnSuccess: boolean;
+  NotifyOnFailure: boolean;
+  NotifyOnProjectUpdate: boolean;
+  NotifyOnSystemAlert: boolean;
+  Timezone: string;
+  DateFormat: string;
+  TimeFormat: '12h' | '24h';
+  Language: string;
+  Theme: string;
+  ColorTheme: string;
+  CreatedAt: Date;
+  UpdatedAt: Date;
+}
+
+export interface INotificationSettings {
+  EmailNotifications?: boolean;
+  DiscordWebhookUrl?: string | null;
+  SlackWebhookUrl?: string | null;
+  NotifyOnSuccess?: boolean;
+  NotifyOnFailure?: boolean;
+  NotifyOnProjectUpdate?: boolean;
+  NotifyOnSystemAlert?: boolean;
+}
+
+export interface IUserPreferences {
+  Timezone?: string;
+  DateFormat?: string;
+  TimeFormat?: '12h' | '24h';
+  Language?: string;
+  Theme?: string;
+  ColorTheme?: string;
+}
+
+export interface IUserProfile {
+  User: IUser;
+  Settings?: IUserSettings;
+}
+
+export interface IApiKey {
+  Id: number;
+  UserId: number;
+  Name: string;
+  Description?: string | null;
+  KeyPrefix: string;
+  Scopes: string[];
+  IsActive: boolean;
+  ExpiresAt?: Date | null;
+  LastUsedAt?: Date | null;
+  UsageCount: number;
+  CreatedAt: Date;
+  UpdatedAt: Date;
+}
+
+export interface IApiKeyCreateResponse {
+  keyId: number;
+  key: string;
+  prefix: string;
+}
+
+export interface IUserSession {
+  Id: number;
+  UserId: number;
+  DeviceInfo?: Record<string, any> | null;
+  IpAddress?: string | null;
+  UserAgent?: string | null;
+  IsActive: boolean;
+  ExpiresAt: Date;
+  CreatedAt: Date;
+  LastActivityAt: Date;
 }
 
 // Project Types

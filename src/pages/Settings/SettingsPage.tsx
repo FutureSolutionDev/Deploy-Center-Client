@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -16,8 +16,8 @@ import {
   FormControlLabel,
   Divider,
   Alert,
-  Grid,
   alpha,
+  Grid,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -29,6 +29,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import UserSettingsService from "@/services/userSettingsService";
+import type { IUser, IUserSettings } from "@/types";
 
 interface ITabPanelProps {
   children?: React.ReactNode;
@@ -52,15 +54,112 @@ export const SettingsPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [savingProfile, setSavingProfile] = useState<boolean>(false);
+  const [savingNotifications, setSavingNotifications] = useState<boolean>(false);
+  const [savingPreferences, setSavingPreferences] = useState<boolean>(false);
+  const [savingPassword, setSavingPassword] = useState<boolean>(false);
 
   // Profile state
   const [username, setUsername] = useState(User?.Username || "");
   const [email, setEmail] = useState(User?.Email || "");
+  const [fullName, setFullName] = useState(User?.FullName || "");
+  const [lastLogin, setLastLogin] = useState<Date | undefined>(User?.LastLogin);
+  const [memberSince, setMemberSince] = useState<Date | undefined>(User?.CreatedAt);
 
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [discordWebhook, setDiscordWebhook] = useState("");
   const [slackWebhook, setSlackWebhook] = useState("");
+  const [notifySuccess, setNotifySuccess] = useState(true);
+  const [notifyFailure, setNotifyFailure] = useState(true);
+  const [notifyProjectUpdate, setNotifyProjectUpdate] = useState(true);
+  const [notifySystemAlert, setNotifySystemAlert] = useState(true);
+
+  // Preferences
+  const [timezone, setTimezone] = useState("UTC");
+  const [dateFormat, setDateFormat] = useState("YYYY-MM-DD");
+  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("24h");
+
+  // Password
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const timezoneOptions = useMemo(
+    () => [
+      "UTC",
+      "Europe/London",
+      "Europe/Berlin",
+      "Africa/Cairo",
+      "Asia/Riyadh",
+      "Asia/Dubai",
+      "Asia/Karachi",
+      "Asia/Kolkata",
+      "Asia/Singapore",
+      "Asia/Tokyo",
+      "America/New_York",
+      "America/Los_Angeles",
+      "America/Chicago",
+    ],
+    []
+  );
+
+  const dateFormatOptions = useMemo(
+    () => ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY"],
+    []
+  );
+
+  const timeFormatOptions: Array<"12h" | "24h"> = ["12h", "24h"];
+
+  const showSuccess = (message: string) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(null), 2500);
+  };
+
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => setError(null), 3500);
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const profile = await UserSettingsService.getProfile();
+        const settings = (await UserSettingsService.getSettings()) as IUserSettings;
+
+        const user: IUser | undefined = profile?.User;
+        if (user) {
+          setUsername(user.Username || "");
+          setEmail(user.Email || "");
+          setFullName(user.FullName || "");
+          setLastLogin(user.LastLogin);
+          setMemberSince(user.CreatedAt);
+        }
+
+        if (settings) {
+          setEmailNotifications(!!settings.EmailNotifications);
+          setDiscordWebhook(settings.DiscordWebhookUrl || "");
+          setSlackWebhook(settings.SlackWebhookUrl || "");
+          setNotifySuccess(!!settings.NotifyOnSuccess);
+          setNotifyFailure(!!settings.NotifyOnFailure);
+          setNotifyProjectUpdate(!!settings.NotifyOnProjectUpdate);
+          setNotifySystemAlert(!!settings.NotifyOnSystemAlert);
+          setTimezone(settings.Timezone || "UTC");
+          setDateFormat(settings.DateFormat || "YYYY-MM-DD");
+          setTimeFormat((settings.TimeFormat as "12h" | "24h") || "24h");
+        }
+      } catch (err) {
+        console.error("Failed to load settings", err);
+        showError(t("settings.loadError") || "Failed to load settings");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [t]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -68,22 +167,119 @@ export const SettingsPage: React.FC = () => {
     setError(null);
   };
 
-  const handleLanguageChange = (newLanguage: "en" | "ar") => {
-    ChangeLanguage(newLanguage);
-    setSuccess(t("settings.languageUpdated"));
-    setTimeout(() => setSuccess(null), 2000);
+  const handleLanguageChange = async (newLanguage: "en" | "ar") => {
+    try {
+      ChangeLanguage(newLanguage);
+      setSavingPreferences(true);
+      await UserSettingsService.updatePreferences({
+        Language: newLanguage,
+        Theme: Mode,
+        ColorTheme: Color,
+        Timezone: timezone,
+        DateFormat: dateFormat,
+        TimeFormat: timeFormat,
+      });
+      showSuccess(t("settings.languageUpdated"));
+    } catch (err) {
+      console.error("Language update failed", err);
+      showError(t("settings.saveFailed") || "Failed to update language");
+    } finally {
+      setSavingPreferences(false);
+    }
   };
 
-  const handleSaveProfile = () => {
-    // API call to update profile
-    setSuccess(t("settings.profileUpdated"));
-    setTimeout(() => setSuccess(null), 3000);
+  const handleSaveProfile = async () => {
+    try {
+      setSavingProfile(true);
+      await UserSettingsService.updateProfile({
+        Username: username,
+        Email: email,
+        FullName: fullName,
+      });
+      showSuccess(t("settings.profileUpdated"));
+    } catch (err) {
+      console.error("Profile update failed", err);
+      showError(t("settings.saveFailed") || "Failed to update profile");
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
-  const handleSaveNotifications = () => {
-    // API call to update notification settings
-    setSuccess(t("settings.notificationsSaved"));
-    setTimeout(() => setSuccess(null), 3000);
+  const handleSaveNotifications = async () => {
+    try {
+      setSavingNotifications(true);
+      await UserSettingsService.updateNotificationSettings({
+        EmailNotifications: emailNotifications,
+        DiscordWebhookUrl: discordWebhook || null,
+        SlackWebhookUrl: slackWebhook || null,
+        NotifyOnSuccess: notifySuccess,
+        NotifyOnFailure: notifyFailure,
+        NotifyOnProjectUpdate: notifyProjectUpdate,
+        NotifyOnSystemAlert: notifySystemAlert,
+      });
+      showSuccess(t("settings.notificationsSaved"));
+    } catch (err) {
+      console.error("Notification update failed", err);
+      showError(t("settings.saveFailed") || "Failed to update notifications");
+    } finally {
+      setSavingNotifications(false);
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    try {
+      setSavingPreferences(true);
+      await UserSettingsService.updatePreferences({
+        Timezone: timezone,
+        DateFormat: dateFormat,
+        TimeFormat: timeFormat,
+        Language,
+        Theme: Mode,
+        ColorTheme: Color,
+      });
+      showSuccess(t("settings.preferencesSaved") || "Preferences updated");
+    } catch (err) {
+      console.error("Preferences update failed", err);
+      showError(t("settings.saveFailed") || "Failed to update preferences");
+    } finally {
+      setSavingPreferences(false);
+    }
+  };
+
+  const handleTestNotification = async (type: "discord" | "slack") => {
+    try {
+      await UserSettingsService.testNotification(type);
+      showSuccess(t("settings.testNotificationSent") || "Test notification sent");
+    } catch (err) {
+      console.error("Test notification failed", err);
+      showError(t("settings.saveFailed") || "Failed to send test notification");
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showError(t("settings.passwordFieldsRequired") || "Please fill all password fields");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showError(t("settings.passwordMismatch") || "New password and confirmation do not match");
+      return;
+    }
+
+    try {
+      setSavingPassword(true);
+      await UserSettingsService.changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      showSuccess(t("settings.passwordUpdated") || "Password updated");
+    } catch (err) {
+      console.error("Change password failed", err);
+      showError(t("settings.saveFailed") || "Failed to change password");
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   return (
@@ -155,25 +351,60 @@ export const SettingsPage: React.FC = () => {
             <Divider sx={{ mb: 3 }} />
 
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label={t("settings.fullName") || "Full Name"}
+                  value={fullName}
+                  disabled={isLoading || savingProfile}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </Grid>
+              <Grid xs={12} md={6}>
                 <TextField
                   fullWidth
                   label={t("settings.username")}
                   value={username}
+                  disabled={isLoading || savingProfile}
                   onChange={(e) => setUsername(e.target.value)}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid xs={12} md={6}>
                 <TextField
                   fullWidth
                   label={t("settings.email")}
                   type="email"
                   value={email}
+                  disabled={isLoading || savingProfile}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Button variant="contained" onClick={handleSaveProfile}>
+              <Grid xs={12} md={6} display="flex" alignItems="center">
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("settings.lastLogin") || "Last login"}
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {lastLogin ? new Date(lastLogin).toLocaleString() : t("settings.notAvailable")}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid xs={12} md={6} display="flex" alignItems="center">
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("settings.memberSince") || "Member since"}
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {memberSince ? new Date(memberSince).toLocaleDateString() : t("settings.notAvailable")}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid xs={12}>
+                <Button
+                  variant="contained"
+                  onClick={handleSaveProfile}
+                  disabled={isLoading || savingProfile}
+                >
                   {t("settings.saveChanges")}
                 </Button>
               </Grid>
@@ -189,13 +420,14 @@ export const SettingsPage: React.FC = () => {
 
             <Grid container spacing={4}>
               {/* Language Selection */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid xs={12} md={6}>
                 <FormControl fullWidth>
                   <InputLabel>{t("settings.language")}</InputLabel>
                   <Select
                     value={Language}
                     label={t("settings.language")}
                     onChange={(e) => handleLanguageChange(e.target.value as "en" | "ar")}
+                    disabled={savingPreferences || isLoading}
                   >
                     <MenuItem value="en">{t("settings.english")}</MenuItem>
                     <MenuItem value="ar">{t("settings.arabic")}</MenuItem>
@@ -207,7 +439,7 @@ export const SettingsPage: React.FC = () => {
               </Grid>
 
               {/* Theme Mode */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid xs={12} md={6}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -222,8 +454,65 @@ export const SettingsPage: React.FC = () => {
                 </Typography>
               </Grid>
 
+              {/* Timezone */}
+              <Grid xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>{t("settings.timezone") || "Timezone"}</InputLabel>
+                  <Select
+                    value={timezone}
+                    label={t("settings.timezone") || "Timezone"}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    disabled={savingPreferences || isLoading}
+                  >
+                    {timezoneOptions.map((tz) => (
+                      <MenuItem key={tz} value={tz}>
+                        {tz}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Date format */}
+              <Grid xs={12} md={3}>
+                <FormControl fullWidth>
+                  <InputLabel>{t("settings.dateFormat") || "Date Format"}</InputLabel>
+                  <Select
+                    value={dateFormat}
+                    label={t("settings.dateFormat") || "Date Format"}
+                    onChange={(e) => setDateFormat(e.target.value)}
+                    disabled={savingPreferences || isLoading}
+                  >
+                    {dateFormatOptions.map((fmt) => (
+                      <MenuItem key={fmt} value={fmt}>
+                        {fmt}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Time format */}
+              <Grid xs={12} md={3}>
+                <FormControl fullWidth>
+                  <InputLabel>{t("settings.timeFormat") || "Time Format"}</InputLabel>
+                  <Select
+                    value={timeFormat}
+                    label={t("settings.timeFormat") || "Time Format"}
+                    onChange={(e) => setTimeFormat(e.target.value as "12h" | "24h")}
+                    disabled={savingPreferences || isLoading}
+                  >
+                    {timeFormatOptions.map((fmt) => (
+                      <MenuItem key={fmt} value={fmt}>
+                        {fmt}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               {/* Color Theme Selection */}
-              <Grid size={{ xs: 12 }}>
+              <Grid xs={12}>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
                   {t("settings.colorTheme")}
                 </Typography>
@@ -273,6 +562,16 @@ export const SettingsPage: React.FC = () => {
                   {t("settings.selectPreferredColor")}
                 </Typography>
               </Grid>
+
+              <Grid xs={12}>
+                <Button
+                  variant="contained"
+                  onClick={handleSavePreferences}
+                  disabled={savingPreferences || isLoading}
+                >
+                  {t("settings.saveChanges")}
+                </Button>
+              </Grid>
             </Grid>
           </TabPanel>
 
@@ -284,12 +583,13 @@ export const SettingsPage: React.FC = () => {
             <Divider sx={{ mb: 3 }} />
 
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12 }}>
+              <Grid xs={12}>
                 <FormControlLabel
                   control={
                     <Switch
                       checked={emailNotifications}
                       onChange={(e) => setEmailNotifications(e.target.checked)}
+                      disabled={savingNotifications || isLoading}
                     />
                   }
                   label={t("settings.emailNotifications")}
@@ -299,29 +599,103 @@ export const SettingsPage: React.FC = () => {
                 </Typography>
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={notifySuccess}
+                      onChange={(e) => setNotifySuccess(e.target.checked)}
+                      disabled={savingNotifications || isLoading}
+                    />
+                  }
+                  label={t("settings.notifySuccess") || "Notify on success"}
+                />
+              </Grid>
+
+              <Grid xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={notifyFailure}
+                      onChange={(e) => setNotifyFailure(e.target.checked)}
+                      disabled={savingNotifications || isLoading}
+                    />
+                  }
+                  label={t("settings.notifyFailure") || "Notify on failure"}
+                />
+              </Grid>
+
+              <Grid xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={notifyProjectUpdate}
+                      onChange={(e) => setNotifyProjectUpdate(e.target.checked)}
+                      disabled={savingNotifications || isLoading}
+                    />
+                  }
+                  label={t("settings.notifyProjectUpdates") || "Project updates"}
+                />
+              </Grid>
+
+              <Grid xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={notifySystemAlert}
+                      onChange={(e) => setNotifySystemAlert(e.target.checked)}
+                      disabled={savingNotifications || isLoading}
+                    />
+                  }
+                  label={t("settings.notifySystemAlerts") || "System alerts"}
+                />
+              </Grid>
+
+              <Grid xs={12}>
                 <TextField
                   fullWidth
                   label={t("settings.discordWebhook")}
                   placeholder={t("settings.discordWebhookPlaceholder")}
                   value={discordWebhook}
+                  disabled={savingNotifications || isLoading}
                   onChange={(e) => setDiscordWebhook(e.target.value)}
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid xs={12}>
                 <TextField
                   fullWidth
                   label={t("settings.slackWebhook")}
                   placeholder={t("settings.slackWebhookPlaceholder")}
                   value={slackWebhook}
+                  disabled={savingNotifications || isLoading}
                   onChange={(e) => setSlackWebhook(e.target.value)}
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
-                <Button variant="contained" onClick={handleSaveNotifications}>
+              <Grid xs={12}>
+                <Button
+                  variant="contained"
+                  onClick={handleSaveNotifications}
+                  disabled={savingNotifications || isLoading}
+                >
                   {t("settings.saveNotificationSettings")}
+                </Button>
+                <Button
+                  variant="outlined"
+                  sx={{ ml: 2 }}
+                  onClick={() => handleTestNotification("discord")}
+                  disabled={savingNotifications || isLoading || !discordWebhook}
+                >
+                  {t("settings.testDiscord") || "Test Discord"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  sx={{ ml: 2 }}
+                  onClick={() => handleTestNotification("slack")}
+                  disabled={savingNotifications || isLoading || !slackWebhook}
+                >
+                  {t("settings.testSlack") || "Test Slack"}
                 </Button>
               </Grid>
             </Grid>
@@ -335,7 +709,7 @@ export const SettingsPage: React.FC = () => {
             <Divider sx={{ mb: 3 }} />
 
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12 }}>
+              <Grid xs={12}>
                 <Typography variant="subtitle1" gutterBottom>
                   {t("settings.changePassword")}
                 </Typography>
@@ -343,24 +717,36 @@ export const SettingsPage: React.FC = () => {
                   fullWidth
                   label={t("settings.currentPassword")}
                   type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
                   sx={{ mb: 2 }}
                 />
                 <TextField
                   fullWidth
                   label={t("settings.newPassword")}
                   type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   sx={{ mb: 2 }}
                 />
                 <TextField
                   fullWidth
                   label={t("settings.confirmNewPassword")}
                   type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   sx={{ mb: 2 }}
                 />
-                <Button variant="contained">{t("settings.updatePassword")}</Button>
+                <Button
+                  variant="contained"
+                  onClick={handleChangePassword}
+                  disabled={savingPassword || isLoading}
+                >
+                  {t("settings.updatePassword")}
+                </Button>
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="subtitle1" gutterBottom>
                   {t("settings.twoFactorAuth")}
