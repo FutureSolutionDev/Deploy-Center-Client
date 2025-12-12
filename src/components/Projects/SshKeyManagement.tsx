@@ -15,7 +15,6 @@ import {
   Tooltip,
   Chip,
   Stack,
-  Paper,
   Divider,
 } from '@mui/material';
 import {
@@ -25,7 +24,6 @@ import {
   ContentCopy as CopyIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-  Info as InfoIcon,
 } from '@mui/icons-material';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProjectsService } from '@/services/projectsService';
@@ -162,10 +160,14 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
   };
 
   return (
-    <Card>
+    <Card
+    sx={{
+      mt: 1,
+    }}
+    >
       <CardContent>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <KeyIcon sx={{ mr: 1, color: 'primary.main' }} />
             <Typography variant="h6">
@@ -183,13 +185,13 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
 
         {/* Alerts */}
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          <Alert severity="error" sx={{ mb: 1 }} onClose={() => setError('')}>
             {error}
           </Alert>
         )}
 
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+          <Alert severity="success" sx={{ mb: 1 }} onClose={() => setSuccess('')}>
             {success}
           </Alert>
         )}
@@ -197,24 +199,23 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
         {!hasSSHKey ? (
           // No SSH Key - Show Generate Button
           <Box>
-            <Alert severity="info" sx={{ mb: 2 }}>
+            <Alert severity="info" sx={{ mb: 1 }}>
               <Typography variant="body2">
                 {t('projects.noSshKeyConfigured') ||
                   'No SSH key configured for this project. Generate an ED25519 SSH key to enable secure access to private GitHub repositories.'}
               </Typography>
             </Alert>
 
-            <Paper sx={{ p: 2, mb: 2, bgcolor: 'grey.50' }}>
+            <Alert sx={{ p: 2, mb: 1 }} severity="warning">
               <Stack spacing={1}>
                 <Box sx={{ display: 'flex', alignItems: 'start' }}>
-                  <InfoIcon sx={{ fontSize: 18, mr: 1, mt: 0.5, color: 'info.main' }} />
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2">
                     {t('projects.sshKeyInstructions') ||
                       'After generating the SSH key, copy the public key and add it to your GitHub repository: Settings → Deploy Keys → Add deploy key (read-only access).'}
                   </Typography>
                 </Box>
               </Stack>
-            </Paper>
+            </Alert>
 
             <Button
               variant="contained"
@@ -229,7 +230,7 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
           // Has SSH Key - Show Key Info
           <Box>
             {sshKeyInfo && (
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ mb: 1 }}>
                 <Stack spacing={1}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2" color="text.secondary">
@@ -377,11 +378,11 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
             </Button>
             <Button
               onClick={
-                confirmDialog.action === 'generate'
+                (confirmDialog.action === 'generate'
                   ? handleGenerateKey
-                  : confirmDialog.action === 'regenerate'
-                  ? handleRegenerateKey
-                  : handleDeleteKey
+                  : (confirmDialog.action === 'regenerate'
+                    ? handleRegenerateKey
+                    : handleDeleteKey))
               }
               color={confirmDialog.action === 'delete' ? 'error' : 'primary'}
               variant="contained"
