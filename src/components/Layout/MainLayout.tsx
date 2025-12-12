@@ -210,7 +210,7 @@ export const MainLayout: React.FC = () => {
           {/* User Menu */}
           <IconButton color="inherit" onClick={HandleUserMenuOpen}>
             <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}>
-              {User?.Username?.charAt(0).toUpperCase() || "U"}
+              {User?.FullName?.charAt(0).toUpperCase() || "U"}
             </Avatar>
           </IconButton>
 
@@ -223,7 +223,7 @@ export const MainLayout: React.FC = () => {
               <ListItemIcon>
                 <AccountCircle fontSize="small" />
               </ListItemIcon>
-              <ListItemText>{User?.Username || "User"}</ListItemText>
+              <ListItemText>{User?.FullName || "User"}</ListItemText>
             </MenuItem>
             <Divider />
             <MenuItem onClick={HandleLogout}>

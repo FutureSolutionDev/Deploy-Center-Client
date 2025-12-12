@@ -55,7 +55,6 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   const Login = async (credentials: ILoginCredentials): Promise<IAuthResponse | ITwoFactorChallenge> => {
     try {
-      setIsLoading(true);
       const response = await AuthService.Login(credentials);
 
       // Cookie is set automatically by the backend (httpOnly)
@@ -63,12 +62,11 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       if ('User' in response) {
         setUser(response.User);
       }
+      // For 2FA, don't update user state - wait for verification
       return response;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 

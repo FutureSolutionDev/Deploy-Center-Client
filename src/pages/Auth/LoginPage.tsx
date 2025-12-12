@@ -74,7 +74,9 @@ export const LoginPage: React.FC = () => {
 
   // If 2FA is required at any point, always open the dialog (avoids missing it after rerenders)
   useEffect(() => {
+    console.error('🔍 RequireTotp changed:', RequireTotp);
     if (RequireTotp) {
+      console.error('🔍 Opening 2FA dialog via useEffect');
       setShowTotpDialog(true);
     }
   }, [RequireTotp]);
@@ -105,14 +107,27 @@ export const LoginPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await Login(Credentials);
+
+      // Debug: Log the response to see what we're getting
+      console.error('🔍 Login response:', response);
+      console.error('🔍 TwoFactorRequired check:', "TwoFactorRequired" in response && response.TwoFactorRequired);
+
       if ("TwoFactorRequired" in response && response.TwoFactorRequired) {
         const challenge = response as ITwoFactorChallenge;
-        setRequireTotp(true);
-        setPendingUserId(challenge.UserId);
-        setShowTotpDialog(true);
-        setInfo(t("auth.totpPrompt"));
+        console.error('🔍 Setting 2FA dialog state:', challenge);
+
+        // Set all states in a single batch to avoid HMR issues
+        setLoading(false); // stop spinner first
         setError(null);
-        setLoading(false); // stop spinner while waiting for code
+        setInfo(t("auth.totpPrompt"));
+        setPendingUserId(challenge.UserId);
+        setRequireTotp(true);
+
+        // Use setTimeout to ensure state updates are committed before showing dialog
+        setTimeout(() => {
+          setShowTotpDialog(true);
+        }, 0);
+
         return;
       }
 
@@ -283,7 +298,10 @@ export const LoginPage: React.FC = () => {
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle>{t("auth.totpCode")}</DialogTitle>
+        <DialogTitle>
+          {t("auth.totpCode")}
+          {console.error('🔍 Dialog rendering, open state:', ShowTotpDialog, 'RequireTotp:', RequireTotp, 'PendingUserId:', PendingUserId)}
+        </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {t("auth.totpPrompt")}
