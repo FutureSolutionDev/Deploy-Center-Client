@@ -3,7 +3,7 @@
  * User authentication page with login form
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Box,
@@ -23,6 +23,12 @@ import {
   VisibilityOff,
   Login as LoginIcon,
 } from "@mui/icons-material";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { ILoginCredentials, ITwoFactorChallenge } from "@/types";
@@ -39,8 +45,9 @@ export const LoginPage: React.FC = () => {
   });
   const [RequireTotp, setRequireTotp] = useState(false);
   const [PendingUserId, setPendingUserId] = useState<number | null>(null);
+  const [ShowTotpDialog, setShowTotpDialog] = useState(false);
+  const [TotpError, setTotpError] = useState<string | null>(null);
   const [Info, setInfo] = useState<string | null>(null);
-
   const [ShowPassword, setShowPassword] = useState(false);
   const [Loading, setLoading] = useState(false);
   const [Error, setError] = useState<string | null>(null);
@@ -53,10 +60,28 @@ export const LoginPage: React.FC = () => {
           [field]: event.target.value,
         }));
         setError(null);
+        setTotpError(null);
       };
+
+  const ResetTotpState = () => {
+    setRequireTotp(false);
+    setPendingUserId(null);
+    setShowTotpDialog(false);
+    setTotpError(null);
+    setInfo(null);
+    setCredentials((prev) => ({ ...prev, TotpCode: "" }));
+  };
+
+  // If 2FA is required at any point, always open the dialog (avoids missing it after rerenders)
+  useEffect(() => {
+    if (RequireTotp) {
+      setShowTotpDialog(true);
+    }
+  }, [RequireTotp]);
 
   const HandleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    event.stopPropagation();
     setError(null);
     setInfo(null);
 
@@ -72,43 +97,22 @@ export const LoginPage: React.FC = () => {
     }
 
     if (RequireTotp) {
-      if (!Credentials.TotpCode) {
-        setError(t("auth.totpRequired"));
-        return;
-      }
-
-      if (!PendingUserId) {
-        setError(t("auth.loginFailed"));
-        return;
-      }
-
-      try {
-        setLoading(true);
-        await Verify2FA(PendingUserId, Credentials.TotpCode);
-        navigate("/dashboard");
-      } catch (error: unknown) {
-        const errorMessage =
-          error && typeof error === "object" && "message" in error
-            ? String(error.message)
-            : t("auth.loginFailed");
-
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
+      // User already passed credentials; open 2FA dialog
+      setShowTotpDialog(true);
       return;
     }
 
     try {
       setLoading(true);
       const response = await Login(Credentials);
-
       if ("TwoFactorRequired" in response && response.TwoFactorRequired) {
         const challenge = response as ITwoFactorChallenge;
         setRequireTotp(true);
         setPendingUserId(challenge.UserId);
+        setShowTotpDialog(true);
         setInfo(t("auth.totpPrompt"));
         setError(null);
+        setLoading(false); // stop spinner while waiting for code
         return;
       }
 
@@ -122,12 +126,45 @@ export const LoginPage: React.FC = () => {
       const lower = errorMessage.toLowerCase();
       if (lower.includes("two-factor") || lower.includes("2fa")) {
         setRequireTotp(true);
+        setShowTotpDialog(true);
         setInfo(t("auth.totpPrompt"));
         setError(null);
+        setLoading(false);
         return;
       }
 
       setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const HandleTotpSubmit = async () => {
+    setTotpError(null);
+    setError(null);
+
+    if (!Credentials.TotpCode) {
+      setTotpError(t("auth.totpRequired"));
+      return;
+    }
+
+    if (!PendingUserId) {
+      setTotpError(t("auth.loginFailed"));
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await Verify2FA(PendingUserId, Credentials.TotpCode);
+      setShowTotpDialog(false);
+      navigate("/dashboard");
+    } catch (error: unknown) {
+      const errorMessage =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : t("auth.loginFailed");
+
+      setTotpError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -214,18 +251,6 @@ export const LoginPage: React.FC = () => {
               }}
             />
 
-            {RequireTotp && (
-              <TextField
-                fullWidth
-                label={t("auth.totpCode")}
-                value={Credentials.TotpCode || ""}
-                onChange={HandleChange("TotpCode")}
-                margin="normal"
-                autoComplete="one-time-code"
-                disabled={Loading}
-              />
-            )}
-
             <Button
               fullWidth
               type="submit"
@@ -251,6 +276,47 @@ export const LoginPage: React.FC = () => {
           </form>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={ShowTotpDialog}
+        onClose={ResetTotpState}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>{t("auth.totpCode")}</DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("auth.totpPrompt")}
+          </Typography>
+          {TotpError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {TotpError}
+            </Alert>
+          )}
+          <TextField
+            autoFocus
+            fullWidth
+            label={t("auth.totpCode")}
+            value={Credentials.TotpCode || ""}
+            onChange={HandleChange("TotpCode")}
+            margin="dense"
+            autoComplete="one-time-code"
+            disabled={Loading}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={ResetTotpState} disabled={Loading}>
+            {t("projects.cancel")}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={HandleTotpSubmit}
+            disabled={Loading}
+          >
+            {Loading ? t("auth.loggingIn") : t("auth.login")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
