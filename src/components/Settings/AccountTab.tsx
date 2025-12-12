@@ -1,11 +1,20 @@
-import React from "react";
-import { alpha, Box, Button, Divider, Typography } from "@mui/material";
+import React, { useState } from "react";
+import { alpha, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Typography } from "@mui/material";
 
 interface IAccountTabProps {
   t: (key: string) => string;
+  onDeleteAccount: () => Promise<void>;
+  loading?: boolean;
 }
 
-export const AccountTab: React.FC<IAccountTabProps> = ({ t }) => {
+export const AccountTab: React.FC<IAccountTabProps> = ({ t, onDeleteAccount, loading }) => {
+  const [open, setOpen] = useState(false);
+
+  const handleConfirm = async () => {
+    await onDeleteAccount();
+    setOpen(false);
+  };
+
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -28,10 +37,23 @@ export const AccountTab: React.FC<IAccountTabProps> = ({ t }) => {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t("settings.deleteWarning")}
         </Typography>
-        <Button variant="outlined" color="error" disabled>
+        <Button variant="outlined" color="error" onClick={() => setOpen(true)} disabled={loading}>
           {t("settings.deleteAccount")}
         </Button>
       </Box>
+
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>{t("settings.deleteAccount")}</DialogTitle>
+        <DialogContent>
+          <Typography>{t("settings.deleteAccountConfirm")}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>{t("settings.cancel")}</Button>
+          <Button onClick={handleConfirm} color="error" variant="contained" disabled={loading}>
+            {t("settings.deleteAccount")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

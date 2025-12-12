@@ -11,12 +11,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import UserSettingsService from "@/services/userSettingsService";
-import type { IUser, IUserSettings } from "@/types";
+import type { IApiKey, IUser, IUserSession, IUserSettings } from "@/types";
 import ProfileTab from "@/components/Settings/ProfileTab";
 import PreferencesTab from "@/components/Settings/PreferencesTab";
 import NotificationsTab from "@/components/Settings/NotificationsTab";
 import SecurityTab from "@/components/Settings/SecurityTab";
 import AccountTab from "@/components/Settings/AccountTab";
+import ApiKeysTab, { type ICreateApiKeyInput } from "@/components/Settings/ApiKeysTab";
+import SessionsTab from "@/components/Settings/SessionsTab";
 
 interface ITabPanelProps {
   children?: React.ReactNode;
@@ -45,6 +47,8 @@ export const SettingsPage: React.FC = () => {
   const [savingNotifications, setSavingNotifications] = useState<boolean>(false);
   const [savingPreferences, setSavingPreferences] = useState<boolean>(false);
   const [savingPassword, setSavingPassword] = useState<boolean>(false);
+  const [apiKeys, setApiKeys] = useState<IApiKey[]>([]);
+  const [sessions, setSessions] = useState<IUserSession[]>([]);
 
   // Profile state
   const [username, setUsername] = useState(User?.Username || "");
@@ -108,8 +112,12 @@ export const SettingsPage: React.FC = () => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const profile = await UserSettingsService.getProfile();
-        const settings = (await UserSettingsService.getSettings()) as IUserSettings;
+        const [profile, settings, apiKeysResponse, sessionsResponse] = await Promise.all([
+          UserSettingsService.getProfile(),
+          UserSettingsService.getSettings(),
+          UserSettingsService.listApiKeys(),
+          UserSettingsService.listSessions(),
+        ]);
 
         const user: IUser | undefined = profile?.User;
         if (user) {
@@ -132,6 +140,9 @@ export const SettingsPage: React.FC = () => {
           setDateFormat(settings.DateFormat || "YYYY-MM-DD");
           setTimeFormat((settings.TimeFormat as "12h" | "24h") || "24h");
         }
+
+        setApiKeys(apiKeysResponse || []);
+        setSessions(sessionsResponse || []);
       } catch (err) {
         console.error("Failed to load settings", err);
         showError(t("settings.loadError"));
@@ -152,21 +163,10 @@ export const SettingsPage: React.FC = () => {
   const handleLanguageChange = async (newLanguage: "en" | "ar") => {
     try {
       ChangeLanguage(newLanguage);
-      setSavingPreferences(true);
-      await UserSettingsService.updatePreferences({
-        Language: newLanguage,
-        Theme: Mode,
-        ColorTheme: Color,
-        Timezone: timezone,
-        DateFormat: dateFormat,
-        TimeFormat: timeFormat,
-      });
-      showSuccess(t("settings.languageUpdated"));
+      await savePreferencesPartial({ Language: newLanguage });
     } catch (err) {
       console.error("Language update failed", err);
       showError(t("settings.saveFailed"));
-    } finally {
-      setSavingPreferences(false);
     }
   };
 
@@ -209,6 +209,10 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleSavePreferences = async () => {
+    await savePreferencesPartial({});
+  };
+
+  const savePreferencesPartial = async (overrides: Partial<IUserSettings>) => {
     try {
       setSavingPreferences(true);
       await UserSettingsService.updatePreferences({
@@ -218,8 +222,11 @@ export const SettingsPage: React.FC = () => {
         Language,
         Theme: Mode,
         ColorTheme: Color,
+        ...overrides,
       });
-      showSuccess(t("settings.preferencesSaved"));
+      showSuccess(
+        overrides.Language ? t("settings.languageUpdated") : t("settings.preferencesSaved")
+      );
     } catch (err) {
       console.error("Preferences update failed", err);
       showError(t("settings.saveFailed"));
@@ -234,6 +241,50 @@ export const SettingsPage: React.FC = () => {
       showSuccess(t("settings.testNotificationSent"));
     } catch (err) {
       console.error("Test notification failed", err);
+      showError(t("settings.saveFailed"));
+    }
+  };
+
+  const handleGenerateApiKey = async (input: ICreateApiKeyInput) => {
+    try {
+      const result = await UserSettingsService.generateApiKey(input.name, input.scopes, input.expiresAt || undefined);
+      const refreshed = await UserSettingsService.listApiKeys();
+      setApiKeys(refreshed || []);
+      return result;
+    } catch (err) {
+      console.error("Generate API key failed", err);
+      showError(t("settings.saveFailed"));
+      return null;
+    }
+  };
+
+  const handleRevokeApiKey = async (id: number) => {
+    try {
+      await UserSettingsService.revokeApiKey(id);
+      setApiKeys((prev) => prev.filter((k) => k.Id !== id));
+    } catch (err) {
+      console.error("Revoke API key failed", err);
+      showError(t("settings.saveFailed"));
+    }
+  };
+
+  const handleRevokeSession = async (id: number) => {
+    try {
+      await UserSettingsService.revokeSession(id);
+      setSessions((prev) => prev.filter((s) => s.Id !== id));
+    } catch (err) {
+      console.error("Revoke session failed", err);
+      showError(t("settings.saveFailed"));
+    }
+  };
+
+  const handleRevokeAllSessions = async (keepId: number) => {
+    try {
+      await UserSettingsService.revokeAllSessions(keepId);
+      const refreshed = await UserSettingsService.listSessions();
+      setSessions(refreshed || []);
+    } catch (err) {
+      console.error("Revoke all sessions failed", err);
       showError(t("settings.saveFailed"));
     }
   };
@@ -266,7 +317,23 @@ export const SettingsPage: React.FC = () => {
 
   const handleColorSelect = (value: string) => {
     SetColor(value as string);
-    showSuccess(t("settings.colorThemeUpdated"));
+    void savePreferencesPartial({ ColorTheme: value });
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await UserSettingsService.deleteAccount();
+      showSuccess(t("settings.deleteAccountSuccess"));
+    } catch (err) {
+      console.error("Delete account failed", err);
+      showError(t("settings.deleteAccountFailed"));
+    }
+  };
+
+  const handleToggleMode = () => {
+    ToggleMode();
+    const nextTheme = Mode === "dark" ? "light" : "dark";
+    void savePreferencesPartial({ Theme: nextTheme });
   };
 
   return (
@@ -302,6 +369,8 @@ export const SettingsPage: React.FC = () => {
               iconPosition="start"
               sx={{ minHeight: 64 }}
             />
+            <Tab label={t("settings.apiKeys")} icon={<SecurityIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
+            <Tab label={t("settings.sessions")} icon={<AccountIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
             <Tab label={t("settings.security")} icon={<SecurityIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
             <Tab label={t("settings.account")} icon={<AccountIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
           </Tabs>
@@ -372,6 +441,26 @@ export const SettingsPage: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={tabValue} index={3}>
+            <ApiKeysTab
+              apiKeys={apiKeys}
+              loading={isLoading}
+              onGenerate={handleGenerateApiKey}
+              onRevoke={handleRevokeApiKey}
+              t={t}
+            />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={4}>
+            <SessionsTab
+              sessions={sessions}
+              loading={isLoading}
+              onRevoke={handleRevokeSession}
+              onRevokeAll={handleRevokeAllSessions}
+              t={t}
+            />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={5}>
             <SecurityTab
               currentPassword={currentPassword}
               newPassword={newPassword}
@@ -385,8 +474,8 @@ export const SettingsPage: React.FC = () => {
             />
           </TabPanel>
 
-          <TabPanel value={tabValue} index={4}>
-            <AccountTab t={t} />
+          <TabPanel value={tabValue} index={6}>
+            <AccountTab t={t} onDeleteAccount={handleDeleteAccount} loading={isLoading} />
           </TabPanel>
         </CardContent>
       </Card>
