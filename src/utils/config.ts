@@ -6,22 +6,22 @@
 export const Config = {
   // API Configuration
   Api: {
-    BaseUrl: import.meta.env.VITE_API_URL || 'http://localhost:9090/api',
+    BaseUrl: window?.Config?.API_URL || "http://localhost:9090/api",
     Timeout: 30000,
   },
   // Authentication
   Auth: {
-    TokenKey: 'deploy_center_access_token',
-    RefreshTokenKey: 'deploy_center_refresh_token',
-    UserKey: 'deploy_center_user',
+    TokenKey: "deploy_center_access_token",
+    RefreshTokenKey: "deploy_center_refresh_token",
+    UserKey: "deploy_center_user",
   },
 
   // Application
   App: {
-    Name: 'Deploy Center',
-    Version: '2.0.0',
-    DefaultLanguage: 'en' as const,
-    DefaultTheme: 'blue' as const,
+    Name: "Deploy Center",
+    Version: "2.0.0",
+    DefaultLanguage: "en" as const,
+    DefaultTheme: "blue" as const,
   },
   // Pagination
   Pagination: {
@@ -30,7 +30,7 @@ export const Config = {
   },
   // Real-time
   Socket: {
-    Url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:9090',
+    Url: window?.Config?.API_URL || "http://localhost:9090",
     Path: "/v1/ws",
     ReconnectAttempts: 5,
     ReconnectDelay: 3000,
@@ -39,7 +39,7 @@ export const Config = {
   // File Upload
   Upload: {
     MaxSize: 10 * 1024 * 1024, // 10MB
-    AllowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+    AllowedTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
   },
 };
 
