@@ -83,7 +83,7 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
 
     try {
       const result = await ProjectsService.generateSshKey(project.Id, {
-        keyType: 'ed25519',
+        keyType: 'rsa',
       });
 
       setSuccess(t('projects.sshKeyGenerated') || 'SSH key generated successfully! Copy the public key and add it to your GitHub repository.');
