@@ -30,7 +30,7 @@ export const Config = {
   },
   // Real-time
   Socket: {
-    Url: window?.Config?.API_URL || "http://localhost:9090",
+    Url: window?.Config?.SOCKET_URL || "http://localhost:9090",
     Path: "/v1/ws",
     ReconnectAttempts: 5,
     ReconnectDelay: 3000,

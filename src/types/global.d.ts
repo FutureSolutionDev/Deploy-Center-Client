@@ -6,6 +6,7 @@ declare global {
   interface Window {
     Config?: {
       API_URL?: string;
+      SOCKET_URL?: string;
     };
   }
 }
