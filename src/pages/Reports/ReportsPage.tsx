@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Box,
     Card,
@@ -13,6 +13,7 @@ import {
     Paper,
     Divider,
     alpha,
+    CircularProgress,
 } from "@mui/material";
 import {
     Download as DownloadIcon,
@@ -22,6 +23,9 @@ import {
 } from "@mui/icons-material";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DeploymentsService } from "@/services/deploymentsService";
+import { ProjectsService } from "@/services/projectsService";
+import type { IDeploymentStatistics, IProject } from "@/types";
 
 export const ReportsPage: React.FC = () => {
     const { t } = useLanguage();
@@ -29,19 +33,50 @@ export const ReportsPage: React.FC = () => {
 
     const [dateRange, setDateRange] = useState("last30");
     const [reportType, setReportType] = useState("overview");
+    const [loading, setLoading] = useState(true);
+    const [statistics, setStatistics] = useState<IDeploymentStatistics | null>(null);
+    const [projects, setProjects] = useState<IProject[]>([]);
 
-    // Mock data for charts/stats
-    const stats = {
-        totalDeployments: 145,
-        successRate: 92,
-        avgDuration: "4m 12s",
-        activeProjects: 8,
+    // Fetch statistics on mount
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [stats, projectsList] = await Promise.all([
+                    DeploymentsService.getStatistics(),
+                    ProjectsService.getAll(),
+                ]);
+                setStatistics(stats);
+                setProjects(projectsList.filter(p => p.IsActive));
+            } catch (error) {
+                console.error('Failed to fetch reports data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [dateRange]);
+
+    const formatDuration = (seconds?: number) => {
+        if (!seconds) return '-';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}m ${secs}s`;
     };
 
     const handleExport = (format: "pdf" | "csv") => {
         // Mock export functionality
         console.log(`Exporting report as ${format}...`);
     };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
 
     return (
         <Box>
@@ -130,7 +165,7 @@ export const ReportsPage: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 3, textAlign: "center", height: "100%" }}>
                         <Typography variant="h3" color="primary.main" sx={{ fontWeight: 700, mb: 1 }}>
-                            {stats.totalDeployments}
+                            {statistics?.Total || 0}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             {t("dashboard.totalDeployments")}
@@ -141,7 +176,7 @@ export const ReportsPage: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 3, textAlign: "center", height: "100%" }}>
                         <Typography variant="h3" color="success.main" sx={{ fontWeight: 700, mb: 1 }}>
-                            {stats.successRate}%
+                            {statistics?.SuccessRate?.toFixed(0) || 0}%
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             {t("reports.successRate")}
@@ -152,7 +187,7 @@ export const ReportsPage: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 3, textAlign: "center", height: "100%" }}>
                         <Typography variant="h3" color="info.main" sx={{ fontWeight: 700, mb: 1 }}>
-                            {stats.avgDuration}
+                            {formatDuration(statistics?.AverageDuration)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             {t("dashboard.averageDuration")}
@@ -163,7 +198,7 @@ export const ReportsPage: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 3, textAlign: "center", height: "100%" }}>
                         <Typography variant="h3" color="warning.main" sx={{ fontWeight: 700, mb: 1 }}>
-                            {stats.activeProjects}
+                            {projects.length}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             {t("dashboard.activeProjects")}
@@ -237,62 +272,78 @@ export const ReportsPage: React.FC = () => {
                             <Divider sx={{ mb: 3 }} />
 
                             <Box sx={{ position: "relative", height: 300, display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                {/* Simple CSS Pie Chart Mock */}
-                                <Box
-                                    sx={{
-                                        width: 200,
-                                        height: 200,
-                                        borderRadius: "50%",
-                                        background: `conic-gradient(
-                                        ${(theme: any) => theme.palette.success.main} 0% 70%, 
-                                        ${(theme: any) => theme.palette.error.main} 70% 85%, 
-                                        ${(theme: any) => theme.palette.warning.main} 85% 100%
-                    )`,
-                                    }}
-                                />
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        width: 140,
-                                        height: 140,
-                                        borderRadius: "50%",
-                                        bgcolor: "background.paper",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        flexDirection: "column",
-                                    }}
-                                >
-                                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                        145
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Total
-                                    </Typography>
-                                </Box>
+                                {/* Simple CSS Pie Chart with real data */}
+                                {(() => {
+                                    const total = statistics?.Total || 1;
+                                    const successPercent = ((statistics?.Success || 0) / total) * 100;
+                                    const failedPercent = ((statistics?.Failed || 0) / total) * 100;
+
+                                    return (
+                                        <>
+                                            <Box
+                                                sx={{
+                                                    width: 200,
+                                                    height: 200,
+                                                    borderRadius: "50%",
+                                                    background: (theme: any) => `conic-gradient(
+                                                        ${theme.palette.success.main} 0% ${successPercent}%,
+                                                        ${theme.palette.error.main} ${successPercent}% ${successPercent + failedPercent}%,
+                                                        ${theme.palette.warning.main} ${successPercent + failedPercent}% 100%
+                                                    )`,
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    width: 140,
+                                                    height: 140,
+                                                    borderRadius: "50%",
+                                                    bgcolor: "background.paper",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    flexDirection: "column",
+                                                }}
+                                            >
+                                                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                                                    {statistics?.Total || 0}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Total
+                                                </Typography>
+                                            </Box>
+                                        </>
+                                    );
+                                })()}
                             </Box>
 
                             <Box sx={{ mt: 2 }}>
                                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                         <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: "success.main" }} />
-                                        <Typography variant="body2">Success</Typography>
+                                        <Typography variant="body2">Success ({statistics?.Success || 0})</Typography>
                                     </Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>70%</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        {statistics?.Total ? ((statistics.Success / statistics.Total) * 100).toFixed(0) : 0}%
+                                    </Typography>
                                 </Box>
                                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                         <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: "error.main" }} />
-                                        <Typography variant="body2">Failed</Typography>
+                                        <Typography variant="body2">Failed ({statistics?.Failed || 0})</Typography>
                                     </Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>15%</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        {statistics?.Total ? ((statistics.Failed / statistics.Total) * 100).toFixed(0) : 0}%
+                                    </Typography>
                                 </Box>
                                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                         <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: "warning.main" }} />
-                                        <Typography variant="body2">Pending</Typography>
+                                        <Typography variant="body2">Pending ({statistics?.Pending || 0})</Typography>
                                     </Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>15%</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        {statistics?.Total ? ((statistics.Pending / statistics.Total) * 100).toFixed(0) : 0}%
+                                    </Typography>
                                 </Box>
                             </Box>
                         </CardContent>

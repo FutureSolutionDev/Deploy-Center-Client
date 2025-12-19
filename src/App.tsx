@@ -85,9 +85,9 @@ const AppRoutesWithToast: React.FC = () => {
       showWarning: toast.showWarning,
     });
 
-    // Setup API response interceptor
+    // Setup API response interceptor (only once on mount)
     setupResponseInterceptor(ApiInstance);
-  }, [toast]);
+  }, [toast.showSuccess, toast.showError, toast.showWarning]);
 
   return <AppRoutes />;
 };

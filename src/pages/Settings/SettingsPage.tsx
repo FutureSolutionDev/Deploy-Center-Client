@@ -164,7 +164,7 @@ export const SettingsPage: React.FC = () => {
     };
 
     loadData();
-  }, [t]);
+  }, []);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -336,7 +336,9 @@ export const SettingsPage: React.FC = () => {
   const handleRevokeApiKey = async (id: number) => {
     try {
       await UserSettingsService.revokeApiKey(id);
-      setApiKeys((prev) => prev.filter((k) => k.Id !== id));
+      // Update the key status to inactive instead of removing it
+      setApiKeys((prev) => prev.map((k) => k.Id === id ? { ...k, IsActive: false } : k));
+      showSuccess(t("settings.saveSuccess") || "API key revoked successfully");
     } catch (err) {
       console.error("Revoke API key failed", err);
       showError(t("settings.saveFailed"));

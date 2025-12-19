@@ -41,8 +41,9 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DeploymentsService } from '@/services/deploymentsService';
-import { useDeploymentUpdates, useDeploymentEvents } from '@/hooks/useSocket';
+import { useDeploymentUpdates, useDeploymentEvents, useSocket } from '@/hooks/useSocket';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
+import { socketService } from '@/services/socket';
 import type { IDeployment } from '@/types';
 
 export const DeploymentDetailsPage: React.FC = () => {
@@ -51,6 +52,7 @@ export const DeploymentDetailsPage: React.FC = () => {
     const { t } = useTranslation();
     const { formatDateTime } = useDateFormatter();
     const logsEndRef = useRef<HTMLDivElement>(null);
+    const { socket } = useSocket();
 
     const [deployment, setDeployment] = useState<IDeployment | null>(null);
     const [logs, setLogs] = useState<string>('');
@@ -61,7 +63,7 @@ export const DeploymentDetailsPage: React.FC = () => {
     // Connect to socket for this deployment
     useDeploymentUpdates(deployment?.ProjectId);
 
-    // Listen for updates
+    // Listen for deployment updates
     useDeploymentEvents((updatedDeployment) => {
         if (updatedDeployment.Id === Number(id)) {
             setDeployment(updatedDeployment);
@@ -71,6 +73,26 @@ export const DeploymentDetailsPage: React.FC = () => {
             }
         }
     });
+
+    // Listen for real-time logs
+    useEffect(() => {
+        if (!socket || !id) return;
+
+        // Join deployment room
+        socketService.joinDeployment(Number(id));
+
+        const handleLogUpdate = (data: { DeploymentId: number; Log: string; Timestamp: string }) => {
+            if (data.DeploymentId === Number(id)) {
+                setLogs((prevLogs) => prevLogs + '\n' + data.Log);
+            }
+        };
+
+        socket.on('deployment:log', handleLogUpdate);
+
+        return () => {
+            socket.off('deployment:log', handleLogUpdate);
+        };
+    }, [socket, id]);
 
     const fetchDeployment = async () => {
         try {
@@ -129,11 +151,39 @@ export const DeploymentDetailsPage: React.FC = () => {
     };
 
     const getLogColor = (log: string) => {
-        if (log.includes('[ERROR]') || log.includes('ERROR') || log.includes('Failed')) return '#ff6b6b';
-        if (log.includes('[SUCCESS]') || log.includes('SUCCESS') || log.includes('✅')) return '#51cf66';
-        if (log.includes('[WARNING]') || log.includes('WARNING') || log.includes('⚠️')) return '#ffd43b';
-        if (log.includes('[INFO]') || log.includes('INFO')) return '#74c0fc';
-        return '#d4d4d4';
+        // Error patterns - Red
+        if (log.includes('[ERROR]') || log.includes('ERROR') || log.includes('Failed') || log.includes('failed') ||
+            log.includes('Error:') || log.includes('Exception') || log.includes('✗')) {
+            return '#ff6b6b';
+        }
+        // Success patterns - Green
+        if (log.includes('[SUCCESS]') || log.includes('SUCCESS') || log.includes('✅') || log.includes('✓') ||
+            log.includes('completed successfully') || log.includes('Done')) {
+            return '#51cf66';
+        }
+        // Warning patterns - Yellow
+        if (log.includes('[WARNING]') || log.includes('WARNING') || log.includes('⚠️') || log.includes('WARN') ||
+            log.includes('deprecated')) {
+            return '#ffd43b';
+        }
+        // Info patterns - Blue
+        if (log.includes('[INFO]') || log.includes('INFO') || log.includes('ℹ️')) {
+            return '#74c0fc';
+        }
+        // Debug patterns - Purple
+        if (log.includes('[DEBUG]') || log.includes('DEBUG')) {
+            return '#b197fc';
+        }
+        // Step/Pipeline patterns - Cyan
+        if (log.includes('🚀') || log.includes('Step') || log.includes('Running:') || log.includes('Executing')) {
+            return '#66d9ef';
+        }
+        // Timestamp patterns - Gray
+        if (log.match(/^\[?\d{4}-\d{2}-\d{2}/)) {
+            return '#8b949e';
+        }
+        // Default - Light gray
+        return '#c9d1d9';
     };
 
     const getStatusChip = (status: string) => {
@@ -398,42 +448,101 @@ export const DeploymentDetailsPage: React.FC = () => {
                     <Grid size={{ xs: 12 }}>
                     <Paper
                         sx={{
-                            bgcolor: '#1e1e1e',
-                            color: '#d4d4d4',
+                            bgcolor: '#0d1117',
+                            color: '#c9d1d9',
                             fontFamily: 'monospace',
                             fontSize: '0.875rem',
-                            minHeight: '400px',
-                            maxHeight: '600px',
-                            overflow: 'auto',
+                            height: '600px',
                             borderRadius: 2,
                             boxShadow: 3,
                             position: 'relative',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
                         }}
                     >
-                        {/* Terminal Header */}
+                        {/* Terminal Header - Sticky */}
                         <Box
                             sx={{
                                 display: 'flex',
                                 alignItems: 'center',
+                                justifyContent: 'space-between',
                                 p: 2,
                                 pb: 1.5,
                                 borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                bgcolor: '#161b22',
+                                position: 'sticky',
+                                top: 0,
+                                zIndex: 1,
                             }}
                         >
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ff5f56' }} />
-                                <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ffbd2e' }} />
-                                <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#27c93f' }} />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ff5f56' }} />
+                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ffbd2e' }} />
+                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#27c93f' }} />
+                                </Box>
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                                    deployment-{id}.log
+                                </Typography>
                             </Box>
-                            <Typography variant="caption" sx={{ ml: 2, color: 'rgba(255,255,255,0.6)' }}>
-                                deployment-{id}.log
-                            </Typography>
+
+                            {/* Live indicator for in-progress deployments */}
+                            {deployment.Status === 'inProgress' && (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        bgcolor: 'rgba(0,0,0,0.3)',
+                                        px: 2,
+                                        py: 0.5,
+                                        borderRadius: 1,
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: '50%',
+                                            bgcolor: '#27c93f',
+                                            animation: 'pulse 2s infinite',
+                                            '@keyframes pulse': {
+                                                '0%, 100%': { opacity: 1 },
+                                                '50%': { opacity: 0.3 },
+                                            },
+                                        }}
+                                    />
+                                    <Typography variant="caption" sx={{ color: '#27c93f', fontWeight: 600 }}>
+                                        {t('deployments.liveIndicator') || 'LIVE'}
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
 
-                        {/* Logs Content */}
-                        <Box sx={{ p: 2 }}>
+                        {/* Logs Content - Scrollable */}
+                        <Box
+                            sx={{
+                                p: 2,
+                                flex: 1,
+                                overflow: 'auto',
+                                '&::-webkit-scrollbar': {
+                                    width: '8px',
+                                },
+                                '&::-webkit-scrollbar-track': {
+                                    bgcolor: '#0d1117',
+                                },
+                                '&::-webkit-scrollbar-thumb': {
+                                    bgcolor: '#30363d',
+                                    borderRadius: '4px',
+                                    '&:hover': {
+                                        bgcolor: '#484f58',
+                                    },
+                                },
+                            }}
+                        >
                             {!logs || logs.trim().length === 0 ? (
-                                <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
+                                <Typography sx={{ color: 'rgba(201,209,217,0.6)', fontStyle: 'italic' }}>
                                     {t('deployments.noLogsAvailable') || 'Waiting for logs...'}
                                 </Typography>
                             ) : (
@@ -442,10 +551,14 @@ export const DeploymentDetailsPage: React.FC = () => {
                                         <Box
                                             key={index}
                                             sx={{
-                                                mb: 0.5,
+                                                mb: 0.25,
                                                 color: getLogColor(log),
                                                 whiteSpace: 'pre-wrap',
                                                 wordBreak: 'break-word',
+                                                lineHeight: 1.6,
+                                                '&:hover': {
+                                                    bgcolor: 'rgba(255,255,255,0.03)',
+                                                },
                                             }}
                                         >
                                             {log}
@@ -455,41 +568,6 @@ export const DeploymentDetailsPage: React.FC = () => {
                             )}
                             <div ref={logsEndRef} />
                         </Box>
-
-                        {/* Live indicator for in-progress deployments */}
-                        {deployment.Status === 'inProgress' && (
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    top: 16,
-                                    right: 16,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    bgcolor: 'rgba(0,0,0,0.5)',
-                                    px: 2,
-                                    py: 1,
-                                    borderRadius: 1,
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: '50%',
-                                        bgcolor: '#27c93f',
-                                        animation: 'pulse 2s infinite',
-                                        '@keyframes pulse': {
-                                            '0%, 100%': { opacity: 1 },
-                                            '50%': { opacity: 0.3 },
-                                        },
-                                    }}
-                                />
-                                <Typography variant="caption" sx={{ color: '#27c93f' }}>
-                                    {t('deployments.liveIndicator') || 'LIVE'}
-                                </Typography>
-                            </Box>
-                        )}
                     </Paper>
                     </Grid>
                 </Grid>
