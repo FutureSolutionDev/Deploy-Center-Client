@@ -4,7 +4,8 @@
  */
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Snackbar, Alert, AlertColor, Slide, SlideProps } from '@mui/material';
+import { Snackbar, Alert, Slide } from '@mui/material';
+import type { AlertColor, SlideProps } from '@mui/material';
 
 interface IToastMessage {
   id: number;

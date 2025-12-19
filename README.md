@@ -1,73 +1,94 @@
-# React + TypeScript + Vite
+# Deploy Center - Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern React-based web interface for Deploy Center CI/CD platform.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ✅ Real-time deployment updates via Socket.IO
+- ✅ Material-UI based responsive design
+- ✅ Multi-language support (English/Arabic)
+- ✅ Dark/Light theme with customizable colors
+- ✅ Toast notifications for user feedback
+- ✅ Secure authentication with JWT
+- ✅ Role-based access control
+- ✅ Project and deployment management
+- ✅ Live deployment logs streaming
+- ✅ Statistics and analytics dashboard
 
-## React Compiler
+## 📋 Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js 18+
+- npm or yarn
+- Deploy Center Server running
 
-## Expanding the ESLint configuration
+## 🛠️ Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# Install dependencies
+npm install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# or with yarn
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ⚙️ Configuration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create `.env` file in the client directory:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+# API Configuration
+VITE_API_BASE_URL=http://localhost:3000/api
+VITE_SOCKET_URL=http://localhost:3000
+
+# Optional: Override default settings
+VITE_SOCKET_PATH=/v1/ws
+VITE_API_TIMEOUT=30000
 ```
+
+## 🏃 Development
+
+```bash
+# Start development server
+npm run dev
+
+# Server will start at http://localhost:5173
+```
+
+## 🔨 Build
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+Build output will be in `dist/` directory.
+
+## 📁 Project Structure
+
+```
+client/
+├── src/
+│   ├── components/      # React components
+│   ├── contexts/        # React contexts (Auth, Theme, Toast, etc.)
+│   ├── hooks/           # Custom hooks (useSocket, etc.)
+│   ├── pages/           # Page components
+│   ├── services/        # API services
+│   ├── types/           # TypeScript types
+│   ├── utils/           # Utility functions
+│   └── App.tsx          # Root component
+├── .env                 # Environment variables
+└── vite.config.ts       # Vite configuration
+```
+
+## 🔗 Documentation
+
+- [Architecture Guide](ARCHITECTURE.md) - Component structure
+- [API Integration](API_INTEGRATION.md) - Backend integration
+- [Frontend Roadmap](FRONTEND_ROADMAP.md) - Status and plans
+
+## 📞 Support
+
+For documentation and support, see [Current Status](../CURRENT_STATUS.md)

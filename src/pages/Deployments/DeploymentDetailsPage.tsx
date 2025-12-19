@@ -14,6 +14,18 @@ import {
     Alert,
     IconButton,
     Tooltip,
+    Stepper,
+    Step,
+    StepLabel,
+    StepContent,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Tabs,
+    Tab,
 } from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
@@ -24,6 +36,8 @@ import {
     Download as DownloadIcon,
     Refresh as RefreshIcon,
     Replay as RetryIcon,
+    RemoveCircle as SkippedIcon,
+    HourglassEmpty as PendingIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DeploymentsService } from '@/services/deploymentsService';
@@ -42,6 +56,7 @@ export const DeploymentDetailsPage: React.FC = () => {
     const [logs, setLogs] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState(0);
 
     // Connect to socket for this deployment
     useDeploymentUpdates(deployment?.ProjectId);
@@ -134,6 +149,23 @@ export const DeploymentDetailsPage: React.FC = () => {
         return <Chip label={config.label} color={config.color as any} icon={config.icon} />;
     };
 
+    const getStepIcon = (status: string) => {
+        const iconProps = { fontSize: 'small' as const };
+        switch (status) {
+            case 'success':
+                return <SuccessIcon {...iconProps} sx={{ color: '#51cf66' }} />;
+            case 'failed':
+                return <ErrorIcon {...iconProps} sx={{ color: '#ff6b6b' }} />;
+            case 'running':
+                return <RunningIcon {...iconProps} sx={{ color: '#ffd43b' }} />;
+            case 'skipped':
+                return <SkippedIcon {...iconProps} sx={{ color: '#868e96' }} />;
+            case 'pending':
+            default:
+                return <PendingIcon {...iconProps} sx={{ color: '#adb5bd' }} />;
+        }
+    };
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -195,50 +227,175 @@ export const DeploymentDetailsPage: React.FC = () => {
                 </Box>
             </Box>
 
-            <Grid container spacing={3}>
-                {/* Info Card */}
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Details
-                            </Typography>
-                            <Divider sx={{ mb: 2 }} />
+            {/* Tabs */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                <Tabs value={activeTab} onChange={(_e, newValue) => setActiveTab(newValue)}>
+                    <Tab label="Overview" />
+                    <Tab label="Pipeline Steps" />
+                    <Tab label="Variables" />
+                    <Tab label="Logs" />
+                </Tabs>
+            </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Project</Typography>
-                                    <Typography variant="body1">{deployment.ProjectName}</Typography>
+            {/* Tab Content */}
+            {activeTab === 0 && (
+                <Grid container spacing={3}>
+                    {/* Info Card */}
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    Deployment Details
+                                </Typography>
+                                <Divider sx={{ mb: 2 }} />
+
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">Project</Typography>
+                                        <Typography variant="body1">{deployment.ProjectName}</Typography>
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">Branch</Typography>
+                                        <Typography variant="body1">{deployment.Branch}</Typography>
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">Commit</Typography>
+                                        <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                                            {deployment.Commit?.substring(0, 7) || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    {deployment.CommitMessage && (
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary">Commit Message</Typography>
+                                            <Typography variant="body2">{deployment.CommitMessage}</Typography>
+                                        </Box>
+                                    )}
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">Triggered By</Typography>
+                                        <Typography variant="body1">{deployment.Author || 'System'}</Typography>
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">Trigger Type</Typography>
+                                        <Chip label={deployment.TriggerType} size="small" variant="outlined" />
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">Duration</Typography>
+                                        <Typography variant="body1">{deployment.Duration ? `${deployment.Duration}s` : '-'}</Typography>
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">Started At</Typography>
+                                        <Typography variant="body1">
+                                            {deployment.StartedAt ? formatDateTime(deployment.StartedAt) : '-'}
+                                        </Typography>
+                                    </Box>
+                                    {deployment.CompletedAt && (
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary">Completed At</Typography>
+                                            <Typography variant="body1">{formatDateTime(deployment.CompletedAt)}</Typography>
+                                        </Box>
+                                    )}
+                                    {deployment.ErrorMessage && (
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary">Error Message</Typography>
+                                            <Alert severity="error" sx={{ mt: 1 }}>
+                                                {deployment.ErrorMessage}
+                                            </Alert>
+                                        </Box>
+                                    )}
                                 </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Branch</Typography>
-                                    <Typography variant="body1">{deployment.Branch}</Typography>
-                                </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Commit</Typography>
-                                    <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                                        {deployment.Commit?.substring(0, 7) || 'N/A'}
-                                    </Typography>
-                                </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Triggered By</Typography>
-                                    <Typography variant="body1">{deployment.Author || 'System'}</Typography>
-                                </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Duration</Typography>
-                                    <Typography variant="body1">{deployment.Duration ? `${deployment.Duration}s` : '-'}</Typography>
-                                </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Date</Typography>
-                                    <Typography variant="body1">{formatDateTime(deployment.CreatedAt)}</Typography>
-                                </Box>
-                            </Box>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </Grid>
                 </Grid>
+            )}
 
-                {/* Logs Terminal */}
-                <Grid size={{ xs: 12, md: 8 }}>
+            {/* Pipeline Steps Tab */}
+            {activeTab === 1 && (
+                <Card>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                            Pipeline Execution
+                        </Typography>
+                        <Divider sx={{ mb: 3 }} />
+
+                        {deployment.Project?.Config?.Pipeline && deployment.Project.Config.Pipeline.length > 0 ? (
+                            <Stepper orientation="vertical" activeStep={-1}>
+                                {deployment.Project.Config.Pipeline.map((step, index) => (
+                                    <Step key={index} expanded active completed={false}>
+                                        <StepLabel
+                                            icon={getStepIcon('pending')}
+                                            sx={{
+                                                '& .MuiStepLabel-label': {
+                                                    fontSize: '1rem',
+                                                    fontWeight: 500,
+                                                },
+                                            }}
+                                        >
+                                            {step.Name}
+                                        </StepLabel>
+                                        <StepContent>
+                                            {step.RunIf && (
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                                                    <strong>Condition:</strong> {step.RunIf}
+                                                </Typography>
+                                            )}
+                                            <Paper sx={{ p: 2, bgcolor: '#f5f5f5', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                                                {step.Run.map((cmd, cmdIndex) => (
+                                                    <Box key={cmdIndex} sx={{ mb: cmdIndex < step.Run.length - 1 ? 0.5 : 0 }}>
+                                                        {cmd}
+                                                    </Box>
+                                                ))}
+                                            </Paper>
+                                        </StepContent>
+                                    </Step>
+                                ))}
+                            </Stepper>
+                        ) : (
+                            <Alert severity="info">No pipeline steps configured for this project</Alert>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Variables Tab */}
+            {activeTab === 2 && (
+                <Card>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                            Deployment Variables
+                        </Typography>
+                        <Divider sx={{ mb: 3 }} />
+
+                        {deployment.Project?.Config?.Variables && Object.keys(deployment.Project.Config.Variables).length > 0 ? (
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 600 }}>Variable</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Value</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {Object.entries(deployment.Project.Config.Variables).map(([key, value]) => (
+                                            <TableRow key={key}>
+                                                <TableCell sx={{ fontFamily: 'monospace', color: '#1976d2' }}>{key}</TableCell>
+                                                <TableCell sx={{ fontFamily: 'monospace' }}>{value}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        ) : (
+                            <Alert severity="info">No variables configured for this deployment</Alert>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Logs Tab */}
+            {activeTab === 3 && (
+                <Grid container spacing={3}>
+                    <Grid size={{ xs: 12 }}>
                     <Paper
                         sx={{
                             bgcolor: '#1e1e1e',
@@ -334,8 +491,9 @@ export const DeploymentDetailsPage: React.FC = () => {
                             </Box>
                         )}
                     </Paper>
+                    </Grid>
                 </Grid>
-            </Grid>
+            )}
         </Box>
     );
 };
