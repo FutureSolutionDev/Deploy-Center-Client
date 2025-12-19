@@ -54,6 +54,7 @@ export interface IRegisterData {
 
 export interface IAuthResponse {
   User: IUser;
+  SessionId: number; // Current session ID for tracking
   Tokens?: IAuthTokens; // Optional because server uses httpOnly cookies
 }
 

@@ -77,7 +77,7 @@ const PublicRoute: React.FC<IPublicRouteProps> = ({ children }) => {
  */
 const AppRoutesWithToast: React.FC = () => {
   const toast = useToast();
-  const { User, Logout } = useAuth();
+  const { User, CurrentSessionId, Logout } = useAuth();
 
   useEffect(() => {
     // Setup toast handlers for API interceptor
@@ -93,7 +93,7 @@ const AppRoutesWithToast: React.FC = () => {
 
   // Listen for session revoked event
   useEffect(() => {
-    if (!User) return;
+    if (!User || !CurrentSessionId) return;
 
     // Import socket service
     import('@/services/socket').then(({ socketService }) => {
@@ -103,11 +103,14 @@ const AppRoutesWithToast: React.FC = () => {
       socket.emit('join:user', User.Id);
 
       // Listen for session revoked event
-      const handleSessionRevoked = () => {
-        toast.showWarning('Your session has been revoked. Logging out...');
-        setTimeout(() => {
-          Logout();
-        }, 1500);
+      const handleSessionRevoked = (payload: { SessionId: number }) => {
+        // Only logout if the revoked session is THIS session
+        if (payload.SessionId === CurrentSessionId) {
+          toast.showWarning('Your session has been revoked. Logging out...');
+          setTimeout(() => {
+            Logout();
+          }, 1500);
+        }
       };
 
       socket.on('session:revoked', handleSessionRevoked);
@@ -117,7 +120,7 @@ const AppRoutesWithToast: React.FC = () => {
       };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [User, Logout, toast.showWarning]);
+  }, [User, CurrentSessionId, Logout, toast.showWarning]);
 
   return <AppRoutes />;
 };

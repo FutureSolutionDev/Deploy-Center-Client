@@ -311,7 +311,7 @@ export const DeploymentDetailsPage: React.FC = () => {
                                     <Box>
                                         <Typography variant="caption" color="text.secondary">Commit</Typography>
                                         <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                                            {deployment.CommitHash?.substring(0, 7) || 'N/A'}
+                                            {deployment.Commit?.substring(0, 7) || 'N/A'}
                                         </Typography>
                                     </Box>
                                     {deployment.CommitMessage && (

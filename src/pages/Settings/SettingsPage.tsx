@@ -116,7 +116,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   // Track which tabs have been loaded
-  const [loadedTabs, setLoadedTabs] = useState<Set<number>>(new Set([0]));
+  const [loadedTabs, setLoadedTabs] = useState<Set<number>>(new Set());
 
   // Load data based on active tab
   useEffect(() => {

@@ -19,6 +19,7 @@ interface IAuthContextValue {
   IsAuthenticated: boolean;
   IsLoading: boolean;
   HasSession: boolean;
+  CurrentSessionId: number | null;
   Login: (credentials: ILoginCredentials) => Promise<IAuthResponse | ITwoFactorChallenge>;
   Verify2FA: (userId: number, code: string) => Promise<IAuthResponse>;
   Register: (data: IRegisterData) => Promise<void>;
@@ -36,6 +37,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [User, setUser] = useState<IUser | null>(null);
   const [IsLoading, setIsLoading] = useState<boolean>(true);
   const [HasSession, setHasSession] = useState<boolean>(() => !sessionStorage.getItem('dc_no_session'));
+  const [CurrentSessionId, setCurrentSessionId] = useState<number | null>(null);
 
   // Initialize auth state by checking if user is authenticated via cookie
   useEffect(() => {
@@ -47,8 +49,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     const InitializeAuth = async () => {
       try {
         // Try to fetch profile - if cookie exists and valid, this will succeed
-        const profile = await AuthService.GetProfile();
-        setUser(profile?.User);
+        const user = await AuthService.GetProfile();
+        setUser(user);
         setHasSession(true);
         sessionStorage.removeItem('dc_no_session');
       } catch (_error: unknown) {
@@ -72,6 +74,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       // We only need to update the user state
       if ('User' in response) {
         setUser(response.User);
+        setCurrentSessionId(response.SessionId);
         setHasSession(true);
         sessionStorage.removeItem('dc_no_session');
       }
@@ -88,6 +91,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       const response = await AuthService.Verify2FA(userId, code);
       setUser(response.User);
+      setCurrentSessionId(response.SessionId);
       setHasSession(true);
       sessionStorage.removeItem('dc_no_session');
       return response;
@@ -124,6 +128,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     } finally {
       // Clear user state regardless of API response
       setUser(null);
+      setCurrentSessionId(null);
       setHasSession(false);
       sessionStorage.setItem('dc_no_session', '1');
     }
@@ -131,8 +136,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   const RefreshUser = async (): Promise<void> => {
     try {
-      const profile = await AuthService.GetProfile();
-      setUser(profile?.User);
+      const user = await AuthService.GetProfile();
+      setUser(user);
     } catch (error) {
       console.error('Failed to refresh user:', error);
       // If profile fetch fails, user is likely not authenticated anymore
@@ -146,6 +151,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     IsAuthenticated: !!User,
     IsLoading,
     HasSession,
+    CurrentSessionId,
     Login,
     Verify2FA,
     Register,
