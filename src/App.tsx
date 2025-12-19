@@ -76,6 +76,7 @@ const PublicRoute: React.FC<IPublicRouteProps> = ({ children }) => {
  */
 const AppRoutesWithToast: React.FC = () => {
   const toast = useToast();
+  const { User, Logout } = useAuth();
 
   useEffect(() => {
     // Setup toast handlers for API interceptor
@@ -88,6 +89,33 @@ const AppRoutesWithToast: React.FC = () => {
     // Setup API response interceptor (only once on mount)
     setupResponseInterceptor(ApiInstance);
   }, [toast.showSuccess, toast.showError, toast.showWarning]);
+
+  // Listen for session revoked event
+  useEffect(() => {
+    if (!User) return;
+
+    // Import socket service
+    import('@/services/socket').then(({ socketService }) => {
+      const socket = socketService.connect();
+
+      // Join user room for session management
+      socket.emit('join:user', User.Id);
+
+      // Listen for session revoked event
+      const handleSessionRevoked = () => {
+        toast.showWarning('Your session has been revoked. Logging out...');
+        setTimeout(() => {
+          Logout();
+        }, 1500);
+      };
+
+      socket.on('session:revoked', handleSessionRevoked);
+
+      return () => {
+        socket.off('session:revoked', handleSessionRevoked);
+      };
+    });
+  }, [User, Logout, toast.showWarning]);
 
   return <AppRoutes />;
 };

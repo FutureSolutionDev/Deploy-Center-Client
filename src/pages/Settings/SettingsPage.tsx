@@ -115,56 +115,82 @@ export const SettingsPage: React.FC = () => {
     setTimeout(() => setError(null), 3500);
   };
 
+  // Track which tabs have been loaded
+  const [loadedTabs, setLoadedTabs] = useState<Set<number>>(new Set([0]));
+
+  // Load data based on active tab
   useEffect(() => {
-    const loadData = async () => {
+    if (loadedTabs.has(tabValue)) return;
+
+    const loadTabData = async () => {
       try {
         setIsLoading(true);
-        const [profile, settings, apiKeysResponse, sessionsResponse, twoFAStatus] = await Promise.all([
-          UserSettingsService.getProfile(),
-          UserSettingsService.getSettings(),
-          UserSettingsService.listApiKeys(),
-          UserSettingsService.listSessions(),
-          UserSettingsService.get2FAStatus(),
-        ]);
 
-        const user: IUser | undefined = profile?.User;
-        if (user) {
-          setUsername(user.Username || "");
-          setEmail(user.Email || "");
-          setFullName(user.FullName || "");
-          setLastLogin(user.LastLogin);
-          setMemberSince(user.CreatedAt);
+        switch (tabValue) {
+          case 0: // Profile
+            const profile = await UserSettingsService.getProfile();
+            const user: IUser | undefined = profile?.User;
+            if (user) {
+              setUsername(user.Username || "");
+              setEmail(user.Email || "");
+              setFullName(user.FullName || "");
+              setLastLogin(user.LastLogin);
+              setMemberSince(user.CreatedAt);
+            }
+            break;
+
+          case 1: // Security
+            const twoFAStatus = await UserSettingsService.get2FAStatus();
+            setTwoFactorEnabled(!!twoFAStatus?.enabled);
+            setTwoFactorQr(null);
+            setTwoFactorSecret(null);
+            setBackupCodes([]);
+            break;
+
+          case 2: // API Keys
+            const apiKeysResponse = await UserSettingsService.listApiKeys();
+            setApiKeys(apiKeysResponse || []);
+            break;
+
+          case 3: // Sessions
+            const sessionsResponse = await UserSettingsService.listSessions();
+            setSessions(sessionsResponse || []);
+            break;
+
+          case 4: // Notifications
+            const settings = await UserSettingsService.getSettings();
+            if (settings) {
+              setEmailNotifications(!!settings.EmailNotifications);
+              setDiscordWebhook(settings.DiscordWebhookUrl || "");
+              setSlackWebhook(settings.SlackWebhookUrl || "");
+              setNotifySuccess(!!settings.NotifyOnSuccess);
+              setNotifyFailure(!!settings.NotifyOnFailure);
+              setNotifyProjectUpdate(!!settings.NotifyOnProjectUpdate);
+              setNotifySystemAlert(!!settings.NotifyOnSystemAlert);
+            }
+            break;
+
+          case 5: // Preferences
+            const prefs = await UserSettingsService.getSettings();
+            if (prefs) {
+              setTimezone(prefs.Timezone || "UTC");
+              setDateFormat(prefs.DateFormat || "YYYY-MM-DD");
+              setTimeFormat((prefs.TimeFormat as "12h" | "24h") || "24h");
+            }
+            break;
         }
 
-        if (settings) {
-          setEmailNotifications(!!settings.EmailNotifications);
-          setDiscordWebhook(settings.DiscordWebhookUrl || "");
-          setSlackWebhook(settings.SlackWebhookUrl || "");
-          setNotifySuccess(!!settings.NotifyOnSuccess);
-          setNotifyFailure(!!settings.NotifyOnFailure);
-          setNotifyProjectUpdate(!!settings.NotifyOnProjectUpdate);
-          setNotifySystemAlert(!!settings.NotifyOnSystemAlert);
-          setTimezone(settings.Timezone || "UTC");
-          setDateFormat(settings.DateFormat || "YYYY-MM-DD");
-          setTimeFormat((settings.TimeFormat as "12h" | "24h") || "24h");
-        }
-
-        setApiKeys(apiKeysResponse || []);
-        setSessions(sessionsResponse || []);
-        setTwoFactorEnabled(!!twoFAStatus?.enabled);
-        setTwoFactorQr(null);
-        setTwoFactorSecret(null);
-        setBackupCodes([]);
+        setLoadedTabs((prev) => new Set(prev).add(tabValue));
       } catch (err) {
-        console.error("Failed to load settings", err);
+        console.error("Failed to load tab data", err);
         showError(t("settings.loadError"));
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
-  }, []);
+    loadTabData();
+  }, [tabValue]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
