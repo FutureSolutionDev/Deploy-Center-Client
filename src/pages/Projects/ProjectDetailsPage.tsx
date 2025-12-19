@@ -39,6 +39,12 @@ import {
   VisibilityOff as VisibilityOffIcon,
   ContentCopy as CopyIcon,
   Autorenew as RegenerateIcon,
+  Edit as EditIcon,
+  Power as PowerIcon,
+  PowerOff as PowerOffIcon,
+  Settings as SettingsIcon,
+  Code as CodeIcon,
+  FolderOpen as FolderIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -75,10 +81,10 @@ export const ProjectDetailsPage: React.FC = () => {
   const [showWebhook, setShowWebhook] = useState(false);
   const [regeneratingWebhook, setRegeneratingWebhook] = useState(false);
   const [deployDialogOpen, setDeployDialogOpen] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
 
   const fetchProjectDetails = async () => {
     if (!id) return;
-
     setLoading(true);
     try {
       const [projectData, deploymentsData, statsData] = await Promise.all([
@@ -163,6 +169,26 @@ export const ProjectDetailsPage: React.FC = () => {
     navigator.clipboard.writeText(text);
     setSuccess(t("common.copiedToClipboard"));
     setTimeout(() => setSuccess(null), 2000);
+  };
+
+  const handleToggleActive = async () => {
+    if (!project) return;
+
+    try {
+      setTogglingActive(true);
+      await ProjectsService.update(project.Id, { IsActive: !project.IsActive });
+      setProject({ ...project, IsActive: !project.IsActive });
+      setSuccess(
+        project.IsActive
+          ? t("projects.deactivatedSuccessfully")
+          : t("projects.activatedSuccessfully")
+      );
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error: any) {
+      setError(error?.message || t("projects.failedToToggleActive"));
+    } finally {
+      setTogglingActive(false);
+    }
   };
 
   const getStatusChip = (status: string) => {
@@ -253,6 +279,30 @@ export const ProjectDetailsPage: React.FC = () => {
             </IconButton>
             <Button
               variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={() => navigate(`/projects/edit/${project.Id}`)}
+            >
+              {t("common.edit")}
+            </Button>
+            <Button
+              variant="outlined"
+              color={project.IsActive ? "warning" : "success"}
+              startIcon={
+                togglingActive ? (
+                  <CircularProgress size={20} />
+                ) : project.IsActive ? (
+                  <PowerOffIcon />
+                ) : (
+                  <PowerIcon />
+                )
+              }
+              onClick={handleToggleActive}
+              disabled={togglingActive}
+            >
+              {project.IsActive ? t("common.deactivate") : t("common.activate")}
+            </Button>
+            <Button
+              variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteDialogOpen(true)}
@@ -263,7 +313,7 @@ export const ProjectDetailsPage: React.FC = () => {
               variant="contained"
               startIcon={<DeployIcon />}
               onClick={handleOpenDeploy}
-              disabled={deploying}
+              disabled={deploying || !project.IsActive}
             >
               {t("projects.deployNow")}
             </Button>
@@ -320,58 +370,212 @@ export const ProjectDetailsPage: React.FC = () => {
                   {project.ProjectType}
                 </Typography>
               </Box>
+
+              <Box sx={{ mb: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  {t("common.createdAt")}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {formatDateTime(project.CreatedAt)}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  {t("common.updatedAt")}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {formatDateTime(project.UpdatedAt)}
+                </Typography>
+              </Box>
             </CardContent>
           </Card>
 
-          {/* Webhook Configuration */}
-          <Card>
+          {/* Configuration Details */}
+          <Card sx={{ mb: 1 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                {t("projects.webhook")}
-              </Typography>
-              <Divider sx={{ mb: 0.5 }} />
-              <Typography variant="body2" color="text.secondary" paragraph>
-                {t("projects.webhook")}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <SettingsIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {t("projects.configuration")}
+                </Typography>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
 
-              <TextField
-                fullWidth
-                label={t("projects.webhookSecret")}
-                type={showWebhook ? "text" : "password"}
-                value={project.WebhookSecret || "Not generated"}
-                InputProps={{
-                  readOnly: true,
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => setShowWebhook(!showWebhook)} edge="end">
-                        {showWebhook ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                      <Tooltip title={t("common.copy")}>
-                        <IconButton onClick={() => copyToClipboard(project.WebhookSecret)} edge="end">
-                          <CopyIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ mb: 0.5 }}
-              />
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {t("projects.environment")}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+                    {project.Config?.Environment || 'production'}
+                  </Typography>
+                </Grid>
 
-              <Button
-                variant="outlined"
-                color="warning"
-                startIcon={regeneratingWebhook ? <CircularProgress size={20} /> : <RegenerateIcon />}
-                onClick={handleRegenerateWebhook}
-                disabled={regeneratingWebhook}
-                fullWidth
-              >
-                {t("projects.regenerateSecret")}
-              </Button>
+                <Grid size={{ xs: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {t("projects.autoDeploy")}
+                  </Typography>
+                  <Box sx={{ mt: 0.5 }}>
+                    <Chip
+                      label={project.Config?.AutoDeploy ? t("common.enabled") : t("common.disabled")}
+                      color={project.Config?.AutoDeploy ? "success" : "default"}
+                      size="small"
+                    />
+                  </Box>
+                </Grid>
+
+                {project.Config?.Variables?.BuildCommand && (
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t("projects.buildCommand")}
+                    </Typography>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        mt: 0.5,
+                        p: 1,
+                        bgcolor: 'grey.50',
+                        fontFamily: 'monospace',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      {project.Config.Variables.BuildCommand}
+                    </Paper>
+                  </Grid>
+                )}
+
+                {project.Config?.Variables?.BuildOutput && (
+                  <Grid size={{ xs: 6 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t("projects.buildOutput")}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                      <FolderIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                        {project.Config.Variables.BuildOutput}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+
+                {project.Config?.Variables?.TargetPath && (
+                  <Grid size={{ xs: 6 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t("projects.targetPath")}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                      <FolderIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                        {project.Config.Variables.TargetPath}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+
+                {project.Config?.DeployOnPaths && project.Config.DeployOnPaths.length > 0 && (
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                      {t("projects.deployOnPaths")}
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                      {project.Config.DeployOnPaths.map((path, index) => (
+                        <Chip
+                          key={index}
+                          label={path}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                        />
+                      ))}
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
             </CardContent>
           </Card>
 
-          {/* SSH Key Management */}
-          <SshKeyManagement project={project} onUpdate={fetchProjectDetails} />
+          {/* Pipeline Steps */}
+          {project.Config?.Pipeline && project.Config.Pipeline.length > 0 && (
+            <Card sx={{ mb: 1 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <CodeIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {t("projects.pipeline")} ({project.Config.Pipeline.length} {t("common.steps")})
+                  </Typography>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+
+                {project.Config.Pipeline.map((step, index) => (
+                  <Paper
+                    key={index}
+                    variant="outlined"
+                    sx={{
+                      mb: 1.5,
+                      p: 1.5,
+                      '&:last-child': { mb: 0 },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Chip
+                        label={`${index + 1}`}
+                        size="small"
+                        color="primary"
+                        sx={{ mr: 1, minWidth: 32 }}
+                      />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {step.Name}
+                      </Typography>
+                    </Box>
+
+                    {step.RunIf && (
+                      <Box sx={{ mb: 1 }}>
+                        <Chip
+                          label={`Condition: ${step.RunIf}`}
+                          size="small"
+                          variant="outlined"
+                          color="info"
+                          sx={{ fontFamily: 'monospace', fontSize: '0.7rem' }}
+                        />
+                      </Box>
+                    )}
+
+                    {step.Run && Array.isArray(step.Run) && step.Run.length > 0 && (
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 1,
+                          bgcolor: 'grey.900',
+                          color: 'common.white',
+                          fontFamily: 'monospace',
+                          fontSize: '0.75rem',
+                          overflow: 'auto',
+                        }}
+                      >
+                        {step.Run.map((cmd, cmdIndex) => (
+                          <Box key={cmdIndex} sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                            <Typography
+                              component="span"
+                              sx={{
+                                color: 'success.light',
+                                fontFamily: 'monospace',
+                                fontSize: '0.75rem',
+                                mr: 1,
+                              }}
+                            >
+                              $
+                            </Typography>
+                            {cmd}
+                          </Box>
+                        ))}
+                      </Paper>
+                    )}
+                  </Paper>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </Grid>
 
         {/* Right Column - Statistics & History */}
@@ -442,7 +646,7 @@ export const ProjectDetailsPage: React.FC = () => {
           )}
 
           {/* Deployment History */}
-          <Card>
+          <Card sx={{ mb: 1 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 {t("dashboard.recentDeployments")}
@@ -457,7 +661,7 @@ export const ProjectDetailsPage: React.FC = () => {
                   </Typography>
                 </Box>
               ) : (
-                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 240 }} >
+                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 340 }} >
                   <Table size="small">
                     <TableHead
                       sx={{
@@ -475,7 +679,7 @@ export const ProjectDetailsPage: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {deployments.slice(0, 5).map((deployment) => (
+                      {deployments.slice(0, 50).map((deployment) => (
                         <TableRow
                           key={deployment.Id}
                           sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
@@ -503,6 +707,55 @@ export const ProjectDetailsPage: React.FC = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Webhook Configuration */}
+          <Card sx={{ mb: 1 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                {t("projects.webhook")}
+              </Typography>
+              <Divider sx={{ mb: 0.5 }} />
+              <Typography variant="body2" color="text.secondary" paragraph>
+                {t("projects.webhook")}
+              </Typography>
+
+              <TextField
+                fullWidth
+                label={t("projects.webhookSecret")}
+                type={showWebhook ? "text" : "password"}
+                value={project.WebhookSecret || "Not generated"}
+                InputProps={{
+                  readOnly: true,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowWebhook(!showWebhook)} edge="end">
+                        {showWebhook ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                      <Tooltip title={t("common.copy")}>
+                        <IconButton onClick={() => copyToClipboard(project.WebhookSecret)} edge="end">
+                          <CopyIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 0.5 }}
+              />
+
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={regeneratingWebhook ? <CircularProgress size={20} /> : <RegenerateIcon />}
+                onClick={handleRegenerateWebhook}
+                disabled={regeneratingWebhook}
+                fullWidth
+              >
+                {t("projects.regenerateSecret")}
+              </Button>
+            </CardContent>
+          </Card>
+          {/* SSH Key Management */}
+          <SshKeyManagement project={project} onUpdate={fetchProjectDetails} />
         </Grid>
       </Grid>
 
