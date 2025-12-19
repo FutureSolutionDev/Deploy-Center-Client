@@ -302,7 +302,7 @@ export const DeploymentDetailsPage: React.FC = () => {
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                     <Box>
                                         <Typography variant="caption" color="text.secondary">Project</Typography>
-                                        <Typography variant="body1">{deployment.ProjectName}</Typography>
+                                        <Typography variant="body1">{deployment.Project?.Name}</Typography>
                                     </Box>
                                     <Box>
                                         <Typography variant="caption" color="text.secondary">Branch</Typography>
@@ -311,7 +311,7 @@ export const DeploymentDetailsPage: React.FC = () => {
                                     <Box>
                                         <Typography variant="caption" color="text.secondary">Commit</Typography>
                                         <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                                            {deployment.Commit?.substring(0, 7) || 'N/A'}
+                                            {deployment.CommitHash?.substring(0, 7) || 'N/A'}
                                         </Typography>
                                     </Box>
                                     {deployment.CommitMessage && (
@@ -389,7 +389,7 @@ export const DeploymentDetailsPage: React.FC = () => {
                                                     <strong>Condition:</strong> {step.RunIf}
                                                 </Typography>
                                             )}
-                                            <Paper sx={{ p: 2, bgcolor: '#f5f5f5', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                                            <Paper sx={{ p: 2, fontFamily: 'monospace', fontSize: '0.875rem' }}>
                                                 {step.Run.map((cmd, cmdIndex) => (
                                                     <Box key={cmdIndex} sx={{ mb: cmdIndex < step.Run.length - 1 ? 0.5 : 0 }}>
                                                         {cmd}
@@ -446,129 +446,129 @@ export const DeploymentDetailsPage: React.FC = () => {
             {activeTab === 3 && (
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12 }}>
-                    <Paper
-                        sx={{
-                            bgcolor: '#0d1117',
-                            color: '#c9d1d9',
-                            fontFamily: 'monospace',
-                            fontSize: '0.875rem',
-                            height: '600px',
-                            borderRadius: 2,
-                            boxShadow: 3,
-                            position: 'relative',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                        }}
-                    >
-                        {/* Terminal Header - Sticky */}
-                        <Box
+                        <Paper
                             sx={{
+                                bgcolor: '#0d1117',
+                                color: '#c9d1d9',
+                                fontFamily: 'monospace',
+                                fontSize: '0.875rem',
+                                height: '600px',
+                                borderRadius: 2,
+                                boxShadow: 3,
+                                position: 'relative',
                                 display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                p: 2,
-                                pb: 1.5,
-                                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                bgcolor: '#161b22',
-                                position: 'sticky',
-                                top: 0,
-                                zIndex: 1,
+                                flexDirection: 'column',
+                                overflow: 'hidden',
                             }}
                         >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ff5f56' }} />
-                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ffbd2e' }} />
-                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#27c93f' }} />
-                                </Box>
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                                    deployment-{id}.log
-                                </Typography>
-                            </Box>
-
-                            {/* Live indicator for in-progress deployments */}
-                            {deployment.Status === 'inProgress' && (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        bgcolor: 'rgba(0,0,0,0.3)',
-                                        px: 2,
-                                        py: 0.5,
-                                        borderRadius: 1,
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            width: 8,
-                                            height: 8,
-                                            borderRadius: '50%',
-                                            bgcolor: '#27c93f',
-                                            animation: 'pulse 2s infinite',
-                                            '@keyframes pulse': {
-                                                '0%, 100%': { opacity: 1 },
-                                                '50%': { opacity: 0.3 },
-                                            },
-                                        }}
-                                    />
-                                    <Typography variant="caption" sx={{ color: '#27c93f', fontWeight: 600 }}>
-                                        {t('deployments.liveIndicator') || 'LIVE'}
+                            {/* Terminal Header - Sticky */}
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    p: 2,
+                                    pb: 1.5,
+                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                    bgcolor: '#161b22',
+                                    position: 'sticky',
+                                    top: 0,
+                                    zIndex: 1,
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ff5f56' }} />
+                                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ffbd2e' }} />
+                                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#27c93f' }} />
+                                    </Box>
+                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                                        deployment-{id}.log
                                     </Typography>
                                 </Box>
-                            )}
-                        </Box>
 
-                        {/* Logs Content - Scrollable */}
-                        <Box
-                            sx={{
-                                p: 2,
-                                flex: 1,
-                                overflow: 'auto',
-                                '&::-webkit-scrollbar': {
-                                    width: '8px',
-                                },
-                                '&::-webkit-scrollbar-track': {
-                                    bgcolor: '#0d1117',
-                                },
-                                '&::-webkit-scrollbar-thumb': {
-                                    bgcolor: '#30363d',
-                                    borderRadius: '4px',
-                                    '&:hover': {
-                                        bgcolor: '#484f58',
-                                    },
-                                },
-                            }}
-                        >
-                            {!logs || logs.trim().length === 0 ? (
-                                <Typography sx={{ color: 'rgba(201,209,217,0.6)', fontStyle: 'italic' }}>
-                                    {t('deployments.noLogsAvailable') || 'Waiting for logs...'}
-                                </Typography>
-                            ) : (
-                                logs.split('\n').map((log, index) => (
-                                    log.trim().length > 0 && (
+                                {/* Live indicator for in-progress deployments */}
+                                {deployment.Status === 'inProgress' && (
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            bgcolor: 'rgba(0,0,0,0.3)',
+                                            px: 2,
+                                            py: 0.5,
+                                            borderRadius: 1,
+                                        }}
+                                    >
                                         <Box
-                                            key={index}
                                             sx={{
-                                                mb: 0.25,
-                                                color: getLogColor(log),
-                                                whiteSpace: 'pre-wrap',
-                                                wordBreak: 'break-word',
-                                                lineHeight: 1.6,
-                                                '&:hover': {
-                                                    bgcolor: 'rgba(255,255,255,0.03)',
+                                                width: 8,
+                                                height: 8,
+                                                borderRadius: '50%',
+                                                bgcolor: '#27c93f',
+                                                animation: 'pulse 2s infinite',
+                                                '@keyframes pulse': {
+                                                    '0%, 100%': { opacity: 1 },
+                                                    '50%': { opacity: 0.3 },
                                                 },
                                             }}
-                                        >
-                                            {log}
-                                        </Box>
-                                    )
-                                ))
-                            )}
-                            <div ref={logsEndRef} />
-                        </Box>
-                    </Paper>
+                                        />
+                                        <Typography variant="caption" sx={{ color: '#27c93f', fontWeight: 600 }}>
+                                            {t('deployments.liveIndicator') || 'LIVE'}
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+
+                            {/* Logs Content - Scrollable */}
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    flex: 1,
+                                    overflow: 'auto',
+                                    '&::-webkit-scrollbar': {
+                                        width: '8px',
+                                    },
+                                    '&::-webkit-scrollbar-track': {
+                                        bgcolor: '#0d1117',
+                                    },
+                                    '&::-webkit-scrollbar-thumb': {
+                                        bgcolor: '#30363d',
+                                        borderRadius: '4px',
+                                        '&:hover': {
+                                            bgcolor: '#484f58',
+                                        },
+                                    },
+                                }}
+                            >
+                                {!logs || logs.trim().length === 0 ? (
+                                    <Typography sx={{ color: 'rgba(201,209,217,0.6)', fontStyle: 'italic' }}>
+                                        {t('deployments.noLogsAvailable') || 'Waiting for logs...'}
+                                    </Typography>
+                                ) : (
+                                    logs.split('\n').map((log, index) => (
+                                        log.trim().length > 0 && (
+                                            <Box
+                                                key={index}
+                                                sx={{
+                                                    mb: 0.25,
+                                                    color: getLogColor(log),
+                                                    whiteSpace: 'pre-wrap',
+                                                    wordBreak: 'break-word',
+                                                    lineHeight: 1.6,
+                                                    '&:hover': {
+                                                        bgcolor: 'rgba(255,255,255,0.03)',
+                                                    },
+                                                }}
+                                            >
+                                                {log}
+                                            </Box>
+                                        )
+                                    ))
+                                )}
+                                <div ref={logsEndRef} />
+                            </Box>
+                        </Paper>
                     </Grid>
                 </Grid>
             )}

@@ -116,6 +116,7 @@ const AppRoutesWithToast: React.FC = () => {
         socket.off('session:revoked', handleSessionRevoked);
       };
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [User, Logout, toast.showWarning]);
 
   return <AppRoutes />;

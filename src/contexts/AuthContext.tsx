@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       try {
         // Try to fetch profile - if cookie exists and valid, this will succeed
         const profile = await AuthService.GetProfile();
-        setUser(profile);
+        setUser(profile?.User);
         setHasSession(true);
         sessionStorage.removeItem('dc_no_session');
       } catch (_error: unknown) {
@@ -132,7 +132,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const RefreshUser = async (): Promise<void> => {
     try {
       const profile = await AuthService.GetProfile();
-      setUser(profile);
+      setUser(profile?.User);
     } catch (error) {
       console.error('Failed to refresh user:', error);
       // If profile fetch fails, user is likely not authenticated anymore
@@ -157,6 +157,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 };
 
 // Custom hook to use auth context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): IAuthContextValue => {
   const context = useContext(AuthContext);
   if (!context) {

@@ -102,7 +102,6 @@ export const MainLayout: React.FC = () => {
   const { Mode, ToggleMode } = useTheme();
   const { Language, ChangeLanguage, t } = useLanguage();
   const { hasRole } = useRole();
-
   const [MobileOpen, setMobileOpen] = useState(false);
   const [UserMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
     null
@@ -224,7 +223,7 @@ export const MainLayout: React.FC = () => {
           {/* User Menu */}
           <IconButton color="inherit" onClick={HandleUserMenuOpen}>
             <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}>
-              {User?.FullName?.charAt(0).toUpperCase() || "U"}
+              {User?.FullName?.charAt(0).toUpperCase() || User?.Username?.charAt(0).toUpperCase() || "U"}
             </Avatar>
           </IconButton>
 
@@ -237,7 +236,7 @@ export const MainLayout: React.FC = () => {
               <ListItemIcon>
                 <AccountCircle fontSize="small" />
               </ListItemIcon>
-              <ListItemText>{User?.FullName || "User"}</ListItemText>
+              <ListItemText>{User?.FullName || User?.Username || "Users"}</ListItemText>
             </MenuItem>
             <Divider />
             <MenuItem onClick={HandleLogout}>
