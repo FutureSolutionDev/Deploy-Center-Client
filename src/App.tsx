@@ -10,6 +10,7 @@ import { ThemeContextProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { UserSettingsProvider } from '@/contexts/UserSettingsContext';
 import { ToastProvider, useToast } from '@/contexts/ToastContext';
+import { RoleProvider } from '@/contexts/RoleContext';
 import { setToastHandlers, setupResponseInterceptor } from '@/utils/apiInterceptors';
 import ApiInstance from '@/services/api';
 import { MainLayout } from '@/components/Layout/MainLayout';
@@ -183,14 +184,16 @@ const App: React.FC = () => {
       <ErrorBoundary>
         <LanguageProvider>
           <AuthProvider>
-            <UserSettingsProvider>
-              <ThemeContextProvider>
-                <ToastProvider>
-                  <CssBaseline />
-                  <AppRoutesWithToast />
-                </ToastProvider>
-              </ThemeContextProvider>
-            </UserSettingsProvider>
+            <RoleProvider>
+              <UserSettingsProvider>
+                <ThemeContextProvider>
+                  <ToastProvider>
+                    <CssBaseline />
+                    <AppRoutesWithToast />
+                  </ToastProvider>
+                </ThemeContextProvider>
+              </UserSettingsProvider>
+            </RoleProvider>
           </AuthProvider>
         </LanguageProvider>
       </ErrorBoundary>

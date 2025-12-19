@@ -107,6 +107,15 @@ export const UserSettingsService = {
     await ApiInstance.delete(`/users/me/api-keys/${keyId}`);
   },
 
+  reactivateApiKey: async (keyId: number): Promise<void> => {
+    await ApiInstance.post(`/users/me/api-keys/${keyId}/reactivate`);
+  },
+
+  regenerateApiKey: async (keyId: number): Promise<IApiKeyCreateResponse> => {
+    const response = await ApiInstance.post(`/users/me/api-keys/${keyId}/regenerate`);
+    return response.data.Data;
+  },
+
   // Sessions
   listSessions: async (): Promise<IUserSession[]> => {
     const response = await ApiInstance.get('/users/me/sessions');

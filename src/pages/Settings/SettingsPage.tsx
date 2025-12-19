@@ -371,6 +371,31 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleReactivateApiKey = async (id: number) => {
+    try {
+      await UserSettingsService.reactivateApiKey(id);
+      // Update the key status to active
+      setApiKeys((prev) => prev.map((k) => k.Id === id ? { ...k, IsActive: true } : k));
+      showSuccess("API key reactivated successfully");
+    } catch (err) {
+      console.error("Reactivate API key failed", err);
+      showError(t("settings.saveFailed"));
+    }
+  };
+
+  const handleRegenerateApiKey = async (id: number) => {
+    try {
+      const result = await UserSettingsService.regenerateApiKey(id);
+      const refreshed = await UserSettingsService.listApiKeys();
+      setApiKeys(refreshed || []);
+      return result;
+    } catch (err) {
+      console.error("Regenerate API key failed", err);
+      showError(t("settings.saveFailed"));
+      return null;
+    }
+  };
+
   const handleRevokeSession = async (id: number) => {
     try {
       await UserSettingsService.revokeSession(id);
@@ -549,6 +574,8 @@ export const SettingsPage: React.FC = () => {
               loading={isLoading}
               onGenerate={handleGenerateApiKey}
               onRevoke={handleRevokeApiKey}
+              onReactivate={handleReactivateApiKey}
+              onRegenerate={handleRegenerateApiKey}
               t={t}
             />
           </TabPanel>

@@ -40,6 +40,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRole, UserRole } from "@/contexts/RoleContext";
 
 const DRAWER_WIDTH = 240;
 
@@ -48,6 +49,7 @@ interface IMenuItem {
   TitleAr: string;
   Path: string;
   Icon: React.ReactNode;
+  AllowedRoles?: UserRole[]; // Optional - if not specified, all roles can access
 }
 
 const MenuItems: IMenuItem[] = [
@@ -80,6 +82,7 @@ const MenuItems: IMenuItem[] = [
     TitleAr: "التقارير",
     Path: "/reports",
     Icon: <ReportsIcon />,
+    AllowedRoles: [UserRole.Admin], // Only Admin can access Reports
   },
   {
     Title: "Settings",
@@ -98,11 +101,22 @@ export const MainLayout: React.FC = () => {
   const { User, Logout } = useAuth();
   const { Mode, ToggleMode } = useTheme();
   const { Language, ChangeLanguage, t } = useLanguage();
+  const { hasRole } = useRole();
 
   const [MobileOpen, setMobileOpen] = useState(false);
   const [UserMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
     null
   );
+
+  // Filter menu items based on user role
+  const FilteredMenuItems = MenuItems.filter((item) => {
+    // If no specific roles required, show to everyone
+    if (!item.AllowedRoles || item.AllowedRoles.length === 0) {
+      return true;
+    }
+    // Check if user has required role
+    return hasRole(item.AllowedRoles);
+  });
 
   const HandleDrawerToggle = () => {
     setMobileOpen(!MobileOpen);
@@ -140,7 +154,7 @@ export const MainLayout: React.FC = () => {
       <Divider />
       <List
       >
-        {MenuItems.map((item) => {
+        {FilteredMenuItems.map((item) => {
           const isActive = location.pathname === item.Path;
           return (
             <ListItem key={item.Path} disablePadding>
