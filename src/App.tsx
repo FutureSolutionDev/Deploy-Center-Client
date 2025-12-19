@@ -2,13 +2,16 @@
  * Main App Component
  * Root component with routing and context providers
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeContextProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { UserSettingsProvider } from '@/contexts/UserSettingsContext';
+import { ToastProvider, useToast } from '@/contexts/ToastContext';
+import { setToastHandlers, setupResponseInterceptor } from '@/utils/apiInterceptors';
+import ApiInstance from '@/services/api';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { LoginPage } from '@/pages/Auth/LoginPage';
 import { RegisterPage } from '@/pages/Auth/RegisterPage';
@@ -65,6 +68,28 @@ const PublicRoute: React.FC<IPublicRouteProps> = ({ children }) => {
   }
 
   return <>{children}</>;
+};
+
+/**
+ * App Routes Component with Toast Integration
+ * Defines all application routes
+ */
+const AppRoutesWithToast: React.FC = () => {
+  const toast = useToast();
+
+  useEffect(() => {
+    // Setup toast handlers for API interceptor
+    setToastHandlers({
+      showSuccess: toast.showSuccess,
+      showError: toast.showError,
+      showWarning: toast.showWarning,
+    });
+
+    // Setup API response interceptor
+    setupResponseInterceptor(ApiInstance);
+  }, [toast]);
+
+  return <AppRoutes />;
 };
 
 /**
@@ -132,8 +157,10 @@ const App: React.FC = () => {
           <AuthProvider>
             <UserSettingsProvider>
               <ThemeContextProvider>
-                <CssBaseline />
-                <AppRoutes />
+                <ToastProvider>
+                  <CssBaseline />
+                  <AppRoutesWithToast />
+                </ToastProvider>
               </ThemeContextProvider>
             </UserSettingsProvider>
           </AuthProvider>
