@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Box,
   Card,
@@ -7,6 +7,7 @@ import {
   Paper,
   Chip,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   FolderCopy as ProjectsIcon,
@@ -16,8 +17,7 @@ import {
 } from '@mui/icons-material';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ProjectsService } from '@/services/projectsService';
-import { DeploymentsService } from '@/services/deploymentsService';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { IDeployment } from '@/types';
 
@@ -33,65 +33,9 @@ export const DashboardPage: React.FC = () => {
   const { t } = useLanguage();
   const { User } = useAuth();
   const { formatDateTime } = useDateFormatter();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<IStatCard[]>([]);
-  const [recentDeployments, setRecentDeployments] = useState<IDeployment[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [projects, deployments] = await Promise.all([
-          ProjectsService.getAll(),
-          DeploymentsService.getAll(),
-        ]);
-
-        const totalProjects = projects.length;
-        const totalDeployments = deployments.length;
-        const successDeployments = deployments.filter(d => d.Status === 'success').length;
-        const failedDeployments = deployments.filter(d => d.Status === 'failed').length;
-
-        setStats([
-          {
-            Title: 'totalProjects',
-            TitleAr: 'totalProjects',
-            Value: totalProjects,
-            Icon: <ProjectsIcon fontSize="large" />,
-            Color: '#1976d2',
-          },
-          {
-            Title: 'totalDeployments',
-            TitleAr: 'totalDeployments',
-            Value: totalDeployments,
-            Icon: <DeploymentsIcon fontSize="large" />,
-            Color: '#9c27b0',
-          },
-          {
-            Title: 'successfulDeployments',
-            TitleAr: 'successfulDeployments',
-            Value: successDeployments,
-            Icon: <SuccessIcon fontSize="large" />,
-            Color: '#4caf50',
-          },
-          {
-            Title: 'failedDeployments',
-            TitleAr: 'failedDeployments',
-            Value: failedDeployments,
-            Icon: <ErrorIcon fontSize="large" />,
-            Color: '#f44336',
-          },
-        ]);
-
-        setRecentDeployments(deployments.slice(0, 5));
-      } catch (error) {
-        console.error('Failed to fetch dashboard data', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  // Use the optimized dashboard stats hook
+  const { data, isLoading, error } = useDashboardStats();
 
   const GetStatusColor = (status: string): 'success' | 'error' | 'default' => {
     switch (status) {
@@ -104,13 +48,68 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  // Loading state
+  if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <CircularProgress />
       </Box>
     );
   }
+
+  // Error state
+  if (error) {
+    return (
+      <Box sx={{ mt: 4 }}>
+        <Alert severity="error">
+          Failed to load dashboard data: {error.message}
+        </Alert>
+      </Box>
+    );
+  }
+
+  // No data state (shouldn't happen, but good to handle)
+  if (!data) {
+    return (
+      <Box sx={{ mt: 4 }}>
+        <Alert severity="info">No dashboard data available</Alert>
+      </Box>
+    );
+  }
+
+  // Build stats cards from API data
+  const stats: IStatCard[] = [
+    {
+      Title: 'totalProjects',
+      TitleAr: 'totalProjects',
+      Value: data.Stats.TotalProjects,
+      Icon: <ProjectsIcon fontSize="large" />,
+      Color: '#1976d2',
+    },
+    {
+      Title: 'totalDeployments',
+      TitleAr: 'totalDeployments',
+      Value: data.Stats.TotalDeployments,
+      Icon: <DeploymentsIcon fontSize="large" />,
+      Color: '#9c27b0',
+    },
+    {
+      Title: 'successfulDeployments',
+      TitleAr: 'successfulDeployments',
+      Value: data.Stats.SuccessfulDeployments,
+      Icon: <SuccessIcon fontSize="large" />,
+      Color: '#4caf50',
+    },
+    {
+      Title: 'failedDeployments',
+      TitleAr: 'failedDeployments',
+      Value: data.Stats.FailedDeployments,
+      Icon: <ErrorIcon fontSize="large" />,
+      Color: '#f44336',
+    },
+  ];
+
+  const recentDeployments: IDeployment[] = data.RecentDeployments;
 
   return (
     <Box>
@@ -169,34 +168,40 @@ export const DashboardPage: React.FC = () => {
         </Typography>
 
         <Box sx={{ mt: 2 }}>
-          {recentDeployments.map((deployment) => (
-            <Box
-              key={deployment.Id}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                p: 2,
-                mb: 1,
-                bgcolor: 'background.default',
-                borderRadius: 1,
-              }}
-            >
-              <Box>
-                <Typography variant="body1" fontWeight="medium">
-                  {deployment.ProjectName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {deployment.Branch} • {formatDateTime(deployment.CreatedAt)}
-                </Typography>
+          {recentDeployments.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No recent deployments
+            </Typography>
+          ) : (
+            recentDeployments.map((deployment) => (
+              <Box
+                key={deployment.Id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: 2,
+                  mb: 1,
+                  bgcolor: 'background.default',
+                  borderRadius: 1,
+                }}
+              >
+                <Box>
+                  <Typography variant="body1" fontWeight="medium">
+                    {deployment.ProjectName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {deployment.Branch} • {formatDateTime(deployment.CreatedAt)}
+                  </Typography>
+                </Box>
+                <Chip
+                  label={deployment.Status}
+                  color={GetStatusColor(deployment.Status)}
+                  size="small"
+                />
               </Box>
-              <Chip
-                label={deployment.Status}
-                color={GetStatusColor(deployment.Status)}
-                size="small"
-              />
-            </Box>
-          ))}
+            ))
+          )}
         </Box>
       </Paper>
     </Box>

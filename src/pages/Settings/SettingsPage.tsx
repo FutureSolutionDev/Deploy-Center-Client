@@ -115,9 +115,6 @@ export const SettingsPage: React.FC = () => {
     setTimeout(() => setError(null), 3500);
   };
 
-  // Track which tabs have been loaded
-  const [loadedTabs, setLoadedTabs] = useState<Set<number>>(new Set());
-
   // Update profile state when User changes from AuthContext
   useEffect(() => {
     if (User) {
@@ -129,75 +126,59 @@ export const SettingsPage: React.FC = () => {
     }
   }, [User]);
 
-  // Load data based on active tab
+  // Load ALL settings data ONCE on mount
   useEffect(() => {
-    if (loadedTabs.has(tabValue)) return;
-
-    const loadTabData = async () => {
+    const loadAllData = async () => {
       try {
         setIsLoading(true);
 
-        switch (tabValue) {
-          case 0: // Profile
-            // No need to load profile - already available from AuthContext
-            break;
+        // Fetch all data in parallel
+        const [settings, apiKeysResponse, sessionsResponse, twoFAStatus] = await Promise.all([
+          UserSettingsService.getSettings(),
+          UserSettingsService.listApiKeys(),
+          UserSettingsService.listSessions(),
+          UserSettingsService.get2FAStatus(),
+        ]);
 
-          case 1: // Preferences
-            const prefs = await UserSettingsService.getSettings();
-            if (prefs) {
-              setTimezone(prefs.Timezone || "UTC");
-              setDateFormat(prefs.DateFormat || "YYYY-MM-DD");
-              setTimeFormat((prefs.TimeFormat as "12h" | "24h") || "24h");
-            }
-            break;
+        // Populate Preferences tab
+        if (settings) {
+          setTimezone(settings.Timezone || "UTC");
+          setDateFormat(settings.DateFormat || "YYYY-MM-DD");
+          setTimeFormat((settings.TimeFormat as "12h" | "24h") || "24h");
 
-          case 2: // Notifications
-            const settings = await UserSettingsService.getSettings();
-            if (settings) {
-              setEmailNotifications(!!settings.EmailNotifications);
-              setDiscordWebhook(settings.DiscordWebhookUrl || "");
-              setSlackWebhook(settings.SlackWebhookUrl || "");
-              setNotifySuccess(!!settings.NotifyOnSuccess);
-              setNotifyFailure(!!settings.NotifyOnFailure);
-              setNotifyProjectUpdate(!!settings.NotifyOnProjectUpdate);
-              setNotifySystemAlert(!!settings.NotifyOnSystemAlert);
-            }
-            break;
-
-          case 3: // API Keys
-            const apiKeysResponse = await UserSettingsService.listApiKeys();
-            setApiKeys(apiKeysResponse || []);
-            break;
-
-          case 4: // Sessions
-            const sessionsResponse = await UserSettingsService.listSessions();
-            setSessions(sessionsResponse || []);
-            break;
-
-          case 5: // Security
-            const twoFAStatus = await UserSettingsService.get2FAStatus();
-            setTwoFactorEnabled(!!twoFAStatus?.enabled);
-            setTwoFactorQr(null);
-            setTwoFactorSecret(null);
-            setBackupCodes([]);
-            break;
-
-          case 6: // Account
-            // No data to load for account tab
-            break;
+          // Populate Notifications tab (same settings object!)
+          setEmailNotifications(!!settings.EmailNotifications);
+          setDiscordWebhook(settings.DiscordWebhookUrl || "");
+          setSlackWebhook(settings.SlackWebhookUrl || "");
+          setNotifySuccess(!!settings.NotifyOnSuccess);
+          setNotifyFailure(!!settings.NotifyOnFailure);
+          setNotifyProjectUpdate(!!settings.NotifyOnProjectUpdate);
+          setNotifySystemAlert(!!settings.NotifyOnSystemAlert);
         }
 
-        setLoadedTabs((prev) => new Set(prev).add(tabValue));
+        // Populate API Keys tab
+        setApiKeys(apiKeysResponse || []);
+
+        // Populate Sessions tab
+        setSessions(sessionsResponse || []);
+
+        // Populate Security tab
+        setTwoFactorEnabled(!!twoFAStatus?.enabled);
+        setTwoFactorQr(null);
+        setTwoFactorSecret(null);
+        setBackupCodes([]);
+
       } catch (err) {
-        console.error("Failed to load tab data", err);
+        console.error("Failed to load settings data", err);
         showError(t("settings.loadError"));
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadTabData();
-  }, [tabValue]);
+    loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

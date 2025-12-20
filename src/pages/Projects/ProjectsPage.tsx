@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -33,7 +33,13 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ProjectsService } from "@/services/projectsService";
+import { useToast } from "@/contexts/ToastContext";
+import {
+  useProjects,
+  useUpdateProject,
+  useDeleteProject,
+  useDeployProject,
+} from "@/hooks/useProjects";
 import type { IProject, IDeploymentRequest } from "@/types";
 import { ProjectWizard } from "@/components/Projects/Wizard/ProjectWizard";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
@@ -41,62 +47,46 @@ import { DeploymentModal } from "@/components/Projects/DeploymentModal";
 export const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [projects, setProjects] = useState<IProject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { showSuccess, showError } = useToast();
+
+  // React Query hooks
+  const { data: projects = [], isLoading, error, refetch } = useProjects(true);
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
+  const deployProject = useDeployProject();
+
+  // Local UI state
   const [openDialog, setOpenDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<IProject | null>(null);
-
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deployDialogOpen, setDeployDialogOpen] = useState(false);
   const [deployingProject, setDeployingProject] = useState<IProject | null>(null);
 
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const data = await ProjectsService.getAll(true);
-      setProjects(data);
-    } catch (error) {
-      console.error("Failed to fetch projects", error);
-      setError("Failed to load projects");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
   const handleOpenDialog = (project?: IProject) => {
-    if (project) {
-      setEditingProject(project);
-    } else {
-      setEditingProject(null);
-    }
+    setEditingProject(project || null);
     setOpenDialog(true);
-    setError(null);
-    setSuccess(null);
   };
 
   const handleSaveProject = async (projectData: Partial<IProject>) => {
-    try {
-      if (editingProject) {
-        await ProjectsService.update(editingProject.Id, projectData as any);
-        setSuccess("Project updated successfully");
-      } else {
-        await ProjectsService.create(projectData as any);
-        setSuccess("Project created successfully");
-      }
-
-      setTimeout(() => {
-        fetchProjects();
-      }, 1000);
-    } catch (error: any) {
-      throw new Error(error?.message || "Failed to save project");
+    if (editingProject) {
+      await updateProject.mutateAsync(
+        { id: editingProject.Id, data: projectData },
+        {
+          onSuccess: () => {
+            showSuccess("Project updated successfully");
+            setOpenDialog(false);
+            setEditingProject(null);
+          },
+          onError: (error: Error) => {
+            throw new Error(error?.message || "Failed to update project");
+          },
+        }
+      );
+    } else {
+      // For create, the wizard will handle the mutation
+      throw new Error("Create functionality should use the wizard's internal mutation");
     }
   };
 
@@ -125,16 +115,17 @@ export const ProjectsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!selectedProject) return;
 
-    try {
-      await ProjectsService.delete(selectedProject.Id);
-      setSuccess("Project deleted successfully");
-      fetchProjects();
-    } catch (error: any) {
-      setError(error?.message || "Failed to delete project");
-    } finally {
-      setDeleteDialogOpen(false);
-      setSelectedProject(null);
-    }
+    deleteProject.mutate(selectedProject.Id, {
+      onSuccess: () => {
+        showSuccess("Project deleted successfully");
+        setDeleteDialogOpen(false);
+        setSelectedProject(null);
+      },
+      onError: (error: Error) => {
+        showError(error?.message || "Failed to delete project");
+        setDeleteDialogOpen(false);
+      },
+    });
   };
 
   const handleOpenDeploy = (project: IProject) => {
@@ -144,15 +135,15 @@ export const ProjectsPage: React.FC = () => {
 
   const handleDeploy = async (data: IDeploymentRequest) => {
     try {
-      await ProjectsService.deploy(data.ProjectId, data);
-      setSuccess(`Deployment started successfully`);
-      setTimeout(() => setSuccess(null), 3000);
+      await deployProject.mutateAsync({ id: data.ProjectId, data });
+      showSuccess("Deployment started successfully");
       setDeployDialogOpen(false);
+      setDeployingProject(null);
     } catch (error: unknown) {
       const errorMessage =
-        error && typeof error === 'object' && 'message' in error
+        error && typeof error === "object" && "message" in error
           ? String(error.message)
-          : 'Failed to trigger deployment';
+          : "Failed to trigger deployment";
       throw new Error(errorMessage);
     }
   };
@@ -160,20 +151,25 @@ export const ProjectsPage: React.FC = () => {
   const handleToggleActive = async () => {
     if (!selectedProject) return;
 
-    try {
-      await ProjectsService.update(selectedProject.Id, {
-        IsActive: !selectedProject.IsActive
-      });
-      setSuccess(`Project ${selectedProject.IsActive ? 'deactivated' : 'activated'} successfully`);
-      fetchProjects();
-    } catch (error: any) {
-      setError(error?.message || 'Failed to update project');
-    } finally {
-      handleMenuClose();
-    }
+    updateProject.mutate(
+      {
+        id: selectedProject.Id,
+        data: { IsActive: !selectedProject.IsActive },
+      },
+      {
+        onSuccess: () => {
+          showSuccess(
+            `Project ${selectedProject.IsActive ? "deactivated" : "activated"} successfully`
+          );
+          handleMenuClose();
+        },
+        onError: (error: Error) => {
+          showError(error?.message || "Failed to update project");
+          handleMenuClose();
+        },
+      }
+    );
   };
-
-
 
   return (
     <Box>
@@ -190,8 +186,8 @@ export const ProjectsPage: React.FC = () => {
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <Button
             startIcon={<RefreshIcon />}
-            onClick={fetchProjects}
-            disabled={loading}
+            onClick={() => refetch()}
+            disabled={isLoading}
             sx={{ height: "2.5rem" }}
           >
             {t("common.refresh")}
@@ -207,24 +203,19 @@ export const ProjectsPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Alerts */}
+      {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
-          {success}
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error.message}
         </Alert>
       )}
 
       {/* Projects Grid */}
-      {loading ? (
+      {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />
         </Box>
-      ) :
+      ) : (
         <>
           {projects.length === 0 ? (
             <Card sx={{ textAlign: "center", py: 8 }}>
@@ -321,10 +312,7 @@ export const ProjectsPage: React.FC = () => {
                           {t("projects.deploy")}
                         </Button>
                       </Box>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuOpen(e, project)}
-                      >
+                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, project)}>
                         <MoreVertIcon />
                       </IconButton>
                     </CardActions>
@@ -334,14 +322,10 @@ export const ProjectsPage: React.FC = () => {
             </Grid>
           )}
         </>
-      }
+      )}
 
       {/* Action Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         <MenuItem onClick={handleEdit}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
@@ -363,9 +347,7 @@ export const ProjectsPage: React.FC = () => {
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText sx={{ color: "error.main" }}>
-            {t("common.delete")}
-          </ListItemText>
+          <ListItemText sx={{ color: "error.main" }}>{t("common.delete")}</ListItemText>
         </MenuItem>
       </Menu>
 
@@ -376,7 +358,7 @@ export const ProjectsPage: React.FC = () => {
         maxWidth="md"
         fullWidth
         PaperProps={{
-          sx: { minHeight: '80vh' }
+          sx: { minHeight: "80vh" },
         }}
       >
         {openDialog && (
@@ -408,9 +390,7 @@ export const ProjectsPage: React.FC = () => {
       >
         <DialogTitle>{t("projects.confirmDelete")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            {t("projects.confirmDeleteDesc")}
-          </Typography>
+          <Typography>{t("projects.confirmDeleteDesc")}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>{t("common.cancel")}</Button>

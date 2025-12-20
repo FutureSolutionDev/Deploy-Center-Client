@@ -5,6 +5,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeContextProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -13,6 +15,19 @@ import { ToastProvider, useToast } from '@/contexts/ToastContext';
 import { RoleProvider } from '@/contexts/RoleContext';
 import { setToastHandlers, setupResponseInterceptor } from '@/utils/apiInterceptors';
 import ApiInstance from '@/services/api';
+
+// Create a React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache garbage collection time
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnReconnect: true, // Refetch on reconnect
+      retry: 1, // Retry failed requests once
+    },
+  },
+});
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { LoginPage } from '@/pages/Auth/LoginPage';
 import { RegisterPage } from '@/pages/Auth/RegisterPage';
@@ -186,20 +201,23 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <LanguageProvider>
-          <AuthProvider>
-            <RoleProvider>
-              <UserSettingsProvider>
-                <ThemeContextProvider>
-                  <ToastProvider>
-                    <CssBaseline />
-                    <AppRoutesWithToast />
-                  </ToastProvider>
-                </ThemeContextProvider>
-              </UserSettingsProvider>
-            </RoleProvider>
-          </AuthProvider>
-        </LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <LanguageProvider>
+            <AuthProvider>
+              <RoleProvider>
+                <UserSettingsProvider>
+                  <ThemeContextProvider>
+                    <ToastProvider>
+                      <CssBaseline />
+                      <AppRoutesWithToast />
+                      <ReactQueryDevtools initialIsOpen={false} />
+                    </ToastProvider>
+                  </ThemeContextProvider>
+                </UserSettingsProvider>
+              </RoleProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </QueryClientProvider>
       </ErrorBoundary>
     </BrowserRouter>
   );
