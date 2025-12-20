@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box,
     Paper,
@@ -30,7 +30,8 @@ import {
     PlayArrow as RunningIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { DeploymentsService } from '@/services/deploymentsService';
+import { useToast } from '@/contexts/ToastContext';
+import { useDeployments, useCancelDeployment } from '@/hooks/useDeployments';
 import { useSocket, useDeploymentEvents } from '@/hooks/useSocket';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { IDeployment } from '@/types';
@@ -38,46 +39,31 @@ import type { IDeployment } from '@/types';
 export const QueuePage: React.FC = () => {
     const { t } = useTranslation();
     const { formatDateTime } = useDateFormatter();
+    const { showSuccess, showError } = useToast();
 
-    const [queue, setQueue] = useState<IDeployment[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    // React Query hooks
+    const { data: allDeployments = [], isLoading, error, refetch } = useDeployments();
+    const cancelDeployment = useCancelDeployment();
+
+    // Local UI state
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelAllDialogOpen, setCancelAllDialogOpen] = useState(false);
     const [selectedDeployment, setSelectedDeployment] = useState<IDeployment | null>(null);
-    const [canceling, setCanceling] = useState(false);
 
-    const fetchQueue = async () => {
-        try {
-            setError(null);
-            const queueData = await DeploymentsService.getAll();
-            // Filter only pending and in-progress deployments
-            const queuedItems = queueData.filter(
-                (d) => d.Status === 'pending' || d.Status === 'queued' || d.Status === 'inProgress');
-            setQueue(queuedItems);
-        } catch (err: unknown) {
-            const errorMessage =
-                err && typeof err === 'object' && 'message' in err
-                    ? String(err.message)
-                    : 'Failed to load queue';
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Filter only pending/queued/inProgress deployments (client-side)
+    const queue = useMemo(() => {
+        return allDeployments.filter(
+            (d) => d.Status === 'pending' || d.Status === 'queued' || d.Status === 'inProgress'
+        );
+    }, [allDeployments]);
 
     // Real-time updates
     const { isConnected } = useSocket();
 
     useDeploymentEvents(
-        () => fetchQueue(), // onUpdate
-        () => fetchQueue()  // onComplete
+        () => refetch(), // onUpdate
+        () => refetch()  // onComplete
     );
-
-    useEffect(() => {
-        fetchQueue();
-    }, []);
 
     const handleCancelOne = (deployment: IDeployment) => {
         setSelectedDeployment(deployment);
@@ -87,24 +73,16 @@ export const QueuePage: React.FC = () => {
     const confirmCancelOne = async () => {
         if (!selectedDeployment) return;
 
-        try {
-            setCanceling(true);
-            await DeploymentsService.cancel(selectedDeployment.Id);
-            setSuccess(`${t('deployments.cancel')} succeeded`);
-            setCancelDialogOpen(false);
-            setSelectedDeployment(null);
-            fetchQueue();
-            setTimeout(() => setSuccess(null), 3000);
-        } catch (err: unknown) {
-            const errorMessage =
-                err && typeof err === 'object' && 'message' in err
-                    ? String(err.message)
-                    : 'Failed to cancel deployment';
-            setError(errorMessage);
-            setTimeout(() => setError(null), 3000);
-        } finally {
-            setCanceling(false);
-        }
+        cancelDeployment.mutate(selectedDeployment.Id, {
+            onSuccess: () => {
+                showSuccess(`${t('deployments.cancel')} succeeded`);
+                setCancelDialogOpen(false);
+                setSelectedDeployment(null);
+            },
+            onError: (error: Error) => {
+                showError(error?.message || 'Failed to cancel deployment');
+            },
+        });
     };
 
     const handleCancelAll = () => {
@@ -112,27 +90,21 @@ export const QueuePage: React.FC = () => {
     };
 
     const confirmCancelAll = async () => {
+        const pendingDeployments = queue.filter((d) => d.Status === 'pending' || d.Status === 'queued');
+
         try {
-            setCanceling(true);
             // Cancel all pending deployments
             await Promise.all(
-                queue
-                    .filter((d) => d.Status === 'pending' || d.Status === 'queued')
-                    .map((d) => DeploymentsService.cancel(d.Id))
+                pendingDeployments.map((d) => cancelDeployment.mutateAsync(d.Id))
             );
-            setSuccess(`${t('deployments.cancelAll')} succeeded`);
+            showSuccess(`${t('deployments.cancelAll')} succeeded`);
             setCancelAllDialogOpen(false);
-            fetchQueue();
-            setTimeout(() => setSuccess(null), 3000);
         } catch (err: unknown) {
             const errorMessage =
                 err && typeof err === 'object' && 'message' in err
                     ? String(err.message)
                     : 'Failed to cancel all deployments';
-            setError(errorMessage);
-            setTimeout(() => setError(null), 3000);
-        } finally {
-            setCanceling(false);
+            showError(errorMessage);
         }
     };
 
@@ -210,8 +182,8 @@ export const QueuePage: React.FC = () => {
                     <Button
                         variant="outlined"
                         startIcon={<RefreshIcon />}
-                        onClick={fetchQueue}
-                        disabled={loading}
+                        onClick={() => refetch()}
+                        disabled={isLoading}
                     >
                         {t('deployments.refresh')}
                     </Button>
@@ -220,28 +192,23 @@ export const QueuePage: React.FC = () => {
                         color="error"
                         startIcon={<CancelAllIcon />}
                         onClick={handleCancelAll}
-                        disabled={queue.length === 0 || canceling}
+                        disabled={queue.length === 0 || cancelDeployment.isPending}
                     >
                         {t('deployments.cancelAll')}
                     </Button>
                 </Box>
             </Box>
 
-            {/* Alerts */}
+            {/* Error Alert */}
             {error && (
                 <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
-                </Alert>
-            )}
-            {success && (
-                <Alert severity="success" sx={{ mb: 3 }}>
-                    {success}
+                    {error.message}
                 </Alert>
             )}
 
             {/* Queue Table */}
-            {loading && queue.length === 0 ? renderLoadingState() : null}
-            {!loading && queue.length === 0 ? renderEmptyState() : null}
+            {isLoading && queue.length === 0 ? renderLoadingState() : null}
+            {!isLoading && queue.length === 0 ? renderEmptyState() : null}
 
             {queue.length > 0 ? (
                 <TableContainer component={Paper}>
@@ -280,7 +247,7 @@ export const QueuePage: React.FC = () => {
                                                 size="small"
                                                 color="error"
                                                 onClick={() => handleCancelOne(deployment)}
-                                                disabled={deployment.Status === 'inProgress' || canceling}
+                                                disabled={deployment.Status === 'inProgress' || cancelDeployment.isPending}
                                             >
                                                 <CancelIcon />
                                             </IconButton>
@@ -321,11 +288,16 @@ export const QueuePage: React.FC = () => {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setCancelDialogOpen(false)} disabled={canceling}>
+                    <Button onClick={() => setCancelDialogOpen(false)} disabled={cancelDeployment.isPending}>
                         {t('common.cancel')}
                     </Button>
-                    <Button onClick={confirmCancelOne} color="error" variant="contained" disabled={canceling}>
-                        {canceling ? <CircularProgress size={20} /> : t('deployments.cancel')}
+                    <Button
+                        onClick={confirmCancelOne}
+                        color="error"
+                        variant="contained"
+                        disabled={cancelDeployment.isPending}
+                    >
+                        {cancelDeployment.isPending ? <CircularProgress size={20} /> : t('deployments.cancel')}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -340,11 +312,16 @@ export const QueuePage: React.FC = () => {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setCancelAllDialogOpen(false)} disabled={canceling}>
+                    <Button onClick={() => setCancelAllDialogOpen(false)} disabled={cancelDeployment.isPending}>
                         {t('common.no')}
                     </Button>
-                    <Button onClick={confirmCancelAll} color="error" variant="contained" disabled={canceling}>
-                        {canceling ? <CircularProgress size={20} /> : t('common.yes')}
+                    <Button
+                        onClick={confirmCancelAll}
+                        color="error"
+                        variant="contained"
+                        disabled={cancelDeployment.isPending}
+                    >
+                        {cancelDeployment.isPending ? <CircularProgress size={20} /> : t('common.yes')}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Card,
@@ -19,6 +19,7 @@ import {
   InputLabel,
   Select,
   alpha,
+  Alert,
 } from "@mui/material";
 import {
   Refresh as RefreshIcon,
@@ -32,19 +33,23 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DeploymentsService } from "@/services/deploymentsService";
+import { useToast } from "@/contexts/ToastContext";
+import { useDeployments, useCancelDeployment, useRetryDeployment } from "@/hooks/useDeployments";
 import { useSocket, useDeploymentEvents } from "@/hooks/useSocket";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
-import type { IDeployment } from "@/types";
 
 export const DeploymentsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { formatDateTime } = useDateFormatter();
+  const { showSuccess, showError } = useToast();
 
-  const [deployments, setDeployments] = useState<IDeployment[]>([]);
-  const [filteredDeployments, setFilteredDeployments] = useState<IDeployment[]>([]);
-  const [loading, setLoading] = useState(true);
+  // React Query hooks
+  const { data: deployments = [], isLoading, error, refetch } = useDeployments();
+  const cancelDeployment = useCancelDeployment();
+  const retryDeployment = useRetryDeployment();
+
+  // Local UI state for filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -52,48 +57,38 @@ export const DeploymentsPage: React.FC = () => {
   const { isConnected } = useSocket();
 
   useDeploymentEvents(
-    () => fetchDeployments(), // onUpdate
-    () => fetchDeployments()  // onComplete
+    () => refetch(), // onUpdate - refetch from cache or server
+    () => refetch()  // onComplete - refetch from cache or server
   );
-
-  const fetchDeployments = async () => {
-    setLoading(true);
-    try {
-      const data = await DeploymentsService.getAll();
-      setDeployments(data);
-      setFilteredDeployments(data);
-    } catch (error) {
-      console.error("Failed to fetch deployments", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCancel = async (id: number) => {
     if (!window.confirm(t("deployments.confirmCancel"))) return;
-    try {
-      await DeploymentsService.cancel(id);
-      fetchDeployments();
-    } catch (error) {
-      console.error("Failed to cancel deployment", error);
-    }
+
+    cancelDeployment.mutate(id, {
+      onSuccess: () => {
+        showSuccess("Deployment cancelled successfully");
+      },
+      onError: (error: Error) => {
+        showError(error?.message || "Failed to cancel deployment");
+      },
+    });
   };
 
   const handleRetry = async (id: number) => {
     if (!window.confirm(t("deployments.confirmRetry"))) return;
-    try {
-      await DeploymentsService.retry(id);
-      fetchDeployments();
-    } catch (error) {
-      console.error("Failed to retry deployment", error);
-    }
+
+    retryDeployment.mutate(id, {
+      onSuccess: () => {
+        showSuccess("Deployment retry initiated successfully");
+      },
+      onError: (error: Error) => {
+        showError(error?.message || "Failed to retry deployment");
+      },
+    });
   };
 
-  useEffect(() => {
-    fetchDeployments();
-  }, []);
-
-  useEffect(() => {
+  // Memoized filtered deployments (client-side filtering)
+  const filteredDeployments = useMemo(() => {
     let filtered = deployments;
 
     // Filter by status
@@ -104,14 +99,13 @@ export const DeploymentsPage: React.FC = () => {
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
-
         (d) =>
           (d.ProjectName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
           d.Branch.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    setFilteredDeployments(filtered);
+    return filtered;
   }, [deployments, statusFilter, searchQuery]);
 
   const getStatusChip = (status: string) => {
@@ -174,8 +168,8 @@ export const DeploymentsPage: React.FC = () => {
 
           <Button
             startIcon={<RefreshIcon />}
-            onClick={fetchDeployments}
-            disabled={loading}
+            onClick={() => refetch()}
+            disabled={isLoading}
           >
             {t("common.refresh")}
           </Button>
@@ -208,14 +202,21 @@ export const DeploymentsPage: React.FC = () => {
         </Box>
       </Box>
 
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error.message}
+        </Alert>
+      )}
+
       {/* Deployments Table */}
-      {loading && (
+      {isLoading && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />
         </Box>
       )}
 
-      {!loading && filteredDeployments.length === 0 && (
+      {!isLoading && filteredDeployments.length === 0 && (
         <Card sx={{ textAlign: "center", py: 8 }}>
           <DeployIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
           <Typography variant="h6" gutterBottom>
@@ -231,7 +232,7 @@ export const DeploymentsPage: React.FC = () => {
         </Card>
       )}
 
-      {!loading && filteredDeployments.length > 0 && (
+      {!isLoading && filteredDeployments.length > 0 && (
         <TableContainer
           component={Paper}
           elevation={2}
@@ -315,6 +316,7 @@ export const DeploymentsPage: React.FC = () => {
                         startIcon={<CancelIcon />}
                         onClick={() => handleCancel(deployment.Id)}
                         sx={{ ml: 1 }}
+                        disabled={cancelDeployment.isPending}
                       >
                         {t("common.cancel")}
                       </Button>
@@ -327,6 +329,7 @@ export const DeploymentsPage: React.FC = () => {
                         startIcon={<RetryIcon />}
                         onClick={() => handleRetry(deployment.Id)}
                         sx={{ ml: 1 }}
+                        disabled={retryDeployment.isPending}
                       >
                         {t("common.retry")}
                       </Button>
@@ -340,7 +343,7 @@ export const DeploymentsPage: React.FC = () => {
       )}
 
       {/* Results Count + Connection Status */}
-      {!loading && filteredDeployments.length > 0 && (
+      {!isLoading && filteredDeployments.length > 0 && (
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2 }}>
           <Typography variant="caption" color="text.secondary">
             Showing {filteredDeployments.length} of {deployments.length} deployments
