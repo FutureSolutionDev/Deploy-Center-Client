@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import UserSettingsService from "@/services/userSettingsService";
-import type { IApiKey, IUser, IUserSession, IUserSettings } from "@/types";
+import type { IApiKey, IUserSession, IUserSettings } from "@/types";
 import ProfileTab from "@/components/Settings/ProfileTab";
 import PreferencesTab from "@/components/Settings/PreferencesTab";
 import NotificationsTab from "@/components/Settings/NotificationsTab";
@@ -37,7 +37,7 @@ const TabPanel: React.FC<ITabPanelProps> = ({ children, value, index }) => {
 };
 
 export const SettingsPage: React.FC = () => {
-  const { User } = useAuth();
+  const { User, RefreshUser } = useAuth();
   const { Language, ChangeLanguage, t } = useLanguage();
   const { Mode, Color, ToggleMode, SetColor } = useTheme();
 
@@ -118,6 +118,17 @@ export const SettingsPage: React.FC = () => {
   // Track which tabs have been loaded
   const [loadedTabs, setLoadedTabs] = useState<Set<number>>(new Set());
 
+  // Update profile state when User changes from AuthContext
+  useEffect(() => {
+    if (User) {
+      setUsername(User.Username || "");
+      setEmail(User.Email || "");
+      setFullName(User.FullName || "");
+      setLastLogin(User.LastLogin);
+      setMemberSince(User.CreatedAt);
+    }
+  }, [User]);
+
   // Load data based on active tab
   useEffect(() => {
     if (loadedTabs.has(tabValue)) return;
@@ -128,36 +139,19 @@ export const SettingsPage: React.FC = () => {
 
         switch (tabValue) {
           case 0: // Profile
-            const profile = await UserSettingsService.getProfile();
-            const user: IUser | undefined = profile?.User;
-            if (user) {
-              setUsername(user.Username || "");
-              setEmail(user.Email || "");
-              setFullName(user.FullName || "");
-              setLastLogin(user.LastLogin);
-              setMemberSince(user.CreatedAt);
+            // No need to load profile - already available from AuthContext
+            break;
+
+          case 1: // Preferences
+            const prefs = await UserSettingsService.getSettings();
+            if (prefs) {
+              setTimezone(prefs.Timezone || "UTC");
+              setDateFormat(prefs.DateFormat || "YYYY-MM-DD");
+              setTimeFormat((prefs.TimeFormat as "12h" | "24h") || "24h");
             }
             break;
 
-          case 1: // Security
-            const twoFAStatus = await UserSettingsService.get2FAStatus();
-            setTwoFactorEnabled(!!twoFAStatus?.enabled);
-            setTwoFactorQr(null);
-            setTwoFactorSecret(null);
-            setBackupCodes([]);
-            break;
-
-          case 2: // API Keys
-            const apiKeysResponse = await UserSettingsService.listApiKeys();
-            setApiKeys(apiKeysResponse || []);
-            break;
-
-          case 3: // Sessions
-            const sessionsResponse = await UserSettingsService.listSessions();
-            setSessions(sessionsResponse || []);
-            break;
-
-          case 4: // Notifications
+          case 2: // Notifications
             const settings = await UserSettingsService.getSettings();
             if (settings) {
               setEmailNotifications(!!settings.EmailNotifications);
@@ -170,13 +164,26 @@ export const SettingsPage: React.FC = () => {
             }
             break;
 
-          case 5: // Preferences
-            const prefs = await UserSettingsService.getSettings();
-            if (prefs) {
-              setTimezone(prefs.Timezone || "UTC");
-              setDateFormat(prefs.DateFormat || "YYYY-MM-DD");
-              setTimeFormat((prefs.TimeFormat as "12h" | "24h") || "24h");
-            }
+          case 3: // API Keys
+            const apiKeysResponse = await UserSettingsService.listApiKeys();
+            setApiKeys(apiKeysResponse || []);
+            break;
+
+          case 4: // Sessions
+            const sessionsResponse = await UserSettingsService.listSessions();
+            setSessions(sessionsResponse || []);
+            break;
+
+          case 5: // Security
+            const twoFAStatus = await UserSettingsService.get2FAStatus();
+            setTwoFactorEnabled(!!twoFAStatus?.enabled);
+            setTwoFactorQr(null);
+            setTwoFactorSecret(null);
+            setBackupCodes([]);
+            break;
+
+          case 6: // Account
+            // No data to load for account tab
             break;
         }
 
@@ -216,6 +223,8 @@ export const SettingsPage: React.FC = () => {
         Email: email,
         FullName: fullName,
       });
+      // Refresh user data in AuthContext
+      await RefreshUser();
       showSuccess(t("settings.profileUpdated"));
     } catch (err) {
       console.error("Profile update failed", err);
@@ -250,7 +259,7 @@ export const SettingsPage: React.FC = () => {
     await savePreferencesPartial({});
   };
 
-  const savePreferencesPartial = async (overrides: Partial<IUserSettings>) => {
+  const savePreferencesPartial = async (overrides: Partial<IUserSettings>, showToast: boolean = true) => {
     try {
       setSavingPreferences(true);
       await UserSettingsService.updatePreferences({
@@ -262,9 +271,11 @@ export const SettingsPage: React.FC = () => {
         ColorTheme: Color,
         ...overrides,
       });
-      showSuccess(
-        overrides.Language ? t("settings.languageUpdated") : t("settings.preferencesSaved")
-      );
+      if (showToast) {
+        showSuccess(
+          overrides.Language ? t("settings.languageUpdated") : t("settings.preferencesSaved")
+        );
+      }
     } catch (err) {
       console.error("Preferences update failed", err);
       showError(t("settings.saveFailed"));
@@ -445,7 +456,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleColorSelect = (value: string) => {
     SetColor(value as any);
-    void savePreferencesPartial({ ColorTheme: value });
+    void savePreferencesPartial({ ColorTheme: value }, false);
   };
 
   const handleDeleteAccount = async () => {
@@ -461,7 +472,7 @@ export const SettingsPage: React.FC = () => {
   const handleToggleMode = () => {
     ToggleMode();
     const nextTheme = Mode === "dark" ? "light" : "dark";
-    void savePreferencesPartial({ Theme: nextTheme });
+    void savePreferencesPartial({ Theme: nextTheme }, false);
   };
 
   return (
