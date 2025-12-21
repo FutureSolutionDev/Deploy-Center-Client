@@ -22,10 +22,10 @@ interface IToastContext {
 }
 
 const ToastContext = createContext<IToastContext>({
-  showSuccess: () => {},
-  showError: () => {},
-  showWarning: () => {},
-  showInfo: () => {},
+  showSuccess: () => { },
+  showError: () => { },
+  showWarning: () => { },
+  showInfo: () => { },
 });
 
 function SlideTransition(props: SlideProps) {
@@ -36,8 +36,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<IToastMessage[]>([]);
 
   const showToast = useCallback((message: string, severity: AlertColor, duration = 5000) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, severity, duration }]);
+    setToasts((prev) => {
+      // Deduplication: Check if an identical toast already exists
+      const exists = prev.some(
+        (t) => t.message === message && t.severity === severity
+      );
+      if (exists) return prev;
+
+      const id = Date.now() + Math.random(); // Reduce collision risk
+      return [...prev, { id, message, severity, duration }];
+    });
   }, []);
 
   const showSuccess = useCallback(

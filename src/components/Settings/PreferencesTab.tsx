@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
-import Grid from "@mui/material/GridLegacy";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Button,
   FormControl,
   FormControlLabel,
+  Grid,
   InputLabel,
   MenuItem,
   Select,
@@ -34,7 +34,12 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(
     (settings?.TimeFormat as "12h" | "24h") || "24h"
   );
-
+  useEffect(() => {
+    if (!settings) return;
+    setTimezone(settings.Timezone);
+    setDateFormat(settings.DateFormat);
+    setTimeFormat(settings.TimeFormat as "12h" | "24h");
+  }, [settings]);
   const timezoneOptions = useMemo(
     () => [
       "UTC",
@@ -112,7 +117,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
       </Typography>
 
       <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.language")}</InputLabel>
             <Select
@@ -127,7 +132,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControlLabel
             control={
               <Switch
@@ -143,7 +148,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.timezone")}</InputLabel>
             <Select
@@ -161,7 +166,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.dateFormat")}</InputLabel>
             <Select
@@ -179,7 +184,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <FormControl fullWidth>
             <InputLabel>{t("settings.timeFormat")}</InputLabel>
             <Select
@@ -197,7 +202,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
           </FormControl>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
             {t("settings.colorTheme")}
           </Typography>
@@ -244,7 +249,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
           </Typography>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Button variant="contained" onClick={handleSave} disabled={updatePreferences.isPending}>
             {t("settings.saveChanges")}
           </Button>

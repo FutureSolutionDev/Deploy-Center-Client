@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from "react";
-import Grid from "@mui/material/GridLegacy";
-import { Box, Button, Divider, TextField, Typography } from "@mui/material";
+import React, { useState, useMemo, useEffect } from "react";
+import { Box, Button, Divider, Grid, TextField, Typography } from "@mui/material";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -24,7 +23,14 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
   // Derived values - no need for state
   const lastLogin = useMemo(() => User?.LastLogin, [User?.LastLogin]);
   const memberSince = useMemo(() => User?.CreatedAt, [User?.CreatedAt]);
+  useEffect(() => {
+    if (!User) return;
+    setUsername(User?.Username || "");
+    setEmail(User?.Email || "");
+    setFullName(User?.FullName || "");
+      
 
+  }, [User]);
   const handleSave = async () => {
     updateProfile.mutate(
       { Username: username, Email: email, FullName: fullName },
@@ -46,7 +52,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
       <Divider sx={{ mb: 3 }} />
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label={t("settings.fullName")}
@@ -55,7 +61,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
             onChange={(e) => setFullName(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label={t("settings.username")}
@@ -64,7 +70,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
             onChange={(e) => setUsername(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label={t("settings.email")}
@@ -74,7 +80,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
             onChange={(e) => setEmail(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={6} display="flex" alignItems="center">
+        <Grid size={{ xs: 12, md: 6 }} display="flex" alignItems="center">
           <Box>
             <Typography variant="body2" color="text.secondary">
               {t("settings.lastLogin")}
@@ -84,7 +90,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
             </Typography>
           </Box>
         </Grid>
-        <Grid item xs={12} md={6} display="flex" alignItems="center">
+        <Grid size={{ xs: 12, md: 6 }} display="flex" alignItems="center">
           <Box>
             <Typography variant="body2" color="text.secondary">
               {t("settings.memberSince")}
@@ -94,7 +100,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
             </Typography>
           </Box>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Button variant="contained" onClick={handleSave} disabled={updateProfile.isPending}>
             {t("settings.saveChanges")}
           </Button>

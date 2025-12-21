@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import Grid from "@mui/material/GridLegacy";
-import { Alert, Box, Button, Divider, Stack, TextField, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Alert, Box, Button, Divider, Grid, Stack, TextField, Typography } from "@mui/material";
 import { useToast } from "@/contexts/ToastContext";
 import {
   use2FAStatus,
@@ -46,7 +45,11 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({ t }) => {
     disable2FA.isPending ||
     regenerateBackupCodes.isPending;
   const disabled = changePassword.isPending;
-
+useEffect(() => {
+  if (!twoFAStatus) return;
+  setQrCodeUrl(twoFAStatus.qrCodeUrl);
+  setSecret(twoFAStatus.secret);
+}, [twoFAStatus]);
   const handleEnable = async () => {
     try {
       setStatusMessage(null);
@@ -95,7 +98,7 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({ t }) => {
       <Divider sx={{ mb: 3 }} />
 
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="subtitle1" gutterBottom>
             {t("settings.changePassword")}
           </Typography>
@@ -153,7 +156,7 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({ t }) => {
           </Button>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Divider sx={{ my: 2 }} />
           <Typography variant="subtitle1" gutterBottom>
             {t("settings.twoFactorAuth")}

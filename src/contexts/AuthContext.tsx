@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       try {
         // Try to fetch profile - if cookie exists and valid, this will succeed
         const user = await AuthService.GetProfile();
-        setUser(user);
+        setUser(user?.User ? user.User : user?.Id ? user : null);
         setHasSession(true);
         sessionStorage.removeItem('dc_no_session');
       } catch (_error: unknown) {
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const RefreshUser = async (): Promise<void> => {
     try {
       const user = await AuthService.GetProfile();
-      setUser(user);
+      setUser(user?.User ? user.User : user?.Id ? user : null);
     } catch (error) {
       console.error('Failed to refresh user:', error);
       // If profile fetch fails, user is likely not authenticated anymore

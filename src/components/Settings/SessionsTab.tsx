@@ -29,9 +29,15 @@ export const SessionsTab: React.FC<ISessionsTabProps> = ({ t }) => {
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();
 
-  const [selectedSessionToKeep, setSelectedSessionToKeep] = useState<number | null>(
-    sessions[0]?.Id ?? null
-  );
+  const [selectedSessionToKeep, setSelectedSessionToKeep] = useState<number | null>(null);
+
+  // Update selected session when sessions are loaded
+  React.useEffect(() => {
+    if (sessions.length > 0 && selectedSessionToKeep === null) {
+      const activeSession = sessions.find(s => s.IsActive) || sessions[0];
+      setSelectedSessionToKeep(activeSession.Id);
+    }
+  }, [sessions, selectedSessionToKeep]);
 
   const handleRevoke = (id: number) => {
     revokeSession.mutate(id, { onError: () => showError(t("settings.saveFailed")) });

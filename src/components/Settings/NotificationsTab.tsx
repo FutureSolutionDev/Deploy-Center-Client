@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import Grid from "@mui/material/GridLegacy";
-import { Button, Divider, FormControlLabel, Switch, TextField, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Button, Divider, FormControlLabel, Grid, Switch, TextField, Typography } from "@mui/material";
 import { useToast } from "@/contexts/ToastContext";
 import {
   useUserSettings,
@@ -30,6 +29,16 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
     settings?.NotifyOnProjectUpdate ?? true
   );
   const [notifySystemAlert, setNotifySystemAlert] = useState(settings?.NotifyOnSystemAlert ?? true);
+  useEffect(() => {
+    if (!settings) return;
+    setEmailNotifications(settings.EmailNotifications);
+    setDiscordWebhook(settings.DiscordWebhookUrl || "");
+    setSlackWebhook(settings.SlackWebhookUrl || "");
+    setNotifySuccess(settings.NotifyOnSuccess);
+    setNotifyFailure(settings.NotifyOnFailure);
+    setNotifyProjectUpdate(settings.NotifyOnProjectUpdate);
+    setNotifySystemAlert(settings.NotifyOnSystemAlert);
+  }, [settings]);
 
   const handleSave = () => {
     updateNotificationSettings.mutate(
@@ -66,7 +75,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
       <Divider sx={{ mb: 3 }} />
 
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <FormControlLabel
             control={
               <Switch
@@ -82,7 +91,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControlLabel
             control={
               <Switch
@@ -95,7 +104,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControlLabel
             control={
               <Switch
@@ -108,7 +117,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControlLabel
             control={
               <Switch
@@ -121,7 +130,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControlLabel
             control={
               <Switch
@@ -134,7 +143,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <TextField
             fullWidth
             label={t("settings.discordWebhook")}
@@ -145,7 +154,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <TextField
             fullWidth
             label={t("settings.slackWebhook")}
@@ -156,7 +165,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Button variant="contained" onClick={handleSave} disabled={isDisabled}>
             {t("settings.saveNotificationSettings")}
           </Button>
