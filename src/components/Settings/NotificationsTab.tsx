@@ -1,48 +1,63 @@
-import React from "react";
+import React, { useState } from "react";
 import Grid from "@mui/material/GridLegacy";
 import { Button, Divider, FormControlLabel, Switch, TextField, Typography } from "@mui/material";
+import { useToast } from "@/contexts/ToastContext";
+import {
+  useUserSettings,
+  useUpdateNotificationSettings,
+  useTestNotification,
+} from "@/hooks/useUserSettings";
 
 interface INotificationsTabProps {
-  emailNotifications: boolean;
-  notifySuccess: boolean;
-  notifyFailure: boolean;
-  notifyProjectUpdate: boolean;
-  notifySystemAlert: boolean;
-  discordWebhook: string;
-  slackWebhook: string;
-  disabled?: boolean;
-  onEmailNotificationsChange: (value: boolean) => void;
-  onNotifySuccessChange: (value: boolean) => void;
-  onNotifyFailureChange: (value: boolean) => void;
-  onNotifyProjectUpdateChange: (value: boolean) => void;
-  onNotifySystemAlertChange: (value: boolean) => void;
-  onDiscordWebhookChange: (value: string) => void;
-  onSlackWebhookChange: (value: string) => void;
-  onSave: () => void;
-  onTest: (type: "discord" | "slack") => void;
   t: (key: string) => string;
 }
 
-export const NotificationsTab: React.FC<INotificationsTabProps> = ({
-  emailNotifications,
-  notifySuccess,
-  notifyFailure,
-  notifyProjectUpdate,
-  notifySystemAlert,
-  discordWebhook,
-  slackWebhook,
-  disabled,
-  onEmailNotificationsChange,
-  onNotifySuccessChange,
-  onNotifyFailureChange,
-  onNotifyProjectUpdateChange,
-  onNotifySystemAlertChange,
-  onDiscordWebhookChange,
-  onSlackWebhookChange,
-  onSave,
-  onTest,
-  t,
-}) => {
+export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
+  const { showSuccess, showError } = useToast();
+  const { data: settings } = useUserSettings();
+  const updateNotificationSettings = useUpdateNotificationSettings();
+  const testNotification = useTestNotification();
+
+  // Local state
+  const [emailNotifications, setEmailNotifications] = useState(
+    settings?.EmailNotifications ?? true
+  );
+  const [discordWebhook, setDiscordWebhook] = useState(settings?.DiscordWebhookUrl || "");
+  const [slackWebhook, setSlackWebhook] = useState(settings?.SlackWebhookUrl || "");
+  const [notifySuccess, setNotifySuccess] = useState(settings?.NotifyOnSuccess ?? true);
+  const [notifyFailure, setNotifyFailure] = useState(settings?.NotifyOnFailure ?? true);
+  const [notifyProjectUpdate, setNotifyProjectUpdate] = useState(
+    settings?.NotifyOnProjectUpdate ?? true
+  );
+  const [notifySystemAlert, setNotifySystemAlert] = useState(settings?.NotifyOnSystemAlert ?? true);
+
+  const handleSave = () => {
+    updateNotificationSettings.mutate(
+      {
+        EmailNotifications: emailNotifications,
+        DiscordWebhookUrl: discordWebhook || null,
+        SlackWebhookUrl: slackWebhook || null,
+        NotifyOnSuccess: notifySuccess,
+        NotifyOnFailure: notifyFailure,
+        NotifyOnProjectUpdate: notifyProjectUpdate,
+        NotifyOnSystemAlert: notifySystemAlert,
+      },
+      {
+        onSuccess: () => showSuccess(t("settings.notificationsSaved")),
+        onError: () => showError(t("settings.saveFailed")),
+      }
+    );
+  };
+
+  const handleTest = (type: "discord" | "slack") => {
+    testNotification.mutate(type, {
+      onSuccess: () => showSuccess(t("settings.testNotificationSent")),
+      onError: () => showError(t("settings.saveFailed")),
+    });
+  };
+
+  const isDisabled = updateNotificationSettings.isPending;
+
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -56,8 +71,8 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
             control={
               <Switch
                 checked={emailNotifications}
-                onChange={(e) => onEmailNotificationsChange(e.target.checked)}
-                disabled={disabled}
+                onChange={(e) => setEmailNotifications(e.target.checked)}
+                disabled={isDisabled}
               />
             }
             label={t("settings.emailNotifications")}
@@ -72,8 +87,8 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
             control={
               <Switch
                 checked={notifySuccess}
-                onChange={(e) => onNotifySuccessChange(e.target.checked)}
-                disabled={disabled}
+                onChange={(e) => setNotifySuccess(e.target.checked)}
+                disabled={isDisabled}
               />
             }
             label={t("settings.notifySuccess")}
@@ -85,8 +100,8 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
             control={
               <Switch
                 checked={notifyFailure}
-                onChange={(e) => onNotifyFailureChange(e.target.checked)}
-                disabled={disabled}
+                onChange={(e) => setNotifyFailure(e.target.checked)}
+                disabled={isDisabled}
               />
             }
             label={t("settings.notifyFailure")}
@@ -98,8 +113,8 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
             control={
               <Switch
                 checked={notifyProjectUpdate}
-                onChange={(e) => onNotifyProjectUpdateChange(e.target.checked)}
-                disabled={disabled}
+                onChange={(e) => setNotifyProjectUpdate(e.target.checked)}
+                disabled={isDisabled}
               />
             }
             label={t("settings.notifyProjectUpdates")}
@@ -111,8 +126,8 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
             control={
               <Switch
                 checked={notifySystemAlert}
-                onChange={(e) => onNotifySystemAlertChange(e.target.checked)}
-                disabled={disabled}
+                onChange={(e) => setNotifySystemAlert(e.target.checked)}
+                disabled={isDisabled}
               />
             }
             label={t("settings.notifySystemAlerts")}
@@ -125,8 +140,8 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
             label={t("settings.discordWebhook")}
             placeholder={t("settings.discordWebhookPlaceholder")}
             value={discordWebhook}
-            disabled={disabled}
-            onChange={(e) => onDiscordWebhookChange(e.target.value)}
+            disabled={isDisabled}
+            onChange={(e) => setDiscordWebhook(e.target.value)}
           />
         </Grid>
 
@@ -136,28 +151,28 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({
             label={t("settings.slackWebhook")}
             placeholder={t("settings.slackWebhookPlaceholder")}
             value={slackWebhook}
-            disabled={disabled}
-            onChange={(e) => onSlackWebhookChange(e.target.value)}
+            disabled={isDisabled}
+            onChange={(e) => setSlackWebhook(e.target.value)}
           />
         </Grid>
 
         <Grid item xs={12}>
-          <Button variant="contained" onClick={onSave} disabled={disabled}>
+          <Button variant="contained" onClick={handleSave} disabled={isDisabled}>
             {t("settings.saveNotificationSettings")}
           </Button>
           <Button
             variant="outlined"
             sx={{ ml: 2 }}
-            onClick={() => onTest("discord")}
-            disabled={disabled || !discordWebhook}
+            onClick={() => handleTest("discord")}
+            disabled={isDisabled || !discordWebhook}
           >
             {t("settings.testDiscord")}
           </Button>
           <Button
             variant="outlined"
             sx={{ ml: 2 }}
-            onClick={() => onTest("slack")}
-            disabled={disabled || !slackWebhook}
+            onClick={() => handleTest("slack")}
+            disabled={isDisabled || !slackWebhook}
           >
             {t("settings.testSlack")}
           </Button>

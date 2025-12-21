@@ -1,58 +1,58 @@
 import React, { useState } from "react";
 import Grid from "@mui/material/GridLegacy";
 import { Alert, Box, Button, Divider, Stack, TextField, Typography } from "@mui/material";
+import { useToast } from "@/contexts/ToastContext";
+import {
+  use2FAStatus,
+  useChangePassword,
+  useGenerate2FA,
+  useEnable2FA,
+  useDisable2FA,
+  useRegenerateBackupCodes,
+} from "@/hooks/useUserSettings";
 
 interface ISecurityTabProps {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-  disabled?: boolean;
-  twoFactorEnabled: boolean;
-  twoFactorLoading?: boolean;
-  qrCodeUrl?: string | null;
-  secret?: string | null;
-  backupCodes: string[];
-  onCurrentPasswordChange: (value: string) => void;
-  onNewPasswordChange: (value: string) => void;
-  onConfirmPasswordChange: (value: string) => void;
-  onChangePassword: () => void;
-  onGenerate2FA: () => Promise<void>;
-  onEnable2FA: (code: string) => Promise<void>;
-  onDisable2FA: (code: string) => Promise<void>;
-  onRegenerateBackupCodes: () => Promise<void>;
   t: (key: string) => string;
 }
 
-export const SecurityTab: React.FC<ISecurityTabProps> = ({
-  currentPassword,
-  newPassword,
-  confirmPassword,
-  disabled,
-  twoFactorEnabled,
-  twoFactorLoading,
-  qrCodeUrl,
-  secret,
-  backupCodes,
-  onCurrentPasswordChange,
-  onNewPasswordChange,
-  onConfirmPasswordChange,
-  onChangePassword,
-  onGenerate2FA,
-  onEnable2FA,
-  onDisable2FA,
-  onRegenerateBackupCodes,
-  t,
-}) => {
+export const SecurityTab: React.FC<ISecurityTabProps> = ({ t }) => {
+  const { showSuccess, showError } = useToast();
+  const { data: twoFAStatus } = use2FAStatus();
+  const changePassword = useChangePassword();
+  const generate2FA = useGenerate2FA();
+  const enable2FA = useEnable2FA();
+  const disable2FA = useDisable2FA();
+  const regenerateBackupCodes = useRegenerateBackupCodes();
+
+  // Password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // 2FA state
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [secret, setSecret] = useState<string | null>(null);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+
   const [enableCode, setEnableCode] = useState("");
   const [disableCode, setDisableCode] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const twoFactorEnabled = !!twoFAStatus?.enabled;
+  const twoFactorLoading =
+    generate2FA.isPending ||
+    enable2FA.isPending ||
+    disable2FA.isPending ||
+    regenerateBackupCodes.isPending;
+  const disabled = changePassword.isPending;
+
   const handleEnable = async () => {
     try {
       setStatusMessage(null);
       setErrorMessage(null);
-      await onEnable2FA(enableCode);
+      const result = await enable2FA.mutateAsync(enableCode);
+      setBackupCodes(result.backupCodes);
       setStatusMessage(t("settings.2faEnabled"));
       setEnableCode("");
     } catch (err) {
@@ -65,7 +65,7 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({
     try {
       setStatusMessage(null);
       setErrorMessage(null);
-      await onDisable2FA(disableCode);
+      await disable2FA.mutateAsync(disableCode);
       setStatusMessage(t("settings.2faDisabled"));
       setDisableCode("");
     } catch (err) {
@@ -78,7 +78,8 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({
     try {
       setStatusMessage(null);
       setErrorMessage(null);
-      await onRegenerateBackupCodes();
+      const codes = await regenerateBackupCodes.mutateAsync(undefined);
+      setBackupCodes(codes);
       setStatusMessage(t("settings.backupCodesRegenerated"));
     } catch (err) {
       console.error(err);
@@ -103,7 +104,7 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({
             label={t("settings.currentPassword")}
             type="password"
             value={currentPassword}
-            onChange={(e) => onCurrentPasswordChange(e.target.value)}
+            onChange={(e) => setCurrentPassword(e.target.value)}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -111,7 +112,7 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({
             label={t("settings.newPassword")}
             type="password"
             value={newPassword}
-            onChange={(e) => onNewPasswordChange(e.target.value)}
+            onChange={(e) => setNewPassword(e.target.value)}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -119,10 +120,35 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({
             label={t("settings.confirmNewPassword")}
             type="password"
             value={confirmPassword}
-            onChange={(e) => onConfirmPasswordChange(e.target.value)}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             sx={{ mb: 2 }}
           />
-          <Button variant="contained" onClick={onChangePassword} disabled={disabled}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (!currentPassword || !newPassword || !confirmPassword) {
+                showError(t("settings.passwordFieldsRequired"));
+                return;
+              }
+              if (newPassword !== confirmPassword) {
+                showError(t("settings.passwordMismatch"));
+                return;
+              }
+              changePassword.mutate(
+                { currentPassword, newPassword },
+                {
+                  onSuccess: () => {
+                    setCurrentPassword("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    showSuccess(t("settings.passwordUpdated"));
+                  },
+                  onError: () => showError(t("settings.saveFailed")),
+                }
+              );
+            }}
+            disabled={disabled}
+          >
             {t("settings.updatePassword")}
           </Button>
         </Grid>
@@ -150,7 +176,22 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({
           {!twoFactorEnabled && (
             <Stack spacing={2}>
               <Box>
-                <Button variant="outlined" onClick={onGenerate2FA} disabled={twoFactorLoading}>
+                <Button
+                  variant="outlined"
+                  onClick={async () => {
+                    try {
+                      setStatusMessage(null);
+                      setErrorMessage(null);
+                      const result = await generate2FA.mutateAsync();
+                      setSecret(result.secret);
+                      setQrCodeUrl(result.qrCodeUrl);
+                    } catch (err) {
+                      console.error(err);
+                      setErrorMessage(t("settings.saveFailed"));
+                    }
+                  }}
+                  disabled={twoFactorLoading}
+                >
                   {t("settings.generate2fa")}
                 </Button>
               </Box>

@@ -1,17 +1,32 @@
 import React, { useState } from "react";
-import { alpha, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Typography } from "@mui/material";
+import {
+  alpha,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Typography,
+} from "@mui/material";
+import { useDeleteAccount } from "@/hooks/useUserSettings";
+import { useToast } from "@/contexts/ToastContext";
 
 interface IAccountTabProps {
   t: (key: string) => string;
-  onDeleteAccount: () => Promise<void>;
-  loading?: boolean;
 }
 
-export const AccountTab: React.FC<IAccountTabProps> = ({ t, onDeleteAccount, loading }) => {
+export const AccountTab: React.FC<IAccountTabProps> = ({ t }) => {
+  const { showSuccess, showError } = useToast();
+  const deleteAccount = useDeleteAccount();
   const [open, setOpen] = useState(false);
 
-  const handleConfirm = async () => {
-    await onDeleteAccount();
+  const handleConfirm = () => {
+    deleteAccount.mutate(undefined, {
+      onSuccess: () => showSuccess(t("settings.deleteAccountSuccess")),
+      onError: () => showError(t("settings.deleteAccountFailed")),
+    });
     setOpen(false);
   };
 
@@ -37,7 +52,12 @@ export const AccountTab: React.FC<IAccountTabProps> = ({ t, onDeleteAccount, loa
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t("settings.deleteWarning")}
         </Typography>
-        <Button variant="outlined" color="error" onClick={() => setOpen(true)} disabled={loading}>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={() => setOpen(true)}
+          disabled={deleteAccount.isPending}
+        >
           {t("settings.deleteAccount")}
         </Button>
       </Box>
@@ -49,7 +69,12 @@ export const AccountTab: React.FC<IAccountTabProps> = ({ t, onDeleteAccount, loa
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>{t("settings.cancel")}</Button>
-          <Button onClick={handleConfirm} color="error" variant="contained" disabled={loading}>
+          <Button
+            onClick={handleConfirm}
+            color="error"
+            variant="contained"
+            disabled={deleteAccount.isPending}
+          >
             {t("settings.deleteAccount")}
           </Button>
         </DialogActions>

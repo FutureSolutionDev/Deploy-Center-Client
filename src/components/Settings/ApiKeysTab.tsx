@@ -28,7 +28,6 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
-import type { IApiKey } from "@/types";
 
 export interface ICreateApiKeyInput {
   name: string;
@@ -36,14 +35,16 @@ export interface ICreateApiKeyInput {
   expiresAt?: Date | null;
 }
 
+import { useToast } from "@/contexts/ToastContext";
+import {
+  useApiKeys,
+  useGenerateApiKey,
+  useRevokeApiKey,
+  useReactivateApiKey,
+  useRegenerateApiKey,
+} from "@/hooks/useUserSettings";
+
 interface IApiKeysTabProps {
-  apiKeys: IApiKey[];
-  loading?: boolean;
-  onGenerate: (input: ICreateApiKeyInput) => Promise<{ key: string; prefix: string } | null>;
-  onRevoke: (id: number) => Promise<void>;
-  onReactivate?: (id: number) => Promise<void>;
-  onRegenerate?: (id: number) => Promise<{ key: string; prefix: string } | null>;
-  availableScopes?: string[];
   t: (key: string) => string;
 }
 
@@ -55,16 +56,13 @@ const DEFAULT_SCOPES = [
   "admin:*",
 ];
 
-export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
-  apiKeys,
-  loading,
-  onGenerate,
-  onRevoke,
-  onReactivate,
-  onRegenerate,
-  availableScopes,
-  t,
-}) => {
+export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({ t }) => {
+  const { showSuccess, showError } = useToast();
+  const { data: apiKeys = [], isLoading: loading } = useApiKeys();
+  const generateApiKey = useGenerateApiKey();
+  const revokeApiKey = useRevokeApiKey();
+  const reactivateApiKey = useReactivateApiKey();
+  const regenerateApiKey = useRegenerateApiKey();
   const { formatDateTime } = useDateFormatter();
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -72,7 +70,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
   const [expiresAt, setExpiresAt] = useState<string>("");
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [regeneratedKey, setRegeneratedKey] = useState<{ id: number; key: string } | null>(null);
-  const scopes = useMemo(() => availableScopes || DEFAULT_SCOPES, [availableScopes]);
+  const scopes = useMemo(() => DEFAULT_SCOPES, []);
 
   const handleCloseDialog = () => {
     setOpen(false);
@@ -83,33 +81,50 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
   };
 
   const handleGenerate = async () => {
-    const expiresDate = expiresAt ? new Date(expiresAt) : undefined;
-    const result = await onGenerate({
-      name: newName,
-      scopes: newScopes,
-      expiresAt: expiresDate || null,
-    });
-    if (result?.key) {
-      setGeneratedKey(result.key);
+    try {
+      const expiresDate = expiresAt ? new Date(expiresAt) : undefined;
+      const result = await generateApiKey.mutateAsync({
+        name: newName,
+        scopes: newScopes,
+        expiresAt: expiresDate || undefined,
+      });
+      if (result?.key) {
+        setGeneratedKey(result.key);
+      }
+    } catch {
+      showError(t("settings.saveFailed"));
     }
   };
 
   const copyToClipboard = (value: string) => {
     if (!value) return;
     void navigator.clipboard.writeText(value);
+    showSuccess(t("common.copiedToClipboard"));
   };
 
   const handleReactivate = async (id: number) => {
-    if (!onReactivate) return;
-    await onReactivate(id);
+    reactivateApiKey.mutate(id, {
+      onSuccess: () => showSuccess("API key reactivated successfully"),
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleRegenerate = async (id: number) => {
-    if (!onRegenerate) return;
-    const result = await onRegenerate(id);
-    if (result?.key) {
-      setRegeneratedKey({ id, key: result.key });
+    try {
+      const result = await regenerateApiKey.mutateAsync(id);
+      if (result?.key) {
+        setRegeneratedKey({ id, key: result.key });
+      }
+    } catch {
+      showError(t("settings.saveFailed"));
     }
+  };
+
+  const handleRevoke = async (id: number) => {
+    revokeApiKey.mutate(id, {
+      onSuccess: () => showSuccess(t("settings.saveSuccess") || "API key revoked successfully"),
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   return (
@@ -149,7 +164,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
                 <TableCell>{key.LastUsedAt ? formatDateTime(key.LastUsedAt) : t("settings.notAvailable")}</TableCell>
                 <TableCell align="right">
                   <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-                    {!key.IsActive && onReactivate && (
+                    {!key.IsActive && (
                       <Tooltip title="Reactivate">
                         <Button
                           color="success"
@@ -162,7 +177,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
                         </Button>
                       </Tooltip>
                     )}
-                    {key.IsActive && onRegenerate && (
+                    {key.IsActive && (
                       <Tooltip title="Regenerate">
                         <Button
                           color="warning"
@@ -180,7 +195,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({
                         color="error"
                         size="small"
                         startIcon={<DeleteIcon />}
-                        onClick={() => onRevoke(key.Id)}
+                        onClick={() => handleRevoke(key.Id)}
                         disabled={loading}
                       >
                         {t("settings.revoke")}

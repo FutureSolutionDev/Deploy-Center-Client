@@ -1,52 +1,107 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Grid from "@mui/material/GridLegacy";
-import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  Switch,
+  Typography,
+} from "@mui/material";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
+import { useUserSettings, useUpdatePreferences } from "@/hooks/useUserSettings";
+import type { IUserSettings } from "@/types";
 
 interface IPreferencesTabProps {
-  language: "en" | "ar";
-  mode: "light" | "dark";
-  color: string;
-  timezone: string;
-  dateFormat: string;
-  timeFormat: "12h" | "24h";
-  timezoneOptions: string[];
-  dateFormatOptions: string[];
-  timeFormatOptions: Array<"12h" | "24h">;
-  colors?: string[];
-  disabled?: boolean;
-  saving?: boolean;
-  onLanguageChange: (lang: "en" | "ar") => void;
-  onToggleMode: () => void;
-  onColorSelect: (color: string) => void;
-  onTimezoneChange: (tz: string) => void;
-  onDateFormatChange: (fmt: string) => void;
-  onTimeFormatChange: (fmt: "12h" | "24h") => void;
-  onSave: () => void;
   t: (key: string) => string;
 }
 
-export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
-  language,
-  mode,
-  color,
-  timezone,
-  dateFormat,
-  timeFormat,
-  timezoneOptions,
-  dateFormatOptions,
-  timeFormatOptions,
-  colors = ["blue", "green", "purple", "orange", "red"],
-  disabled,
-  saving,
-  onLanguageChange,
-  onToggleMode,
-  onColorSelect,
-  onTimezoneChange,
-  onDateFormatChange,
-  onTimeFormatChange,
-  onSave,
-  t,
-}) => {
+export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
+  const { Language, ChangeLanguage } = useLanguage();
+  const { Mode, Color, ToggleMode, SetColor } = useTheme();
+  const { showSuccess, showError } = useToast();
+  const { data: settings } = useUserSettings();
+  const updatePreferences = useUpdatePreferences();
+
+  // Local state for form fields
+  const [timezone, setTimezone] = useState(settings?.Timezone || "UTC");
+  const [dateFormat, setDateFormat] = useState(settings?.DateFormat || "YYYY-MM-DD");
+  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(
+    (settings?.TimeFormat as "12h" | "24h") || "24h"
+  );
+
+  const timezoneOptions = useMemo(
+    () => [
+      "UTC",
+      "Europe/London",
+      "Europe/Berlin",
+      "Africa/Cairo",
+      "Asia/Riyadh",
+      "Asia/Dubai",
+      "Asia/Karachi",
+      "Asia/Kolkata",
+      "Asia/Singapore",
+      "Asia/Tokyo",
+      "America/New_York",
+      "America/Los_Angeles",
+      "America/Chicago",
+    ],
+    []
+  );
+
+  const dateFormatOptions = useMemo(() => ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY"], []);
+  const timeFormatOptions: Array<"12h" | "24h"> = ["12h", "24h"];
+  const colors = ["blue", "green", "purple", "orange", "red"];
+
+  const savePreferencesPartial = (overrides: Partial<IUserSettings>, showToast: boolean = true) => {
+    updatePreferences.mutate(
+      {
+        Timezone: timezone,
+        DateFormat: dateFormat,
+        TimeFormat: timeFormat,
+        Language,
+        Theme: Mode,
+        ColorTheme: Color,
+        ...overrides,
+      },
+      {
+        onSuccess: () => {
+          if (showToast) {
+            showSuccess(
+              overrides.Language ? t("settings.languageUpdated") : t("settings.preferencesSaved")
+            );
+          }
+        },
+        onError: () => showError(t("settings.saveFailed")),
+      }
+    );
+  };
+
+  const handleLanguageChange = (newLanguage: "en" | "ar") => {
+    ChangeLanguage(newLanguage);
+    savePreferencesPartial({ Language: newLanguage });
+  };
+
+  const handleToggleMode = () => {
+    ToggleMode();
+    const nextTheme = Mode === "dark" ? "light" : "dark";
+    savePreferencesPartial({ Theme: nextTheme }, false);
+  };
+
+  const handleColorSelect = (value: string) => {
+    SetColor(value as "blue" | "green" | "purple" | "orange" | "red");
+    savePreferencesPartial({ ColorTheme: value }, false);
+  };
+
+  const handleSave = () => {
+    savePreferencesPartial({});
+  };
+
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -61,10 +116,10 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
           <FormControl fullWidth>
             <InputLabel>{t("settings.language")}</InputLabel>
             <Select
-              value={language}
+              value={Language}
               label={t("settings.language")}
-              onChange={(e) => onLanguageChange(e.target.value as "en" | "ar")}
-              disabled={saving || disabled}
+              onChange={(e) => handleLanguageChange(e.target.value as "en" | "ar")}
+              disabled={updatePreferences.isPending}
             >
               <MenuItem value="en">{t("settings.english")}</MenuItem>
               <MenuItem value="ar">{t("settings.arabic")}</MenuItem>
@@ -74,8 +129,14 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
 
         <Grid item xs={12} md={6}>
           <FormControlLabel
-            control={<Switch checked={mode === "dark"} onChange={onToggleMode} disabled={saving || disabled} />}
-            label={mode === "dark" ? t("settings.darkModeOn") : t("settings.darkModeOff")}
+            control={
+              <Switch
+                checked={Mode === "dark"}
+                onChange={handleToggleMode}
+                disabled={updatePreferences.isPending}
+              />
+            }
+            label={Mode === "dark" ? t("settings.darkModeOn") : t("settings.darkModeOff")}
           />
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
             {t("settings.toggleTheme")}
@@ -88,8 +149,8 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
             <Select
               value={timezone}
               label={t("settings.timezone")}
-              onChange={(e) => onTimezoneChange(e.target.value)}
-              disabled={saving || disabled}
+              onChange={(e) => setTimezone(e.target.value)}
+              disabled={updatePreferences.isPending}
             >
               {timezoneOptions.map((tz) => (
                 <MenuItem key={tz} value={tz}>
@@ -106,8 +167,8 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
             <Select
               value={dateFormat}
               label={t("settings.dateFormat")}
-              onChange={(e) => onDateFormatChange(e.target.value)}
-              disabled={saving || disabled}
+              onChange={(e) => setDateFormat(e.target.value)}
+              disabled={updatePreferences.isPending}
             >
               {dateFormatOptions.map((fmt) => (
                 <MenuItem key={fmt} value={fmt}>
@@ -124,8 +185,8 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
             <Select
               value={timeFormat}
               label={t("settings.timeFormat")}
-              onChange={(e) => onTimeFormatChange(e.target.value as "12h" | "24h")}
-              disabled={saving || disabled}
+              onChange={(e) => setTimeFormat(e.target.value as "12h" | "24h")}
+              disabled={updatePreferences.isPending}
             >
               {timeFormatOptions.map((fmt) => (
                 <MenuItem key={fmt} value={fmt}>
@@ -144,7 +205,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
             {colors.map((option) => (
               <Box
                 key={option}
-                onClick={() => onColorSelect(option)}
+                onClick={() => handleColorSelect(option)}
                 sx={{
                   width: 30,
                   height: 30,
@@ -152,7 +213,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
                   bgcolor: `${option}`,
                   cursor: "pointer",
                   border: 3,
-                  borderColor: color === option ? "text.primary" : "transparent",
+                  borderColor: Color === option ? "text.primary" : "transparent",
                   transition: "all 0.2s",
                   position: "relative",
                   "&:hover": {
@@ -160,7 +221,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
                   },
                 }}
               >
-                {color === option && (
+                {Color === option && (
                   <Box
                     sx={{
                       position: "absolute",
@@ -184,7 +245,7 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({
         </Grid>
 
         <Grid item xs={12}>
-          <Button variant="contained" onClick={onSave} disabled={saving || disabled}>
+          <Button variant="contained" onClick={handleSave} disabled={updatePreferences.isPending}>
             {t("settings.saveChanges")}
           </Button>
         </Grid>

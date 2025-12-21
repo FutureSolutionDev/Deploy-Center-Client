@@ -15,107 +15,121 @@ import {
   Typography,
 } from "@mui/material";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
-import type { IUserSession } from "@/types";
+import { useUserSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/useUserSettings";
+import { useToast } from "@/contexts/ToastContext";
 
 interface ISessionsTabProps {
-  sessions: IUserSession[];
-  loading?: boolean;
-  onRevoke: (id: number) => Promise<void>;
-  onRevokeAll: (keepId: number) => Promise<void>;
   t: (key: string) => string;
 }
 
-export const SessionsTab: React.FC<ISessionsTabProps> = ({
-  sessions,
-  loading,
-  onRevoke,
-  onRevokeAll,
-  t,
-}) => {
+export const SessionsTab: React.FC<ISessionsTabProps> = ({ t }) => {
   const { formatDateTime } = useDateFormatter();
+  const { showError } = useToast();
+  const { data: sessions = [], isLoading: loading } = useUserSessions();
+  const revokeSession = useRevokeSession();
+  const revokeAllSessions = useRevokeAllSessions();
+
   const [selectedSessionToKeep, setSelectedSessionToKeep] = useState<number | null>(
     sessions[0]?.Id ?? null
   );
 
+  const handleRevoke = (id: number) => {
+    revokeSession.mutate(id, { onError: () => showError(t("settings.saveFailed")) });
+  };
+
+  const handleRevokeAll = (keepId: number) => {
+    revokeAllSessions.mutate(keepId, { onError: () => showError(t("settings.saveFailed")) });
+  };
+
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-        <Typography variant="h6" fontWeight={600}>
-          {t("settings.sessions")}
-        </Typography>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>{t("settings.keepSession")}</InputLabel>
-            <Select
-              value={selectedSessionToKeep ?? ""}
-              label={t("settings.keepSession")}
-              onChange={(e) => setSelectedSessionToKeep(Number(e.target.value))}
-              disabled={loading || sessions.length === 0}
-            >
-              {sessions.map((session) => (
-                <MenuItem key={session.Id} value={session.Id}>
-                  {session.Id} - {session.IpAddress || t("settings.notAvailable")}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Button
-            variant="outlined"
-            color="warning"
-            disabled={!selectedSessionToKeep || loading}
-            onClick={() => selectedSessionToKeep && onRevokeAll(selectedSessionToKeep)}
-          >
-            {t("settings.revokeAll")}
-          </Button>
-        </Box>
-      </Box>
+      <Typography variant="h6" gutterBottom>
+        {t("settings.activeSessions")}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {t("settings.manageActiveSessions")}
+      </Typography>
 
       <TableContainer>
-        <Table size="small">
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell>{t("settings.device")}</TableCell>
               <TableCell>{t("settings.ipAddress")}</TableCell>
-              <TableCell>{t("settings.userAgent")}</TableCell>
               <TableCell>{t("settings.lastActivity")}</TableCell>
+              <TableCell>{t("settings.status")}</TableCell>
               <TableCell align="right">{t("settings.actions")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sessions.map((session) => (
-              <TableRow key={session.Id}>
-                <TableCell>
-                  {session.DeviceInfo?.device || session.DeviceInfo?.Device || t("settings.notAvailable")}
-                </TableCell>
-                <TableCell>{session.IpAddress || t("settings.notAvailable")}</TableCell>
-                <TableCell sx={{ maxWidth: 240, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {session.UserAgent || t("settings.notAvailable")}
-                </TableCell>
-                <TableCell>
-                  {session.LastActivityAt
-                    ? formatDateTime(session.LastActivityAt)
-                    : t("settings.notAvailable")}
-                </TableCell>
-                <TableCell align="right">
-                  <Button
-                    size="small"
-                    color="error"
-                    onClick={() => onRevoke(session.Id)}
-                    disabled={loading}
-                  >
-                    {t("settings.revoke")}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {sessions.length === 0 && (
+            {loading && (
               <TableRow>
-                <TableCell colSpan={5}>{t("settings.noSessions")}</TableCell>
+                <TableCell colSpan={5} align="center">
+                  {t("settings.loading")}
+                </TableCell>
               </TableRow>
             )}
+            {!loading && sessions.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  {t("settings.noActiveSessions")}
+                </TableCell>
+              </TableRow>
+            )}
+            {!loading &&
+              sessions.map((session) => (
+                <TableRow key={session.Id}>
+                  <TableCell>{session.UserAgent || t("settings.notAvailable")}</TableCell>
+                  <TableCell>{session.IpAddress || t("settings.notAvailable")}</TableCell>
+                  <TableCell>{formatDateTime(session.LastActivityAt)}</TableCell>
+                  <TableCell>{session.IsActive ? t("settings.active") : t("settings.inactive")}</TableCell>
+                  <TableCell align="right">
+                    <Button
+                      color="error"
+                      size="small"
+                      onClick={() => handleRevoke(session.Id)}
+                      disabled={!session.IsActive}
+                    >
+                      {t("settings.revoke")}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          {t("settings.revokeAllSessions")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("settings.revokeAllSessionsDesc")}
+        </Typography>
+        <FormControl sx={{ minWidth: 200, mb: 2 }}>
+          <InputLabel>{t("settings.keepSession")}</InputLabel>
+          <Select
+            value={selectedSessionToKeep || ""}
+            label={t("settings.keepSession")}
+            onChange={(e) => setSelectedSessionToKeep(Number(e.target.value))}
+          >
+            {sessions.map((session) => (
+              <MenuItem key={session.Id} value={session.Id}>
+                {session.UserAgent || session.IpAddress || `Session ${session.Id}`}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <br />
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={() => selectedSessionToKeep && handleRevokeAll(selectedSessionToKeep)}
+          disabled={!selectedSessionToKeep || sessions.length === 0}
+        >
+          {t("settings.revokeAll")}
+        </Button>
+      </Box>
     </Box>
   );
 };
