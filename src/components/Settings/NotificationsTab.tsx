@@ -32,6 +32,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
   // Synchronize local state with settings if it changes
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEmailNotifications(settings.EmailNotifications);
       setDiscordWebhook(settings.DiscordWebhookUrl || "");
       setSlackWebhook(settings.SlackWebhookUrl || "");

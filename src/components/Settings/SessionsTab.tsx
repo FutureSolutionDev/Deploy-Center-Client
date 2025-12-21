@@ -35,9 +35,10 @@ export const SessionsTab: React.FC<ISessionsTabProps> = ({ t }) => {
   useEffect(() => {
     if (sessions.length > 0 && selectedSessionToKeep === null) {
       const activeSession = sessions.find((s) => s.IsActive) || sessions[0];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSessionToKeep(activeSession.Id);
     }
-  }, [sessions])
+  }, [selectedSessionToKeep, sessions])
 
   const handleRevoke = (id: number) => {
     revokeSession.mutate(id, { onError: () => showError(t("settings.saveFailed")) });
