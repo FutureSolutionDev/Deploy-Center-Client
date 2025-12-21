@@ -95,3 +95,18 @@ export const useProjectStatistics = (id: number | undefined, enabled: boolean = 
     enabled: enabled && id !== undefined,
   });
 };
+
+/**
+ * Custom hook to regenerate webhook secret
+ */
+export const useRegenerateWebhook = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<string, Error, number>({
+    mutationFn: (id) => ProjectsService.regenerateWebhook(id),
+    onSuccess: (_, id) => {
+      // Invalidate the specific project to refetch with new webhook
+      queryClient.invalidateQueries({ queryKey: ['projects', id] });
+    },
+  });
+};

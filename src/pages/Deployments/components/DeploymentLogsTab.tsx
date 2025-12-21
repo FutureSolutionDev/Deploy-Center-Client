@@ -5,7 +5,7 @@ import type { IDeployment } from '@/types';
 interface IDeploymentLogsTabProps {
     deployment: IDeployment;
     logs: string;
-    logsEndRef: React.RefObject<HTMLDivElement>;
+    logsEndRef: React.RefObject<HTMLDivElement | null>;
     t: (key: string) => string;
 }
 
