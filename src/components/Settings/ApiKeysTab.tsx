@@ -104,7 +104,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({ t }) => {
 
   const handleReactivate = async (id: number) => {
     reactivateApiKey.mutate(id, {
-      onSuccess: () => showSuccess("API key reactivated successfully"),
+      onSuccess: () => showSuccess(t("settings.apiKeyReactivated")),
       onError: () => showError(t("settings.saveFailed")),
     });
   };
@@ -165,7 +165,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({ t }) => {
                 <TableCell align="right">
                   <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
                     {!key.IsActive && (
-                      <Tooltip title="Reactivate">
+                      <Tooltip title={t("common.reactivate") || "Reactivate"}>
                         <Button
                           color="success"
                           size="small"
@@ -173,12 +173,12 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({ t }) => {
                           onClick={() => handleReactivate(key.Id)}
                           disabled={loading}
                         >
-                          Reactivate
+                          {t("common.reactivate") || "Reactivate"}
                         </Button>
                       </Tooltip>
                     )}
                     {key.IsActive && (
-                      <Tooltip title="Regenerate">
+                      <Tooltip title={t("common.regenerate") || "Regenerate"}>
                         <Button
                           color="warning"
                           size="small"
@@ -186,7 +186,7 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({ t }) => {
                           onClick={() => handleRegenerate(key.Id)}
                           disabled={loading}
                         >
-                          Regenerate
+                          {t("common.regenerate") || "Regenerate"}
                         </Button>
                       </Tooltip>
                     )}
@@ -298,12 +298,11 @@ export const ApiKeysTab: React.FC<IApiKeysTabProps> = ({ t }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Regenerated Key Dialog */}
       <Dialog open={!!regeneratedKey} onClose={() => setRegeneratedKey(null)} fullWidth maxWidth="sm">
-        <DialogTitle>API Key Regenerated Successfully</DialogTitle>
+        <DialogTitle>{t("settings.apiKeyRegeneratedTitle")}</DialogTitle>
         <DialogContent dividers>
           <Typography variant="subtitle2" gutterBottom>
-            Your new API key (copy it now, it won't be shown again):
+            {t("settings.newApiKeyNote")}
           </Typography>
           <Box
             sx={{

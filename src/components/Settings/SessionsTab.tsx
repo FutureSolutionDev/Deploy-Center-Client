@@ -31,13 +31,13 @@ export const SessionsTab: React.FC<ISessionsTabProps> = ({ t }) => {
 
   const [selectedSessionToKeep, setSelectedSessionToKeep] = useState<number | null>(null);
 
-  // Update selected session when sessions are loaded
-  React.useEffect(() => {
+  // Synchronize local state with sessions if it changes
+  useEffect(() => {
     if (sessions.length > 0 && selectedSessionToKeep === null) {
-      const activeSession = sessions.find(s => s.IsActive) || sessions[0];
+      const activeSession = sessions.find((s) => s.IsActive) || sessions[0];
       setSelectedSessionToKeep(activeSession.Id);
     }
-  }, [sessions, selectedSessionToKeep]);
+  }, [sessions])
 
   const handleRevoke = (id: number) => {
     revokeSession.mutate(id, { onError: () => showError(t("settings.saveFailed")) });

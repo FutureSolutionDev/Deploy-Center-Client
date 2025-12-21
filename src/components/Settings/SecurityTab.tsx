@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Alert, Box, Button, Divider, Grid, Stack, TextField, Typography } from "@mui/material";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -45,11 +45,13 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({ t }) => {
     disable2FA.isPending ||
     regenerateBackupCodes.isPending;
   const disabled = changePassword.isPending;
-useEffect(() => {
-  if (!twoFAStatus) return;
-  setQrCodeUrl(twoFAStatus.qrCodeUrl);
-  setSecret(twoFAStatus.secret);
-}, [twoFAStatus]);
+  // Synchronize local state with twoFAStatus if it changes
+  useEffect(() => {
+    if (twoFAStatus) {
+      setQrCodeUrl(twoFAStatus.qrCodeUrl);
+      setSecret(twoFAStatus.secret);
+    }
+  }, [twoFAStatus])
   const handleEnable = async () => {
     try {
       setStatusMessage(null);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button, Divider, FormControlLabel, Grid, Switch, TextField, Typography } from "@mui/material";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -29,16 +29,18 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
     settings?.NotifyOnProjectUpdate ?? true
   );
   const [notifySystemAlert, setNotifySystemAlert] = useState(settings?.NotifyOnSystemAlert ?? true);
+  // Synchronize local state with settings if it changes
   useEffect(() => {
-    if (!settings) return;
-    setEmailNotifications(settings.EmailNotifications);
-    setDiscordWebhook(settings.DiscordWebhookUrl || "");
-    setSlackWebhook(settings.SlackWebhookUrl || "");
-    setNotifySuccess(settings.NotifyOnSuccess);
-    setNotifyFailure(settings.NotifyOnFailure);
-    setNotifyProjectUpdate(settings.NotifyOnProjectUpdate);
-    setNotifySystemAlert(settings.NotifyOnSystemAlert);
-  }, [settings]);
+    if (settings) {
+      setEmailNotifications(settings.EmailNotifications);
+      setDiscordWebhook(settings.DiscordWebhookUrl || "");
+      setSlackWebhook(settings.SlackWebhookUrl || "");
+      setNotifySuccess(settings.NotifyOnSuccess);
+      setNotifyFailure(settings.NotifyOnFailure);
+      setNotifyProjectUpdate(settings.NotifyOnProjectUpdate);
+      setNotifySystemAlert(settings.NotifyOnSystemAlert);
+    }
+  }, [settings])
 
   const handleSave = () => {
     updateNotificationSettings.mutate(

@@ -1,3 +1,4 @@
+'use client'
 import React, { useState, useMemo, useEffect } from "react";
 import { Box, Button, Divider, Grid, TextField, Typography } from "@mui/material";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
@@ -23,14 +24,14 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
   // Derived values - no need for state
   const lastLogin = useMemo(() => User?.LastLogin, [User?.LastLogin]);
   const memberSince = useMemo(() => User?.CreatedAt, [User?.CreatedAt]);
-  useEffect(() => {
-    if (!User) return;
-    setUsername(User?.Username || "");
-    setEmail(User?.Email || "");
-    setFullName(User?.FullName || "");
-      
-
-  }, [User]);
+  // Synchronize local state with User from context if it changes
+  useEffect(()=> {
+    if(User) {
+      setUsername(User?.Username || "");
+      setEmail(User?.Email || "");
+      setFullName(User?.FullName || "");
+    }
+  }, [User])
   const handleSave = async () => {
     updateProfile.mutate(
       { Username: username, Email: email, FullName: fullName },

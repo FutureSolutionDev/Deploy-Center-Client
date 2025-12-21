@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Button,
@@ -34,12 +34,14 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(
     (settings?.TimeFormat as "12h" | "24h") || "24h"
   );
+  // Synchronize local state with settings if it changes
   useEffect(() => {
-    if (!settings) return;
-    setTimezone(settings.Timezone);
-    setDateFormat(settings.DateFormat);
-    setTimeFormat(settings.TimeFormat as "12h" | "24h");
-  }, [settings]);
+    if (settings) {
+      setTimezone(settings.Timezone);
+      setDateFormat(settings.DateFormat);
+      setTimeFormat(settings.TimeFormat as "12h" | "24h");
+    }
+  }, [settings])
   const timezoneOptions = useMemo(
     () => [
       "UTC",
