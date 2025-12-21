@@ -37,9 +37,9 @@ export const PreferencesTab: React.FC<IPreferencesTabProps> = ({ t }) => {
   // Synchronize local state with settings if it changes
   useEffect(() => {
     if (settings) {
-      setTimezone(settings.Timezone);
-      setDateFormat(settings.DateFormat);
-      setTimeFormat(settings.TimeFormat as "12h" | "24h");
+      setTimezone(settings.Timezone || "UTC");
+      setDateFormat(settings.DateFormat || "YYYY-MM-DD");
+      setTimeFormat(settings.TimeFormat as "12h" | "24h" || "24h");
     }
   }, [settings])
   const timezoneOptions = useMemo(

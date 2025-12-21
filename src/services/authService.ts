@@ -61,8 +61,8 @@ class AuthService {
   /**
    * Get current user profile
    */
-  public async GetProfile(): Promise<IUser> {
-    const response = await ApiInstance.get<IApiResponse<IUser>>(
+  public async GetProfile(): Promise<IUser | { User: IUser }> {
+    const response = await ApiInstance.get<IApiResponse<IUser | { User: IUser }>>(
       "/auth/profile"
     );
 
