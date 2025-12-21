@@ -1,7 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  Alert, Box, Card, CardContent, Tab, Tabs, Typography
-} from "@mui/material";
+import React, { useMemo, useState } from "react";
+import { Box, Card, CardContent, Tab, Tabs, Typography } from "@mui/material";
 import {
   AccountCircle as AccountIcon,
   Notifications as NotificationsIcon,
@@ -12,8 +10,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import UserSettingsService from "@/services/userSettingsService";
-import type { IApiKey, IUserSession, IUserSettings } from "@/types";
+import { useToast } from "@/contexts/ToastContext";
+import type { IUserSettings } from "@/types";
 import ProfileTab from "@/components/Settings/ProfileTab";
 import PreferencesTab from "@/components/Settings/PreferencesTab";
 import NotificationsTab from "@/components/Settings/NotificationsTab";
@@ -21,6 +19,28 @@ import SecurityTab from "@/components/Settings/SecurityTab";
 import AccountTab from "@/components/Settings/AccountTab";
 import ApiKeysTab, { type ICreateApiKeyInput } from "@/components/Settings/ApiKeysTab";
 import SessionsTab from "@/components/Settings/SessionsTab";
+import {
+  useUserSettings,
+  useApiKeys,
+  useUserSessions,
+  use2FAStatus,
+  useUpdateProfile,
+  useUpdateNotificationSettings,
+  useUpdatePreferences,
+  useTestNotification,
+  useChangePassword,
+  useGenerate2FA,
+  useEnable2FA,
+  useDisable2FA,
+  useRegenerateBackupCodes,
+  useGenerateApiKey,
+  useRevokeApiKey,
+  useReactivateApiKey,
+  useRegenerateApiKey,
+  useRevokeSession,
+  useRevokeAllSessions,
+  useDeleteAccount,
+} from "@/hooks/useUserSettings";
 
 interface ITabPanelProps {
   children?: React.ReactNode;
@@ -40,43 +60,66 @@ export const SettingsPage: React.FC = () => {
   const { User, RefreshUser } = useAuth();
   const { Language, ChangeLanguage, t } = useLanguage();
   const { Mode, Color, ToggleMode, SetColor } = useTheme();
+  const { showSuccess, showError } = useToast();
+
+  // React Query hooks
+  const { data: settings, isLoading: settingsLoading } = useUserSettings();
+  const { data: apiKeys = [], isLoading: apiKeysLoading } = useApiKeys();
+  const { data: sessions = [], isLoading: sessionsLoading } = useUserSessions();
+  const { data: twoFAStatus } = use2FAStatus();
+
+  const updateProfile = useUpdateProfile();
+  const updateNotificationSettings = useUpdateNotificationSettings();
+  const updatePreferences = useUpdatePreferences();
+  const testNotification = useTestNotification();
+  const changePassword = useChangePassword();
+  const generate2FA = useGenerate2FA();
+  const enable2FA = useEnable2FA();
+  const disable2FA = useDisable2FA();
+  const regenerateBackupCodes = useRegenerateBackupCodes();
+  const generateApiKey = useGenerateApiKey();
+  const revokeApiKey = useRevokeApiKey();
+  const reactivateApiKey = useReactivateApiKey();
+  const regenerateApiKey = useRegenerateApiKey();
+  const revokeSession = useRevokeSession();
+  const revokeAllSessions = useRevokeAllSessions();
+  const deleteAccount = useDeleteAccount();
 
   const [tabValue, setTabValue] = useState(0);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [savingProfile, setSavingProfile] = useState<boolean>(false);
-  const [savingNotifications, setSavingNotifications] = useState<boolean>(false);
-  const [savingPreferences, setSavingPreferences] = useState<boolean>(false);
-  const [savingPassword, setSavingPassword] = useState<boolean>(false);
-  const [twoFactorLoading, setTwoFactorLoading] = useState<boolean>(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(false);
+
+  // 2FA state
   const [twoFactorQr, setTwoFactorQr] = useState<string | null>(null);
   const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [apiKeys, setApiKeys] = useState<IApiKey[]>([]);
-  const [sessions, setSessions] = useState<IUserSession[]>([]);
 
-  // Profile state
+  // Profile state - controlled form values
   const [username, setUsername] = useState(User?.Username || "");
   const [email, setEmail] = useState(User?.Email || "");
   const [fullName, setFullName] = useState(User?.FullName || "");
-  const [lastLogin, setLastLogin] = useState<Date | undefined>(User?.LastLogin);
-  const [memberSince, setMemberSince] = useState<Date | undefined>(User?.CreatedAt);
 
-  // Notification settings
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [discordWebhook, setDiscordWebhook] = useState("");
-  const [slackWebhook, setSlackWebhook] = useState("");
-  const [notifySuccess, setNotifySuccess] = useState(true);
-  const [notifyFailure, setNotifyFailure] = useState(true);
-  const [notifyProjectUpdate, setNotifyProjectUpdate] = useState(true);
-  const [notifySystemAlert, setNotifySystemAlert] = useState(true);
+  // Derived values from User
+  const lastLogin = useMemo(() => User?.LastLogin, [User?.LastLogin]);
+  const memberSince = useMemo(() => User?.CreatedAt, [User?.CreatedAt]);
 
-  // Preferences
-  const [timezone, setTimezone] = useState("UTC");
-  const [dateFormat, setDateFormat] = useState("YYYY-MM-DD");
-  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("24h");
+  // Notification settings - controlled form values
+  const [emailNotifications, setEmailNotifications] = useState(
+    settings?.EmailNotifications ?? true
+  );
+  const [discordWebhook, setDiscordWebhook] = useState(settings?.DiscordWebhookUrl || "");
+  const [slackWebhook, setSlackWebhook] = useState(settings?.SlackWebhookUrl || "");
+  const [notifySuccess, setNotifySuccess] = useState(settings?.NotifyOnSuccess ?? true);
+  const [notifyFailure, setNotifyFailure] = useState(settings?.NotifyOnFailure ?? true);
+  const [notifyProjectUpdate, setNotifyProjectUpdate] = useState(
+    settings?.NotifyOnProjectUpdate ?? true
+  );
+  const [notifySystemAlert, setNotifySystemAlert] = useState(settings?.NotifyOnSystemAlert ?? true);
+
+  // Preferences - controlled form values
+  const [timezone, setTimezone] = useState(settings?.Timezone || "UTC");
+  const [dateFormat, setDateFormat] = useState(settings?.DateFormat || "YYYY-MM-DD");
+  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(
+    (settings?.TimeFormat as "12h" | "24h") || "24h"
+  );
 
   // Password
   const [currentPassword, setCurrentPassword] = useState("");
@@ -105,120 +148,29 @@ export const SettingsPage: React.FC = () => {
   const dateFormatOptions = useMemo(() => ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY"], []);
   const timeFormatOptions: Array<"12h" | "24h"> = ["12h", "24h"];
 
-  const showSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(null), 2500);
-  };
-
-  const showError = (message: string) => {
-    setError(message);
-    setTimeout(() => setError(null), 3500);
-  };
-
-  // Update profile state when User changes from AuthContext
-  useEffect(() => {
-    if (User) {
-      setUsername(User.Username || "");
-      setEmail(User.Email || "");
-      setFullName(User.FullName || "");
-      setLastLogin(User.LastLogin);
-      setMemberSince(User.CreatedAt);
-    }
-  }, [User]);
-
-  // Load ALL settings data ONCE on mount
-  useEffect(() => {
-    const loadAllData = async () => {
-      try {
-        setIsLoading(true);
-
-        // Fetch all data in parallel
-        const [settings, apiKeysResponse, sessionsResponse, twoFAStatus] = await Promise.all([
-          UserSettingsService.getSettings(),
-          UserSettingsService.listApiKeys(),
-          UserSettingsService.listSessions(),
-          UserSettingsService.get2FAStatus(),
-        ]);
-
-        // Populate Preferences tab
-        if (settings) {
-          setTimezone(settings.Timezone || "UTC");
-          setDateFormat(settings.DateFormat || "YYYY-MM-DD");
-          setTimeFormat((settings.TimeFormat as "12h" | "24h") || "24h");
-
-          // Populate Notifications tab (same settings object!)
-          setEmailNotifications(!!settings.EmailNotifications);
-          setDiscordWebhook(settings.DiscordWebhookUrl || "");
-          setSlackWebhook(settings.SlackWebhookUrl || "");
-          setNotifySuccess(!!settings.NotifyOnSuccess);
-          setNotifyFailure(!!settings.NotifyOnFailure);
-          setNotifyProjectUpdate(!!settings.NotifyOnProjectUpdate);
-          setNotifySystemAlert(!!settings.NotifyOnSystemAlert);
-        }
-
-        // Populate API Keys tab
-        setApiKeys(apiKeysResponse || []);
-
-        // Populate Sessions tab
-        setSessions(sessionsResponse || []);
-
-        // Populate Security tab
-        setTwoFactorEnabled(!!twoFAStatus?.enabled);
-        setTwoFactorQr(null);
-        setTwoFactorSecret(null);
-        setBackupCodes([]);
-
-      } catch (err) {
-        console.error("Failed to load settings data", err);
-        showError(t("settings.loadError"));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
-
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-    setSuccess(null);
-    setError(null);
-  };
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => setTabValue(newValue);
 
   const handleLanguageChange = async (newLanguage: "en" | "ar") => {
-    try {
-      ChangeLanguage(newLanguage);
-      await savePreferencesPartial({ Language: newLanguage });
-    } catch (err) {
-      console.error("Language update failed", err);
-      showError(t("settings.saveFailed"));
-    }
+    ChangeLanguage(newLanguage);
+    await savePreferencesPartial({ Language: newLanguage });
   };
 
   const handleSaveProfile = async () => {
-    try {
-      setSavingProfile(true);
-      await UserSettingsService.updateProfile({
-        Username: username,
-        Email: email,
-        FullName: fullName,
-      });
-      // Refresh user data in AuthContext
-      await RefreshUser();
-      showSuccess(t("settings.profileUpdated"));
-    } catch (err) {
-      console.error("Profile update failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setSavingProfile(false);
-    }
+    updateProfile.mutate(
+      { Username: username, Email: email, FullName: fullName },
+      {
+        onSuccess: async () => {
+          await RefreshUser();
+          showSuccess(t("settings.profileUpdated"));
+        },
+        onError: () => showError(t("settings.saveFailed")),
+      }
+    );
   };
 
   const handleSaveNotifications = async () => {
-    try {
-      setSavingNotifications(true);
-      await UserSettingsService.updateNotificationSettings({
+    updateNotificationSettings.mutate(
+      {
         EmailNotifications: emailNotifications,
         DiscordWebhookUrl: discordWebhook || null,
         SlackWebhookUrl: slackWebhook || null,
@@ -226,24 +178,24 @@ export const SettingsPage: React.FC = () => {
         NotifyOnFailure: notifyFailure,
         NotifyOnProjectUpdate: notifyProjectUpdate,
         NotifyOnSystemAlert: notifySystemAlert,
-      });
-      showSuccess(t("settings.notificationsSaved"));
-    } catch (err) {
-      console.error("Notification update failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setSavingNotifications(false);
-    }
+      },
+      {
+        onSuccess: () => showSuccess(t("settings.notificationsSaved")),
+        onError: () => showError(t("settings.saveFailed")),
+      }
+    );
   };
 
   const handleSavePreferences = async () => {
     await savePreferencesPartial({});
   };
 
-  const savePreferencesPartial = async (overrides: Partial<IUserSettings>, showToast: boolean = true) => {
-    try {
-      setSavingPreferences(true);
-      await UserSettingsService.updatePreferences({
+  const savePreferencesPartial = async (
+    overrides: Partial<IUserSettings>,
+    showToast: boolean = true
+  ) => {
+    updatePreferences.mutate(
+      {
         Timezone: timezone,
         DateFormat: dateFormat,
         TimeFormat: timeFormat,
@@ -251,162 +203,114 @@ export const SettingsPage: React.FC = () => {
         Theme: Mode,
         ColorTheme: Color,
         ...overrides,
-      });
-      if (showToast) {
-        showSuccess(
-          overrides.Language ? t("settings.languageUpdated") : t("settings.preferencesSaved")
-        );
+      },
+      {
+        onSuccess: () => {
+          if (showToast) {
+            showSuccess(
+              overrides.Language ? t("settings.languageUpdated") : t("settings.preferencesSaved")
+            );
+          }
+        },
+        onError: () => showError(t("settings.saveFailed")),
       }
-    } catch (err) {
-      console.error("Preferences update failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setSavingPreferences(false);
-    }
+    );
   };
 
   const handleTestNotification = async (type: "discord" | "slack") => {
-    try {
-      await UserSettingsService.testNotification(type);
-      showSuccess(t("settings.testNotificationSent"));
-    } catch (err) {
-      console.error("Test notification failed", err);
-      showError(t("settings.saveFailed"));
-    }
+    testNotification.mutate(type, {
+      onSuccess: () => showSuccess(t("settings.testNotificationSent")),
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleGenerate2FA = async () => {
-    try {
-      setTwoFactorLoading(true);
-      const result = await UserSettingsService.generate2FA();
-      setTwoFactorSecret(result.secret);
-      setTwoFactorQr(result.qrCodeUrl);
-      setBackupCodes([]);
-    } catch (err) {
-      console.error("Generate 2FA failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setTwoFactorLoading(false);
-    }
+    generate2FA.mutate(undefined, {
+      onSuccess: (result) => {
+        setTwoFactorSecret(result.secret);
+        setTwoFactorQr(result.qrCodeUrl);
+        setBackupCodes([]);
+      },
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleEnable2FA = async (code: string) => {
-    try {
-      setTwoFactorLoading(true);
-      const result = await UserSettingsService.enable2FA(code);
-      setBackupCodes(result.backupCodes || []);
-      setTwoFactorEnabled(true);
-      setTwoFactorQr(null);
-      setTwoFactorSecret(null);
-      showSuccess(t("settings.2faEnabled"));
-    } catch (err) {
-      console.error("Enable 2FA failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setTwoFactorLoading(false);
-    }
+    enable2FA.mutate(code, {
+      onSuccess: (result) => {
+        setBackupCodes(result.backupCodes || []);
+        setTwoFactorQr(null);
+        setTwoFactorSecret(null);
+        showSuccess(t("settings.2faEnabled"));
+      },
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleDisable2FA = async (code: string) => {
-    try {
-      setTwoFactorLoading(true);
-      await UserSettingsService.disable2FA(code);
-      setTwoFactorEnabled(false);
-      setTwoFactorQr(null);
-      setTwoFactorSecret(null);
-      setBackupCodes([]);
-      showSuccess(t("settings.2faDisabled"));
-    } catch (err) {
-      console.error("Disable 2FA failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setTwoFactorLoading(false);
-    }
+    disable2FA.mutate(code, {
+      onSuccess: () => {
+        setTwoFactorQr(null);
+        setTwoFactorSecret(null);
+        setBackupCodes([]);
+        showSuccess(t("settings.2faDisabled"));
+      },
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleRegenerateBackupCodes = async () => {
-    try {
-      setTwoFactorLoading(true);
-      const codes = await UserSettingsService.regenerateBackupCodes();
-      setBackupCodes(codes || []);
-      showSuccess(t("settings.backupCodesRegenerated"));
-    } catch (err) {
-      console.error("Regenerate backup codes failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setTwoFactorLoading(false);
-    }
+    regenerateBackupCodes.mutate(undefined, {
+      onSuccess: (codes) => {
+        setBackupCodes(codes || []);
+        showSuccess(t("settings.backupCodesRegenerated"));
+      },
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleGenerateApiKey = async (input: ICreateApiKeyInput) => {
     try {
-      const result = await UserSettingsService.generateApiKey(input.name, input.scopes, input.expiresAt || undefined);
-      const refreshed = await UserSettingsService.listApiKeys();
-      setApiKeys(refreshed || []);
-      return result;
-    } catch (err) {
-      console.error("Generate API key failed", err);
+      return await generateApiKey.mutateAsync({
+        name: input.name,
+        scopes: input.scopes,
+        expiresAt: input.expiresAt || undefined,
+      });
+    } catch {
       showError(t("settings.saveFailed"));
       return null;
     }
   };
 
   const handleRevokeApiKey = async (id: number) => {
-    try {
-      await UserSettingsService.revokeApiKey(id);
-      // Update the key status to inactive instead of removing it
-      setApiKeys((prev) => prev.map((k) => k.Id === id ? { ...k, IsActive: false } : k));
-      showSuccess(t("settings.saveSuccess") || "API key revoked successfully");
-    } catch (err) {
-      console.error("Revoke API key failed", err);
-      showError(t("settings.saveFailed"));
-    }
+    revokeApiKey.mutate(id, {
+      onSuccess: () => showSuccess(t("settings.saveSuccess") || "API key revoked successfully"),
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleReactivateApiKey = async (id: number) => {
-    try {
-      await UserSettingsService.reactivateApiKey(id);
-      // Update the key status to active
-      setApiKeys((prev) => prev.map((k) => k.Id === id ? { ...k, IsActive: true } : k));
-      showSuccess("API key reactivated successfully");
-    } catch (err) {
-      console.error("Reactivate API key failed", err);
-      showError(t("settings.saveFailed"));
-    }
+    reactivateApiKey.mutate(id, {
+      onSuccess: () => showSuccess("API key reactivated successfully"),
+      onError: () => showError(t("settings.saveFailed")),
+    });
   };
 
   const handleRegenerateApiKey = async (id: number) => {
     try {
-      const result = await UserSettingsService.regenerateApiKey(id);
-      const refreshed = await UserSettingsService.listApiKeys();
-      setApiKeys(refreshed || []);
-      return result;
-    } catch (err) {
-      console.error("Regenerate API key failed", err);
+      return await regenerateApiKey.mutateAsync(id);
+    } catch {
       showError(t("settings.saveFailed"));
       return null;
     }
   };
 
   const handleRevokeSession = async (id: number) => {
-    try {
-      await UserSettingsService.revokeSession(id);
-      setSessions((prev) => prev.filter((s) => s.Id !== id));
-    } catch (err) {
-      console.error("Revoke session failed", err);
-      showError(t("settings.saveFailed"));
-    }
+    revokeSession.mutate(id, { onError: () => showError(t("settings.saveFailed")) });
   };
 
   const handleRevokeAllSessions = async (keepId: number) => {
-    try {
-      await UserSettingsService.revokeAllSessions(keepId);
-      const refreshed = await UserSettingsService.listSessions();
-      setSessions(refreshed || []);
-    } catch (err) {
-      console.error("Revoke all sessions failed", err);
-      showError(t("settings.saveFailed"));
-    }
+    revokeAllSessions.mutate(keepId, { onError: () => showError(t("settings.saveFailed")) });
   };
 
   const handleChangePassword = async () => {
@@ -420,34 +324,30 @@ export const SettingsPage: React.FC = () => {
       return;
     }
 
-    try {
-      setSavingPassword(true);
-      await UserSettingsService.changePassword(currentPassword, newPassword);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      showSuccess(t("settings.passwordUpdated"));
-    } catch (err) {
-      console.error("Change password failed", err);
-      showError(t("settings.saveFailed"));
-    } finally {
-      setSavingPassword(false);
-    }
+    changePassword.mutate(
+      { currentPassword, newPassword },
+      {
+        onSuccess: () => {
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+          showSuccess(t("settings.passwordUpdated"));
+        },
+        onError: () => showError(t("settings.saveFailed")),
+      }
+    );
   };
 
   const handleColorSelect = (value: string) => {
-    SetColor(value as any);
+    SetColor(value as "blue" | "green" | "purple" | "orange" | "red");
     void savePreferencesPartial({ ColorTheme: value }, false);
   };
 
   const handleDeleteAccount = async () => {
-    try {
-      await UserSettingsService.deleteAccount();
-      showSuccess(t("settings.deleteAccountSuccess"));
-    } catch (err) {
-      console.error("Delete account failed", err);
-      showError(t("settings.deleteAccountFailed"));
-    }
+    deleteAccount.mutate(undefined, {
+      onSuccess: () => showSuccess(t("settings.deleteAccountSuccess")),
+      onError: () => showError(t("settings.deleteAccountFailed")),
+    });
   };
 
   const handleToggleMode = () => {
@@ -455,6 +355,8 @@ export const SettingsPage: React.FC = () => {
     const nextTheme = Mode === "dark" ? "light" : "dark";
     void savePreferencesPartial({ Theme: nextTheme }, false);
   };
+
+  const isLoading = settingsLoading || apiKeysLoading || sessionsLoading;
 
   return (
     <Box>
@@ -467,32 +369,51 @@ export const SettingsPage: React.FC = () => {
         </Typography>
       </Box>
 
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
       <Card>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable">
-            <Tab label={t("settings.profile")} icon={<PersonIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
-            <Tab label={t("settings.preferences")} icon={<PaletteIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
+            <Tab
+              label={t("settings.profile")}
+              icon={<PersonIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
+            />
+            <Tab
+              label={t("settings.preferences")}
+              icon={<PaletteIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
+            />
             <Tab
               label={t("settings.notifications")}
               icon={<NotificationsIcon />}
               iconPosition="start"
               sx={{ minHeight: 64 }}
             />
-            <Tab label={t("settings.apiKeys")} icon={<SecurityIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
-            <Tab label={t("settings.sessions")} icon={<AccountIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
-            <Tab label={t("settings.security")} icon={<SecurityIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
-            <Tab label={t("settings.account")} icon={<AccountIcon />} iconPosition="start" sx={{ minHeight: 64 }} />
+            <Tab
+              label={t("settings.apiKeys")}
+              icon={<SecurityIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
+            />
+            <Tab
+              label={t("settings.sessions")}
+              icon={<AccountIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
+            />
+            <Tab
+              label={t("settings.security")}
+              icon={<SecurityIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
+            />
+            <Tab
+              label={t("settings.account")}
+              icon={<AccountIcon />}
+              iconPosition="start"
+              sx={{ minHeight: 64 }}
+            />
           </Tabs>
         </Box>
 
@@ -504,7 +425,7 @@ export const SettingsPage: React.FC = () => {
               email={email}
               lastLogin={lastLogin}
               memberSince={memberSince}
-              disabled={isLoading || savingProfile}
+              disabled={isLoading || updateProfile.isPending}
               onFullNameChange={setFullName}
               onUsernameChange={setUsername}
               onEmailChange={setEmail}
@@ -525,7 +446,7 @@ export const SettingsPage: React.FC = () => {
               dateFormatOptions={dateFormatOptions}
               timeFormatOptions={timeFormatOptions}
               disabled={isLoading}
-              saving={savingPreferences}
+              saving={updatePreferences.isPending}
               onLanguageChange={handleLanguageChange}
               onToggleMode={handleToggleMode}
               onColorSelect={handleColorSelect}
@@ -546,7 +467,7 @@ export const SettingsPage: React.FC = () => {
               notifySystemAlert={notifySystemAlert}
               discordWebhook={discordWebhook}
               slackWebhook={slackWebhook}
-              disabled={isLoading || savingNotifications}
+              disabled={isLoading || updateNotificationSettings.isPending}
               onEmailNotificationsChange={setEmailNotifications}
               onNotifySuccessChange={setNotifySuccess}
               onNotifyFailureChange={setNotifyFailure}
@@ -587,9 +508,14 @@ export const SettingsPage: React.FC = () => {
               currentPassword={currentPassword}
               newPassword={newPassword}
               confirmPassword={confirmPassword}
-              disabled={isLoading || savingPassword}
-              twoFactorEnabled={twoFactorEnabled}
-              twoFactorLoading={twoFactorLoading}
+              disabled={isLoading || changePassword.isPending}
+              twoFactorEnabled={!!twoFAStatus?.enabled}
+              twoFactorLoading={
+                generate2FA.isPending ||
+                enable2FA.isPending ||
+                disable2FA.isPending ||
+                regenerateBackupCodes.isPending
+              }
               qrCodeUrl={twoFactorQr}
               secret={twoFactorSecret}
               backupCodes={backupCodes}

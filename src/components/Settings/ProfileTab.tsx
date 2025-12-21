@@ -1,36 +1,43 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Grid from "@mui/material/GridLegacy";
 import { Box, Button, Divider, TextField, Typography } from "@mui/material";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
+import { useUpdateProfile } from "@/hooks/useUserSettings";
 
 interface IProfileTabProps {
-  fullName: string;
-  username: string;
-  email: string;
-  lastLogin?: Date;
-  memberSince?: Date;
-  disabled?: boolean;
-  onFullNameChange: (value: string) => void;
-  onUsernameChange: (value: string) => void;
-  onEmailChange: (value: string) => void;
-  onSave: () => void;
   t: (key: string) => string;
 }
 
-export const ProfileTab: React.FC<IProfileTabProps> = ({
-  fullName,
-  username,
-  email,
-  lastLogin,
-  memberSince,
-  disabled,
-  onFullNameChange,
-  onUsernameChange,
-  onEmailChange,
-  onSave,
-  t,
-}) => {
+export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
   const { formatDateTime, formatDate } = useDateFormatter();
+  const { User, RefreshUser } = useAuth();
+  const { showSuccess, showError } = useToast();
+  const updateProfile = useUpdateProfile();
+
+  // Local state for form fields
+  const [username, setUsername] = useState(User?.Username || "");
+  const [email, setEmail] = useState(User?.Email || "");
+  const [fullName, setFullName] = useState(User?.FullName || "");
+
+  // Derived values - no need for state
+  const lastLogin = useMemo(() => User?.LastLogin, [User?.LastLogin]);
+  const memberSince = useMemo(() => User?.CreatedAt, [User?.CreatedAt]);
+
+  const handleSave = async () => {
+    updateProfile.mutate(
+      { Username: username, Email: email, FullName: fullName },
+      {
+        onSuccess: async () => {
+          await RefreshUser();
+          showSuccess(t("settings.profileUpdated"));
+        },
+        onError: () => showError(t("settings.saveFailed")),
+      }
+    );
+  };
+
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -44,8 +51,8 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             fullWidth
             label={t("settings.fullName")}
             value={fullName}
-            disabled={disabled}
-            onChange={(e) => onFullNameChange(e.target.value)}
+            disabled={updateProfile.isPending}
+            onChange={(e) => setFullName(e.target.value)}
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -53,8 +60,8 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             fullWidth
             label={t("settings.username")}
             value={username}
-            disabled={disabled}
-            onChange={(e) => onUsernameChange(e.target.value)}
+            disabled={updateProfile.isPending}
+            onChange={(e) => setUsername(e.target.value)}
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -63,8 +70,8 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
             label={t("settings.email")}
             type="email"
             value={email}
-            disabled={disabled}
-            onChange={(e) => onEmailChange(e.target.value)}
+            disabled={updateProfile.isPending}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </Grid>
         <Grid item xs={12} md={6} display="flex" alignItems="center">
@@ -88,7 +95,7 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({
           </Box>
         </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" onClick={onSave} disabled={disabled}>
+          <Button variant="contained" onClick={handleSave} disabled={updateProfile.isPending}>
             {t("settings.saveChanges")}
           </Button>
         </Grid>
