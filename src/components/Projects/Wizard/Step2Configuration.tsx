@@ -20,6 +20,7 @@ interface IStep2Props {
 
 export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) => {
     const paths = config.DeployOnPaths || [];
+    const ignorePatterns = config.SyncIgnorePatterns || [];
 
     const handleAddPath = () => {
         onChange({ DeployOnPaths: [...paths, ''] });
@@ -34,6 +35,21 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
         const newPaths = [...paths];
         newPaths[index] = value;
         onChange({ DeployOnPaths: newPaths });
+    };
+
+    const handleAddIgnorePattern = () => {
+        onChange({ SyncIgnorePatterns: [...ignorePatterns, ''] });
+    };
+
+    const handleRemoveIgnorePattern = (index: number) => {
+        const newPatterns = ignorePatterns.filter((_, i) => i !== index);
+        onChange({ SyncIgnorePatterns: newPatterns });
+    };
+
+    const handleIgnorePatternChange = (index: number, value: string) => {
+        const newPatterns = [...ignorePatterns];
+        newPatterns[index] = value;
+        onChange({ SyncIgnorePatterns: newPatterns });
     };
 
     return (
@@ -144,6 +160,96 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                         • <code>*.ts</code> - Any TypeScript file in root<br />
                         • <code>package.json</code> - Specific file<br />
                         • <code>!**/*.test.ts</code> - Exclude test files (add ! prefix)
+                    </Typography>
+                </Box>
+            </Box>
+
+            <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight="medium">
+                            Sync Ignore Patterns (Optional)
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            Files/folders to preserve during deployment sync (won't be overwritten)
+                        </Typography>
+                    </Box>
+                    <Button
+                        startIcon={<AddIcon />}
+                        onClick={handleAddIgnorePattern}
+                        variant="outlined"
+                        size="small"
+                    >
+                        Add Pattern
+                    </Button>
+                </Box>
+
+                {ignorePatterns.length === 0 ? (
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            p: 3,
+                            textAlign: 'center',
+                            bgcolor: 'background.default',
+                            borderStyle: 'dashed',
+                        }}
+                    >
+                        <Typography variant="body2" color="text.secondary">
+                            No ignore patterns configured. Only system files (.env, .htaccess, etc.) will be preserved.
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            Click "Add Pattern" to preserve custom files/folders (e.g., node_modules, Backup, Logs)
+                        </Typography>
+                    </Paper>
+                ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {ignorePatterns.map((pattern, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    gap: 1,
+                                }}
+                            >
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    value={pattern}
+                                    onChange={(e) => handleIgnorePatternChange(index, e.target.value)}
+                                    placeholder="e.g., node_modules, Backup, Logs, *.log"
+                                    helperText={
+                                        index === 0
+                                            ? "Files/folders to preserve (supports wildcards: *, **, ?)"
+                                            : undefined
+                                    }
+                                />
+                                <IconButton
+                                    color="error"
+                                    onClick={() => handleRemoveIgnorePattern(index)}
+                                    sx={{ mt: 0.5 }}
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Box>
+                        ))}
+                    </Box>
+                )}
+
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.lighter', borderRadius: 1 }}>
+                    <Typography variant="caption" fontWeight="medium" display="block" gutterBottom>
+                        Common Patterns:
+                    </Typography>
+                    <Typography variant="caption" component="div" color="text.secondary">
+                        • <code>node_modules</code> - Dependencies folder<br />
+                        • <code>Backup</code> - Backup files/folders<br />
+                        • <code>Logs</code> - Log files folder<br />
+                        • <code>*.log</code> - All log files<br />
+                        • <code>_RateLimits</code> - Rate limit data<br />
+                        • <code>uploads</code> - User uploads folder
+                    </Typography>
+                    <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                        Note: System files (.env, .htaccess, web.config, php.ini) are always preserved automatically.
                     </Typography>
                 </Box>
             </Box>

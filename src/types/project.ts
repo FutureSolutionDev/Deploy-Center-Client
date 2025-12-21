@@ -50,6 +50,7 @@ export interface IProjectConfig {
   Notifications?: INotificationConfig;
   HealthCheck?: IHealthCheckConfig;
   Url?: string;
+  SyncIgnorePatterns?: string[]; // Custom patterns to ignore during sync (e.g., node_modules, Backup, Logs)
 }
 
 export interface IPipelineStep {
