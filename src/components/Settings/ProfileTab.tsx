@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Box, Button, Divider, Grid, TextField, Typography } from "@mui/material";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,27 +16,23 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
   const { showSuccess, showError } = useToast();
   const updateProfile = useUpdateProfile();
 
-  // Local state for form fields
-  const [username, setUsername] = useState(User?.Username || "");
-  const [email, setEmail] = useState(User?.Email || "");
-  const [fullName, setFullName] = useState(User?.FullName || "");
+  // Local state for pending changes to avoid setState in useEffect
+  const [pendingChanges, setPendingChanges] = useState<{username?: string, email?: string, fullName?: string}>({});
 
   // Derived values - no need for state
   const lastLogin = useMemo(() => User?.LastLogin, [User?.LastLogin]);
   const memberSince = useMemo(() => User?.CreatedAt, [User?.CreatedAt]);
-  // Synchronize local state with User from context if it changes
-  useEffect(()=> {
-    if(User) {
-      setUsername(User?.Username || "");
-      setEmail(User?.Email || "");
-      setFullName(User?.FullName || "");
-    }
-  }, [User])
   const handleSave = async () => {
+    const data = {
+      Username: pendingChanges.username ?? User?.Username ?? "",
+      Email: pendingChanges.email ?? User?.Email ?? "",
+      FullName: pendingChanges.fullName ?? User?.FullName ?? "",
+    };
     updateProfile.mutate(
-      { Username: username, Email: email, FullName: fullName },
+      data,
       {
         onSuccess: async () => {
+          setPendingChanges({}); // clear pending changes
           await RefreshUser();
           showSuccess(t("settings.profileUpdated"));
         },
@@ -57,18 +53,18 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
           <TextField
             fullWidth
             label={t("settings.fullName")}
-            value={fullName}
+            value={pendingChanges.fullName ?? User?.FullName ?? ""}
             disabled={updateProfile.isPending}
-            onChange={(e) => setFullName(e.target.value)}
+            onChange={(e) => setPendingChanges(prev => ({...prev, fullName: e.target.value}))}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label={t("settings.username")}
-            value={username}
+            value={pendingChanges.username ?? User?.Username ?? ""}
             disabled={updateProfile.isPending}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setPendingChanges(prev => ({...prev, username: e.target.value}))}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -76,9 +72,9 @@ export const ProfileTab: React.FC<IProfileTabProps> = ({ t }) => {
             fullWidth
             label={t("settings.email")}
             type="email"
-            value={email}
+            value={pendingChanges.email ?? User?.Email ?? ""}
             disabled={updateProfile.isPending}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setPendingChanges(prev => ({...prev, email: e.target.value}))}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }} display="flex" alignItems="center">

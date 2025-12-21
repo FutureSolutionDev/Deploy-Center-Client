@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Divider, FormControlLabel, Grid, Switch, TextField, Typography } from "@mui/material";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -169,7 +169,7 @@ export const NotificationsTab: React.FC<INotificationsTabProps> = ({ t }) => {
 
         <Grid size={12}>
           <Button variant="contained" onClick={handleSave} disabled={isDisabled}>
-            {t("settings.saveNotificationSettings")}
+            {t("settings.saveChanges")}
           </Button>
           <Button
             variant="outlined"

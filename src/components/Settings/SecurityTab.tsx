@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Box, Button, Divider, Grid, Stack, TextField, Typography } from "@mui/material";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -154,7 +154,7 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({ t }) => {
             }}
             disabled={disabled}
           >
-            {t("settings.updatePassword")}
+            {t("settings.saveChanges")}
           </Button>
         </Grid>
 
