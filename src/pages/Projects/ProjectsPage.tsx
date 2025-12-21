@@ -69,25 +69,9 @@ export const ProjectsPage: React.FC = () => {
     setOpenDialog(true);
   };
 
-  const handleSaveProject = async (projectData: Partial<IProject>) => {
-    if (editingProject) {
-      await updateProject.mutateAsync(
-        { id: editingProject.Id, data: projectData },
-        {
-          onSuccess: () => {
-            showSuccess("Project updated successfully");
-            setOpenDialog(false);
-            setEditingProject(null);
-          },
-          onError: (error: Error) => {
-            throw new Error(error?.message || "Failed to update project");
-          },
-        }
-      );
-    } else {
-      // For create, the wizard will handle the mutation
-      throw new Error("Create functionality should use the wizard's internal mutation");
-    }
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingProject(null);
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, project: IProject) => {
@@ -354,7 +338,7 @@ export const ProjectsPage: React.FC = () => {
       {/* Create/Edit Project Wizard Dialog */}
       <Dialog
         open={openDialog}
-        onClose={() => setOpenDialog(false)}
+        onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
         PaperProps={{
@@ -364,8 +348,7 @@ export const ProjectsPage: React.FC = () => {
         {openDialog && (
           <ProjectWizard
             initialData={editingProject || undefined}
-            onClose={() => setOpenDialog(false)}
-            onSubmit={handleSaveProject}
+            onClose={handleCloseDialog}
           />
         )}
       </Dialog>

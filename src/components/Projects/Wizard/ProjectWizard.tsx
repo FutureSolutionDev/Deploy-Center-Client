@@ -12,6 +12,8 @@ import {
 } from '@mui/material';
 
 import type { IProject, IProjectConfig } from '@/types';
+import { useCreateProject, useUpdateProject } from '@/hooks/useProjects';
+import { useToast } from '@/contexts/ToastContext';
 import { Step1BasicInfo } from './Step1BasicInfo';
 import { Step2Configuration } from './Step2Configuration';
 import { Step3Pipeline } from './Step3Pipeline';
@@ -20,7 +22,6 @@ import { Step4Notifications } from './Step4Notifications';
 interface IProjectWizardProps {
     initialData?: Partial<IProject>;
     onClose: () => void;
-    onSubmit: (data: Partial<IProject>) => Promise<void>;
 }
 
 const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Notifications'];
@@ -28,12 +29,16 @@ const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Notifications'];
 export const ProjectWizard: React.FC<IProjectWizardProps> = ({
     initialData,
     onClose,
-    onSubmit,
 }) => {
+    const { showSuccess, showError } = useToast();
+    const createProject = useCreateProject();
+    const updateProject = useUpdateProject();
 
     const [activeStep, setActiveStep] = useState(0);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const isEditMode = !!initialData?.Id;
+    const loading = createProject.isPending || updateProject.isPending;
 
     const [formData, setFormData] = useState<Partial<IProject>>({
         Name: '',
@@ -67,7 +72,6 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
     };
 
     const handleSubmit = async () => {
-        setLoading(true);
         setError(null);
         try {
             // Ensure Branch is synced between root and Config
@@ -78,12 +82,25 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
                     Branch: formData.Branch || 'master',
                 },
             };
-            await onSubmit(dataToSubmit);
+
+            if (isEditMode) {
+                // Update existing project
+                await updateProject.mutateAsync({
+                    id: initialData.Id!,
+                    data: dataToSubmit,
+                });
+                showSuccess('Project updated successfully');
+            } else {
+                // Create new project
+                await createProject.mutateAsync(dataToSubmit);
+                showSuccess('Project created successfully');
+            }
+
             onClose();
         } catch (err: unknown) {
-            setError((err as any).message || 'Failed to save project');
-        } finally {
-            setLoading(false);
+            const errorMessage = (err as any).message || 'Failed to save project';
+            setError(errorMessage);
+            showError(errorMessage);
         }
     };
 
