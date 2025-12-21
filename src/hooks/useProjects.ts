@@ -1,13 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ProjectsService } from '@/services/projectsService';
-import type { IProject } from '@/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ProjectsService } from "@/services/projectsService";
+import type { IProject, IDeploymentRequest } from "@/types";
 
 /**
  * Custom hook to fetch all projects
  */
 export const useProjects = (includeInactive: boolean = false) => {
   return useQuery<IProject[], Error>({
-    queryKey: ['projects', { includeInactive }],
+    queryKey: ["projects", { includeInactive }],
     queryFn: () => ProjectsService.getAll(includeInactive),
   });
 };
@@ -17,7 +17,7 @@ export const useProjects = (includeInactive: boolean = false) => {
  */
 export const useProject = (id: number | undefined, enabled: boolean = true) => {
   return useQuery<IProject, Error>({
-    queryKey: ['projects', id],
+    queryKey: ["projects", id],
     queryFn: () => ProjectsService.getById(id!),
     enabled: enabled && id !== undefined,
   });
@@ -33,7 +33,7 @@ export const useCreateProject = () => {
     mutationFn: (data) => ProjectsService.create(data),
     onSuccess: () => {
       // Invalidate projects list to refetch
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 };
@@ -48,8 +48,8 @@ export const useUpdateProject = () => {
     mutationFn: ({ id, data }) => ProjectsService.update(id, data),
     onSuccess: (_, variables) => {
       // Invalidate both the specific project and projects list
-      queryClient.invalidateQueries({ queryKey: ['projects', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ["projects", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 };
@@ -64,7 +64,7 @@ export const useDeleteProject = () => {
     mutationFn: (id) => ProjectsService.delete(id),
     onSuccess: () => {
       // Invalidate projects list to refetch
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 };
@@ -76,11 +76,12 @@ export const useDeployProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data?: any }) => ProjectsService.deploy(id, data),
+    mutationFn: ({ id, data }: { id: number; data?: IDeploymentRequest }) =>
+      ProjectsService.deploy(id, data),
     onSuccess: () => {
       // Invalidate deployments to show the new deployment
-      queryClient.invalidateQueries({ queryKey: ['deployments'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ["deployments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 };
@@ -88,9 +89,12 @@ export const useDeployProject = () => {
 /**
  * Custom hook to get project statistics
  */
-export const useProjectStatistics = (id: number | undefined, enabled: boolean = true) => {
+export const useProjectStatistics = (
+  id: number | undefined,
+  enabled: boolean = true
+) => {
   return useQuery({
-    queryKey: ['projects', id, 'statistics'],
+    queryKey: ["projects", id, "statistics"],
     queryFn: () => ProjectsService.getStatistics(id!),
     enabled: enabled && id !== undefined,
   });
@@ -106,7 +110,7 @@ export const useRegenerateWebhook = () => {
     mutationFn: (id) => ProjectsService.regenerateWebhook(id),
     onSuccess: (_, id) => {
       // Invalidate the specific project to refetch with new webhook
-      queryClient.invalidateQueries({ queryKey: ['projects', id] });
+      queryClient.invalidateQueries({ queryKey: ["projects", id] });
     },
   });
 };

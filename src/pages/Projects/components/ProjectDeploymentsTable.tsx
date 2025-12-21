@@ -38,7 +38,7 @@ export const ProjectDeploymentsTable: React.FC<IProjectDeploymentsTableProps> = 
   const { t } = useTranslation();
 
   const getStatusChip = (status: string) => {
-    const statusConfig: Record<string, { color: any; icon: React.ReactElement }> = {
+    const statusConfig: Record<string, { color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"; icon: React.ReactElement }> = {
       success: { color: 'success', icon: <SuccessIcon fontSize="small" /> },
       failed: { color: 'error', icon: <ErrorIcon fontSize="small" /> },
       inProgress: { color: 'warning', icon: <ScheduleIcon fontSize="small" /> },

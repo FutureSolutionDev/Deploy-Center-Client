@@ -1,5 +1,5 @@
-import { io, Socket } from 'socket.io-client';
-import { Config } from '@/utils/config';
+import { io, Socket } from "socket.io-client";
+import { Config } from "@/utils/config";
 
 class SocketService {
   private static instance: SocketService;
@@ -15,7 +15,7 @@ class SocketService {
   }
 
   public connect(): Socket {
-    if (this.socket?.connected) {
+    if (this.socket) {
       return this.socket;
     }
 
@@ -23,19 +23,19 @@ class SocketService {
       withCredentials: true,
       autoConnect: true,
       path: Config.Socket.Path,
-      transports: ['websocket', 'polling'],
+      transports: ["websocket", "polling"],
     });
 
-    this.socket.on('connect', () => {
+    this.socket.on("connect", () => {
       // Connected
     });
 
-    this.socket.on('disconnect', () => {
+    this.socket.on("disconnect", () => {
       // Disconnected
     });
 
-    this.socket.on('connect_error', (err) => {
-      console.error('Socket connection error:', err);
+    this.socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
     });
 
     return this.socket;
@@ -53,11 +53,11 @@ class SocketService {
   }
 
   public joinProject(projectId: number): void {
-    this.socket?.emit('join:project', projectId);
+    this.socket?.emit("join:project", projectId);
   }
 
   public joinDeployment(deploymentId: number): void {
-    this.socket?.emit('join:deployment', deploymentId);
+    this.socket?.emit("join:deployment", deploymentId);
   }
 }
 

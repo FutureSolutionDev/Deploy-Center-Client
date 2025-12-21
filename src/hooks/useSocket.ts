@@ -2,37 +2,33 @@ import { useEffect, useState } from "react";
 import { socketService } from "../services/socket";
 import type { IDeployment } from "../types";
 
-// Single shared socket connection state
-let SharedSocket: any = null;
+// Single shared socket connection state - managed by SocketService
 const ConnectionListeners: Set<(connected: boolean) => void> = new Set();
 
 export const useSocket = () => {
+  // socketService is a singleton, so .connect() will return the same instance
+  const socket = socketService.connect();
+
   const [IsConnected, SetIsConnected] = useState(
-    () => SharedSocket?.connected || false
+    () => socket.connected || false
   );
 
   useEffect(() => {
-    // Only initialize socket once globally
-    if (!SharedSocket) {
-      SharedSocket = socketService.connect();
+    const onConnect = () => {
+      ConnectionListeners.forEach((listener) => listener(true));
+    };
 
-      const onConnect = () => {
-        ConnectionListeners.forEach((listener) => listener(true));
-      };
+    const onDisconnect = () => {
+      ConnectionListeners.forEach((listener) => listener(false));
+    };
 
-      const onDisconnect = () => {
-        ConnectionListeners.forEach((listener) => listener(false));
-      };
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
 
-      SharedSocket.on("connect", onConnect);
-      SharedSocket.on("disconnect", onDisconnect);
-      // Initial check
-      setTimeout(() => {
-        ConnectionListeners.forEach((listener) =>
-          listener(SharedSocket.connected)
-        );
-      }, 0);
-    }
+    // Initial check
+    setTimeout(() => {
+      ConnectionListeners.forEach((listener) => listener(socket.connected));
+    }, 0);
     // Subscribe this component to connection updates
     ConnectionListeners.add(SetIsConnected);
     // Set initial state - handled by useState initializer
@@ -41,9 +37,9 @@ export const useSocket = () => {
       // Unsubscribe when component unmounts
       ConnectionListeners.delete(SetIsConnected);
     };
-  }, []);
+  }, [socket]);
 
-  return { IsConnected, isConnected: IsConnected, socket: SharedSocket };
+  return { IsConnected, isConnected: IsConnected, socket };
 };
 
 export const useDeploymentUpdates = (projectId?: number) => {

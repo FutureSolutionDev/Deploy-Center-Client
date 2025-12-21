@@ -14,6 +14,7 @@ import {
     Divider,
     alpha,
     CircularProgress,
+    type Theme,
 } from "@mui/material";
 import {
     Download as DownloadIcon,
@@ -285,7 +286,7 @@ export const ReportsPage: React.FC = () => {
                                                     width: 200,
                                                     height: 200,
                                                     borderRadius: "50%",
-                                                    background: (theme: any) => `conic-gradient(
+                                                    background: (theme: Theme) => `conic-gradient(
                                                         ${theme.palette.success.main} 0% ${successPercent}%,
                                                         ${theme.palette.error.main} ${successPercent}% ${successPercent + failedPercent}%,
                                                         ${theme.palette.warning.main} ${successPercent + failedPercent}% 100%

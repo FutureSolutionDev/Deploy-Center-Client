@@ -63,7 +63,9 @@
     "recentDeployments": "عمليات النشر الأخيرة",
     "deploymentsTrend": "اتجاه عمليات النشر",
     "queueSize": "حجم قائمة الانتظار",
-    "globalStats": "الإحصائيات العامة"
+    "globalStats": "الإحصائيات العامة",
+    "noData": "لا توجد بيانات للوحة التحكم",
+    "noRecentDeployments": "لا توجد عمليات نشر حديثة"
   },
   "projects": {
     "title": "المشاريع",

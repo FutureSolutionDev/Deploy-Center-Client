@@ -63,7 +63,9 @@
     "recentDeployments": "Recent Deployments",
     "deploymentsTrend": "Deployments Trend",
     "queueSize": "Queue Size",
-    "globalStats": "Global Statistics"
+    "globalStats": "Global Statistics",
+    "noData": "No dashboard data available",
+    "noRecentDeployments": "No recent deployments"
   },
   "projects": {
     "title": "Projects",

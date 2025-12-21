@@ -72,7 +72,7 @@ export const DashboardPage: React.FC = () => {
   if (!data) {
     return (
       <Box sx={{ mt: 4 }}>
-        <Alert severity="info">No dashboard data available</Alert>
+        <Alert severity="info">{t('dashboard.noData')}</Alert>
       </Box>
     );
   }
@@ -170,7 +170,7 @@ export const DashboardPage: React.FC = () => {
         <Box sx={{ mt: 2 }}>
           {recentDeployments.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
-              No recent deployments
+              {t('dashboard.noRecentDeployments')}
             </Typography>
           ) : (
             recentDeployments.map((deployment) => (
