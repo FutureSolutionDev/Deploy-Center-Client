@@ -76,15 +76,15 @@ export const ProjectConfigCard: React.FC<IProjectConfigCardProps> = ({ project }
             </Grid>
           )}
 
-          {project.Config?.Variables?.BuildOutput && (
+          {(project.Config?.BuildOutput || project.Config?.Variables?.BuildOutput) && (
             <Grid size={{ xs: 6 }}>
               <Typography variant="caption" color="text.secondary">
-                {t('projects.buildOutput')}
+                Build Output Directory
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
                 <FolderIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
                 <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                  {project.Config.Variables.BuildOutput}
+                  {project.Config.BuildOutput || project.Config.Variables?.BuildOutput}
                 </Typography>
               </Box>
             </Grid>

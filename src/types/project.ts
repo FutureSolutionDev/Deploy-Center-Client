@@ -50,6 +50,7 @@ export interface IProjectConfig {
   Notifications?: INotificationConfig;
   HealthCheck?: IHealthCheckConfig;
   Url?: string;
+  BuildOutput?: string; // Build output directory to sync (e.g., 'build', 'dist' for React/Vue projects)
   SyncIgnorePatterns?: string[]; // Custom patterns to ignore during sync (e.g., node_modules, Backup, Logs)
   RsyncOptions?: string; // Custom rsync options (e.g., '--no-perms --no-owner --no-group --omit-dir-times')
 }
