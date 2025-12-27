@@ -122,6 +122,46 @@ export const ProjectConfigCard: React.FC<IProjectConfigCardProps> = ({ project }
               </Box>
             </Grid>
           )}
+
+          {project.Config?.SyncIgnorePatterns && project.Config.SyncIgnorePatterns.length > 0 && (
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                Sync Ignore Patterns
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                {project.Config.SyncIgnorePatterns.map((pattern, index) => (
+                  <Chip
+                    key={index}
+                    label={pattern}
+                    size="small"
+                    variant="outlined"
+                    color="warning"
+                    sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                  />
+                ))}
+              </Box>
+            </Grid>
+          )}
+
+          {project.Config?.RsyncOptions && (
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="caption" color="text.secondary">
+                Rsync Options
+              </Typography>
+              <Paper
+                variant="outlined"
+                sx={{
+                  mt: 0.5,
+                  p: 1,
+                  bgcolor: 'grey.50',
+                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
+                }}
+              >
+                {project.Config.RsyncOptions}
+              </Paper>
+            </Grid>
+          )}
         </Grid>
       </CardContent>
     </Card>

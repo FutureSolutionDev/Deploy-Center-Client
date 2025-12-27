@@ -66,6 +66,15 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                 helperText="Deployment environment (e.g., production, staging)"
             />
 
+            <TextField
+                fullWidth
+                label="Build Output Directory (Optional)"
+                value={config.BuildOutput || ''}
+                onChange={(e) => onChange({ BuildOutput: e.target.value })}
+                placeholder="build"
+                helperText="Directory to sync to production (e.g., 'build', 'dist' for React/Vue). Leave empty to sync entire project."
+            />
+
             <FormControlLabel
                 control={
                     <Switch
@@ -250,6 +259,43 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                     </Typography>
                     <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
                         Note: System files (.env, .htaccess, web.config, php.ini) are always preserved automatically.
+                    </Typography>
+                </Box>
+            </Box>
+
+            <Box>
+                <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+                    Advanced Rsync Options (Optional)
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                    Custom rsync command options for syncing files to production
+                </Typography>
+
+                <TextField
+                    fullWidth
+                    label="Rsync Options"
+                    value={config.RsyncOptions || ''}
+                    onChange={(e) => onChange({ RsyncOptions: e.target.value })}
+                    placeholder="-av --no-perms --no-owner --no-group --omit-dir-times --delete"
+                    helperText="Leave empty to use default options (-av --delete)"
+                    multiline
+                    rows={2}
+                />
+
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'info.lighter', borderRadius: 1 }}>
+                    <Typography variant="caption" fontWeight="medium" display="block" gutterBottom>
+                        Common Options:
+                    </Typography>
+                    <Typography variant="caption" component="div" color="text.secondary">
+                        • <code>-av --delete</code> - Default (archive mode with delete)<br />
+                        • <code>--no-perms</code> - Don't preserve permissions<br />
+                        • <code>--no-owner</code> - Don't preserve file ownership<br />
+                        • <code>--no-group</code> - Don't preserve group ownership<br />
+                        • <code>--omit-dir-times</code> - Don't update directory timestamps<br />
+                        • <code>--delete</code> - Delete files that don't exist in source
+                    </Typography>
+                    <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                        Example: <code>-av --no-perms --no-owner --no-group --omit-dir-times --delete</code>
                     </Typography>
                 </Box>
             </Box>
