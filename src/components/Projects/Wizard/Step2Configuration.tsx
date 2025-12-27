@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     TextField,
@@ -8,6 +8,8 @@ import {
     IconButton,
     Button,
     Paper,
+    Checkbox,
+    FormGroup,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -16,11 +18,77 @@ import type { IProjectConfig } from '@/types';
 interface IStep2Props {
     config: IProjectConfig;
     onChange: (config: Partial<IProjectConfig>) => void;
-}   
+}
+
+// Available rsync options
+interface IRsyncOption {
+    flag: string;
+    label: string;
+    description: string;
+    defaultEnabled: boolean;
+}
+
+const RSYNC_OPTIONS: IRsyncOption[] = [
+    { flag: '-a', label: 'Archive mode', description: 'Preserve permissions, timestamps, symlinks, etc. (includes -rlptgoD)', defaultEnabled: true },
+    { flag: '-v', label: 'Verbose', description: 'Show detailed output during sync', defaultEnabled: true },
+    { flag: '--delete', label: 'Delete extraneous files', description: 'Remove files from destination that don\'t exist in source', defaultEnabled: true },
+    { flag: '--no-perms', label: 'Don\'t preserve permissions', description: 'Ignore file permissions (useful for different systems)', defaultEnabled: false },
+    { flag: '--no-owner', label: 'Don\'t preserve owner', description: 'Ignore file ownership (recommended for different users)', defaultEnabled: false },
+    { flag: '--no-group', label: 'Don\'t preserve group', description: 'Ignore file group (recommended for different users)', defaultEnabled: false },
+    { flag: '--omit-dir-times', label: 'Omit directory times', description: 'Don\'t update directory timestamps (faster sync)', defaultEnabled: false },
+    { flag: '--compress', label: 'Compress during transfer', description: 'Compress data during transfer (slower but less bandwidth)', defaultEnabled: false },
+    { flag: '--progress', label: 'Show progress', description: 'Show progress during file transfer', defaultEnabled: false },
+    { flag: '--chmod=ugo=rwX', label: 'Set permissions (rwX)', description: 'Set read/write/execute permissions for all users', defaultEnabled: false },
+    { flag: '--checksum', label: 'Use checksum', description: 'Skip files based on checksum, not size/time (slower but more accurate)', defaultEnabled: false },
+    { flag: '--ignore-times', label: 'Ignore timestamps', description: 'Don\'t skip files that match size and time', defaultEnabled: false },
+];
 
 export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) => {
     const paths = config.DeployOnPaths || [];
     const ignorePatterns = config.SyncIgnorePatterns || [];
+
+    // Parse existing rsync options to determine which checkboxes should be checked
+    const parseRsyncOptions = (optionsString: string | undefined): Set<string> => {
+        if (!optionsString) return new Set(RSYNC_OPTIONS.filter(opt => opt.defaultEnabled).map(opt => opt.flag));
+
+        const flags = new Set<string>();
+        const parts = optionsString.trim().split(/\s+/);
+
+        for (const part of parts) {
+            // Match each known flag
+            RSYNC_OPTIONS.forEach(opt => {
+                if (part === opt.flag || part.startsWith(opt.flag)) {
+                    flags.add(opt.flag);
+                }
+            });
+        }
+
+        return flags;
+    };
+
+    const [selectedOptions, setSelectedOptions] = useState<Set<string>>(() =>
+        parseRsyncOptions(config.RsyncOptions)
+    );
+
+    // Update RsyncOptions whenever selected options change
+    useEffect(() => {
+        const optionsArray = Array.from(selectedOptions);
+        const optionsString = optionsArray.length > 0 ? optionsArray.join(' ') : '';
+        onChange({ RsyncOptions: optionsString || undefined });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedOptions]);
+
+    const handleOptionToggle = (flag: string) => {
+        setSelectedOptions(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(flag)) {
+                newSet.delete(flag);
+            } else {
+                newSet.add(flag);
+            }
+            return newSet;
+        });
+    };
 
     const handleAddPath = () => {
         onChange({ DeployOnPaths: [...paths, ''] });
@@ -66,14 +134,99 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                 helperText="Deployment environment (e.g., production, staging)"
             />
 
-            <TextField
-                fullWidth
-                label="Build Output Directory (Optional)"
-                value={config.BuildOutput || ''}
-                onChange={(e) => onChange({ BuildOutput: e.target.value })}
-                placeholder="build"
-                helperText="Directory to sync to production (e.g., 'build', 'dist' for React/Vue). Leave empty to sync entire project."
-            />
+            <Box>
+                <Typography variant="subtitle2" fontWeight="medium" gutterBottom>
+                    Build Output Directory (Optional)
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                    Select the directory to sync to production, or leave empty to sync entire project
+                </Typography>
+
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    {[
+                        { value: null, label: 'Entire Project', description: 'Sync all files (Node.js projects)' },
+                        { value: 'build', label: 'build/', description: 'React (CRA) default output' },
+                        { value: 'dist', label: 'dist/', description: 'Vite, Vue, Angular output' },
+                        { value: '.next', label: '.next/', description: 'Next.js output' },
+                        { value: 'out', label: 'out/', description: 'Next.js static export' },
+                        { value: 'public', label: 'public/', description: 'Static files only' },
+                    ].map((option) => {
+                        const isSelected = (config.BuildOutput || null) === option.value;
+                        return (
+                            <Paper
+                                key={option.value || 'entire'}
+                                variant="outlined"
+                                sx={{
+                                    p: 1.5,
+                                    cursor: 'pointer',
+                                    flex: '1 1 calc(50% - 8px)',
+                                    minWidth: '200px',
+                                    border: isSelected ? 2 : 1,
+                                    borderColor: isSelected ? 'primary.main' : 'divider',
+                                    bgcolor: isSelected ? 'primary.lighter' : 'background.paper',
+                                    transition: 'all 0.2s',
+                                    '&:hover': {
+                                        borderColor: 'primary.main',
+                                        bgcolor: 'primary.lighter',
+                                    },
+                                }}
+                                onClick={() => onChange({ BuildOutput: option.value || undefined })}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                    <Box
+                                        sx={{
+                                            width: 18,
+                                            height: 18,
+                                            borderRadius: '50%',
+                                            border: 2,
+                                            borderColor: isSelected ? 'primary.main' : 'divider',
+                                            bgcolor: isSelected ? 'primary.main' : 'transparent',
+                                            mr: 1,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        {isSelected && (
+                                            <Box
+                                                sx={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: '50%',
+                                                    bgcolor: 'white',
+                                                }}
+                                            />
+                                        )}
+                                    </Box>
+                                    <Typography
+                                        variant="body2"
+                                        fontWeight="medium"
+                                        sx={{
+                                            fontFamily: option.value ? 'monospace' : 'inherit',
+                                            color: isSelected ? 'primary.main' : 'text.primary',
+                                        }}
+                                    >
+                                        {option.label}
+                                    </Typography>
+                                </Box>
+                                <Typography variant="caption" color="text.secondary" sx={{ ml: 3.5 }}>
+                                    {option.description}
+                                </Typography>
+                            </Paper>
+                        );
+                    })}
+                </Box>
+
+                <TextField
+                    fullWidth
+                    size="small"
+                    label="Custom Directory"
+                    value={config.BuildOutput && !['build', 'dist', '.next', 'out', 'public'].includes(config.BuildOutput) ? config.BuildOutput : ''}
+                    onChange={(e) => onChange({ BuildOutput: e.target.value || undefined })}
+                    placeholder="custom-output"
+                    helperText="Or enter a custom directory name"
+                />
+            </Box>
 
             <FormControlLabel
                 control={
@@ -268,36 +421,75 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                     Advanced Rsync Options (Optional)
                 </Typography>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-                    Custom rsync command options for syncing files to production
+                    Select rsync options for syncing files to production
                 </Typography>
 
-                <TextField
-                    fullWidth
-                    label="Rsync Options"
-                    value={config.RsyncOptions || ''}
-                    onChange={(e) => onChange({ RsyncOptions: e.target.value })}
-                    placeholder="-av --no-perms --no-owner --no-group --omit-dir-times --delete"
-                    helperText="Leave empty to use default options (-av --delete)"
-                    multiline
-                    rows={2}
-                />
+                <Paper
+                    variant="outlined"
+                    sx={{
+                        p: 2,
+                        bgcolor: 'background.default',
+                    }}
+                >
+                    <FormGroup>
+                        {RSYNC_OPTIONS.map((option) => (
+                            <FormControlLabel
+                                key={option.flag}
+                                control={
+                                    <Checkbox
+                                        checked={selectedOptions.has(option.flag)}
+                                        onChange={() => handleOptionToggle(option.flag)}
+                                        size="small"
+                                    />
+                                }
+                                label={
+                                    <Box>
+                                        <Typography variant="body2" fontWeight="medium">
+                                            {option.label}
+                                            <Typography
+                                                component="span"
+                                                variant="caption"
+                                                sx={{
+                                                    ml: 1,
+                                                    fontFamily: 'monospace',
+                                                    color: 'primary.main',
+                                                    bgcolor: 'primary.lighter',
+                                                    px: 0.5,
+                                                    py: 0.25,
+                                                    borderRadius: 0.5,
+                                                }}
+                                            >
+                                                {option.flag}
+                                            </Typography>
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary" display="block">
+                                            {option.description}
+                                        </Typography>
+                                    </Box>
+                                }
+                                sx={{ mb: 1.5, alignItems: 'flex-start' }}
+                            />
+                        ))}
+                    </FormGroup>
+                </Paper>
 
-                <Box sx={{ mt: 2, p: 2, bgcolor: 'info.lighter', borderRadius: 1 }}>
-                    <Typography variant="caption" fontWeight="medium" display="block" gutterBottom>
-                        Common Options:
-                    </Typography>
-                    <Typography variant="caption" component="div" color="text.secondary">
-                        • <code>-av --delete</code> - Default (archive mode with delete)<br />
-                        • <code>--no-perms</code> - Don't preserve permissions<br />
-                        • <code>--no-owner</code> - Don't preserve file ownership<br />
-                        • <code>--no-group</code> - Don't preserve group ownership<br />
-                        • <code>--omit-dir-times</code> - Don't update directory timestamps<br />
-                        • <code>--delete</code> - Delete files that don't exist in source
-                    </Typography>
-                    <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                        Example: <code>-av --no-perms --no-owner --no-group --omit-dir-times --delete</code>
-                    </Typography>
-                </Box>
+                {selectedOptions.size > 0 && (
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'success.lighter', borderRadius: 1 }}>
+                        <Typography variant="caption" fontWeight="medium" display="block" gutterBottom>
+                            Generated Command:
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                fontFamily: 'monospace',
+                                color: 'success.dark',
+                                wordBreak: 'break-word',
+                            }}
+                        >
+                            rsync {Array.from(selectedOptions).join(' ')}
+                        </Typography>
+                    </Box>
+                )}
             </Box>
         </Box>
     );
