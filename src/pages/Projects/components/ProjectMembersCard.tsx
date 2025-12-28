@@ -66,14 +66,14 @@ export const ProjectMembersCard: React.FC<IProjectMembersCardProps> = ({
     try {
       // Fetch all users from backend
       const response = await ApiInstance.get("/users");
-      const allUsers = response.data.Data?.Users || [];
+      const allUsers = response.data.Data || [];
 
       // Filter out users who are already members
       const memberUserIds = members.map((m: any) => m.UserId);
       const filtered = allUsers.filter((u: IUser) => !memberUserIds.includes(u.Id));
       setAvailableUsers(filtered);
-    } catch (error) {
-      showError("Failed to load users");
+    } catch (error: any) {
+      showError(error?.message || "Failed to load users");
     } finally {
       setLoadingUsers(false);
     }
@@ -188,10 +188,10 @@ export const ProjectMembersCard: React.FC<IProjectMembersCardProps> = ({
                             member.User?.Role === "Admin"
                               ? "error"
                               : member.User?.Role === "Manager"
-                              ? "warning"
-                              : member.User?.Role === "Developer"
-                              ? "success"
-                              : "default"
+                                ? "warning"
+                                : member.User?.Role === "Developer"
+                                  ? "success"
+                                  : "default"
                           }
                         />
                       </TableCell>
