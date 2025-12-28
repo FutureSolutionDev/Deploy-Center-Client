@@ -5,3 +5,4 @@ export { ProjectPipelineCard } from './ProjectPipelineCard';
 export { ProjectStatsCard } from './ProjectStatsCard';
 export { ProjectDeploymentsTable } from './ProjectDeploymentsTable';
 export { ProjectWebhookCard } from './ProjectWebhookCard';
+export { ProjectMembersCard } from './ProjectMembersCard';

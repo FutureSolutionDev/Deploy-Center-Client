@@ -40,6 +40,7 @@ import {
   ProjectStatsCard,
   ProjectDeploymentsTable,
   ProjectWebhookCard,
+  ProjectMembersCard,
 } from "./components";
 
 export const ProjectDetailsPage: React.FC = () => {
@@ -48,7 +49,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormatter();
   const { showSuccess, showError } = useToast();
-  const { isViewer } = useRole();
+  const { isViewer, canManageProjects } = useRole();
 
   // React Query hooks
   const { data: project, isLoading, error, refetch } = useProject(Number(id));
@@ -225,6 +226,9 @@ export const ProjectDetailsPage: React.FC = () => {
               />
               <SshKeyManagement project={project} onUpdate={() => refetch()} />
             </>
+          )}
+          {canManageProjects && (
+            <ProjectMembersCard projectId={project.Id} projectName={project.Name} />
           )}
         </Grid>
       </Grid>

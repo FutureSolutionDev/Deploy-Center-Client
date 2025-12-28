@@ -124,6 +124,36 @@ export const ProjectsService = {
   toggleSshKeyUsage: async (id: number, enabled: boolean): Promise<void> => {
     await ApiInstance.patch(`/projects/${id}/ssh-key/toggle`, { enabled });
   },
+
+  // ========================================
+  // PROJECT MEMBER MANAGEMENT METHODS
+  // ========================================
+
+  /**
+   * Get all members of a project
+   * GET /api/projects/:id/members
+   */
+  getMembers: async (projectId: number): Promise<any[]> => {
+    const response = await ApiInstance.get(`/projects/${projectId}/members`);
+    return response.data.Data || [];
+  },
+
+  /**
+   * Add a member to a project
+   * POST /api/projects/:id/members
+   */
+  addMember: async (projectId: number, userId: number, role: string): Promise<any> => {
+    const response = await ApiInstance.post(`/projects/${projectId}/members`, { userId, role });
+    return response.data.Data;
+  },
+
+  /**
+   * Remove a member from a project
+   * DELETE /api/projects/:id/members/:userId
+   */
+  removeMember: async (projectId: number, userId: number): Promise<void> => {
+    await ApiInstance.delete(`/projects/${projectId}/members/${userId}`);
+  },
 };
 
 

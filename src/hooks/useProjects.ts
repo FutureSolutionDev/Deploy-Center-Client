@@ -114,3 +114,46 @@ export const useRegenerateWebhook = () => {
     },
   });
 };
+
+/**
+ * Custom hook to get project members
+ */
+export const useProjectMembers = (projectId: number | undefined, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "members"],
+    queryFn: () => ProjectsService.getMembers(projectId!),
+    enabled: enabled && projectId !== undefined,
+  });
+};
+
+/**
+ * Custom hook to add a member to a project
+ */
+export const useAddProjectMember = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, userId, role }: { projectId: number; userId: number; role: string }) =>
+      ProjectsService.addMember(projectId, userId, role),
+    onSuccess: (_, variables) => {
+      // Invalidate project members to refetch
+      queryClient.invalidateQueries({ queryKey: ["projects", variables.projectId, "members"] });
+    },
+  });
+};
+
+/**
+ * Custom hook to remove a member from a project
+ */
+export const useRemoveProjectMember = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, userId }: { projectId: number; userId: number }) =>
+      ProjectsService.removeMember(projectId, userId),
+    onSuccess: (_, variables) => {
+      // Invalidate project members to refetch
+      queryClient.invalidateQueries({ queryKey: ["projects", variables.projectId, "members"] });
+    },
+  });
+};
