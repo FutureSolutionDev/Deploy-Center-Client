@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/contexts/ToastContext';
+import { useRole } from '@/contexts/RoleContext';
 import { useDeployments, useCancelDeployment } from '@/hooks/useDeployments';
 import { useSocket, useDeploymentEvents } from '@/hooks/useSocket';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
@@ -40,6 +41,7 @@ export const QueuePage: React.FC = () => {
     const { t } = useTranslation();
     const { formatDateTime } = useDateFormatter();
     const { showSuccess, showError } = useToast();
+    const { canDeploy } = useRole();
 
     // React Query hooks
     const { data: allDeployments = [], isLoading, error, refetch } = useDeployments();
@@ -187,15 +189,17 @@ export const QueuePage: React.FC = () => {
                     >
                         {t('deployments.refresh')}
                     </Button>
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<CancelAllIcon />}
-                        onClick={handleCancelAll}
-                        disabled={queue.length === 0 || cancelDeployment.isPending}
-                    >
-                        {t('deployments.cancelAll')}
-                    </Button>
+                    {canDeploy && (
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<CancelAllIcon />}
+                            onClick={handleCancelAll}
+                            disabled={queue.length === 0 || cancelDeployment.isPending}
+                        >
+                            {t('deployments.cancelAll')}
+                        </Button>
+                    )}
                 </Box>
             </Box>
 
@@ -242,16 +246,18 @@ export const QueuePage: React.FC = () => {
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Tooltip title={t('deployments.cancel')}>
-                                            <IconButton
-                                                size="small"
-                                                color="error"
-                                                onClick={() => handleCancelOne(deployment)}
-                                                disabled={deployment.Status === 'inProgress' || cancelDeployment.isPending}
-                                            >
-                                                <CancelIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                        {canDeploy && (
+                                            <Tooltip title={t('deployments.cancel')}>
+                                                <IconButton
+                                                    size="small"
+                                                    color="error"
+                                                    onClick={() => handleCancelOne(deployment)}
+                                                    disabled={deployment.Status === 'inProgress' || cancelDeployment.isPending}
+                                                >
+                                                    <CancelIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}

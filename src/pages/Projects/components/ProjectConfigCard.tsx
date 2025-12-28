@@ -66,7 +66,6 @@ export const ProjectConfigCard: React.FC<IProjectConfigCardProps> = ({ project }
                 sx={{
                   mt: 0.5,
                   p: 1,
-                  bgcolor: 'grey.50',
                   fontFamily: 'monospace',
                   fontSize: '0.875rem',
                 }}
@@ -153,7 +152,6 @@ export const ProjectConfigCard: React.FC<IProjectConfigCardProps> = ({ project }
                 sx={{
                   mt: 0.5,
                   p: 1,
-                  bgcolor: 'grey.50',
                   fontFamily: 'monospace',
                   fontSize: '0.875rem',
                 }}

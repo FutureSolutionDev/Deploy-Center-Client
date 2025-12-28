@@ -215,13 +215,17 @@ export const ProjectDetailsPage: React.FC = () => {
             deployments={projectDeployments}
             formatDateTime={formatDateTime}
           />
-          <ProjectWebhookCard
-            project={project}
-            onRegenerateWebhook={handleRegenerateWebhook}
-            onCopyToClipboard={copyToClipboard}
-            regeneratingWebhook={regenerateWebhook.isPending}
-          />
-          <SshKeyManagement project={project} onUpdate={() => refetch()} />
+          {!isViewer && (
+            <>
+              <ProjectWebhookCard
+                project={project}
+                onRegenerateWebhook={handleRegenerateWebhook}
+                onCopyToClipboard={copyToClipboard}
+                regeneratingWebhook={regenerateWebhook.isPending}
+              />
+              <SshKeyManagement project={project} onUpdate={() => refetch()} />
+            </>
+          )}
         </Grid>
       </Grid>
 

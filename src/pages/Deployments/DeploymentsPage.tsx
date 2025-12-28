@@ -34,6 +34,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/contexts/ToastContext";
+import { useRole } from "@/contexts/RoleContext";
 import { useDeployments, useCancelDeployment, useRetryDeployment } from "@/hooks/useDeployments";
 import { useSocket, useDeploymentEvents } from "@/hooks/useSocket";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
@@ -43,6 +44,7 @@ export const DeploymentsPage: React.FC = () => {
   const { t } = useLanguage();
   const { formatDateTime } = useDateFormatter();
   const { showSuccess, showError } = useToast();
+  const { canDeploy } = useRole();
 
   // React Query hooks
   const { data: deployments = [], isLoading, error, refetch } = useDeployments();
@@ -309,7 +311,7 @@ export const DeploymentsPage: React.FC = () => {
                       {t("deployments.viewLogs")}
                     </Button>
 
-                    {(deployment.Status === 'queued' || deployment.Status === 'inProgress') && (
+                    {canDeploy && (deployment.Status === 'queued' || deployment.Status === 'inProgress') && (
                       <Button
                         size="small"
                         color="error"
@@ -322,7 +324,7 @@ export const DeploymentsPage: React.FC = () => {
                       </Button>
                     )}
 
-                    {deployment.Status === 'failed' && (
+                    {canDeploy && deployment.Status === 'failed' && (
                       <Button
                         size="small"
                         color="warning"
