@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, Divider } from '@mui/material';
-import { GitHub as GitHubIcon } from '@mui/icons-material';
+import { Box, Card, CardContent, Typography, Divider, Chip, Stack } from '@mui/material';
+import { GitHub as GitHubIcon, Folder as FolderIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import type { IProject } from '@/types';
 
@@ -14,6 +14,13 @@ export const ProjectInfoCard: React.FC<IProjectInfoCardProps> = ({
   formatDateTime,
 }) => {
   const { t } = useTranslation();
+
+  // Get deployment paths (backward compatibility)
+  const deploymentPaths = project.DeploymentPaths && project.DeploymentPaths.length > 0
+    ? project.DeploymentPaths
+    : project.ProjectPath
+    ? [project.ProjectPath]
+    : [];
 
   return (
     <Card sx={{ mb: 1 }}>
@@ -49,6 +56,30 @@ export const ProjectInfoCard: React.FC<IProjectInfoCardProps> = ({
           <Typography variant="body1" sx={{ fontWeight: 500, mt: 0.5 }}>
             {project.ProjectType}
           </Typography>
+        </Box>
+
+        <Box sx={{ mb: 0.5 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <FolderIcon sx={{ fontSize: 14 }} />
+            {deploymentPaths.length > 1 ? 'Deployment Paths' : 'Deployment Path'}
+          </Typography>
+          <Stack spacing={1} sx={{ mt: 0.5 }}>
+            {deploymentPaths.map((path, index) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {deploymentPaths.length > 1 && (
+                  <Chip
+                    label={index === 0 ? 'Primary' : `#${index + 1}`}
+                    size="small"
+                    color={index === 0 ? 'primary' : 'default'}
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />
+                )}
+                <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                  {path}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
         </Box>
 
         <Box sx={{ mb: 0.5 }}>

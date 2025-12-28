@@ -46,6 +46,7 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
         RepoUrl: '',
         Branch: 'master',
         ProjectPath: '',
+        DeploymentPaths: [],
         ProjectType: 'node',  // Must match server enum: 'node', 'static', or 'docker'
         Config: {
             Branch: 'master',

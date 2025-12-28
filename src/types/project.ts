@@ -19,7 +19,8 @@ export interface IProject {
   Description?: string;
   RepoUrl: string;
   Branch: string;
-  ProjectPath: string;
+  ProjectPath: string; // Deprecated: kept for backward compatibility, use DeploymentPaths instead
+  DeploymentPaths?: string[]; // Array of deployment paths (replaces single ProjectPath)
   ProjectType: TProjectType;
   WebhookSecret: string;
   IsActive: boolean;
