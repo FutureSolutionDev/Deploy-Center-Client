@@ -34,6 +34,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/contexts/ToastContext";
+import { useRole } from "@/contexts/RoleContext";
 import {
   useProjects,
   useUpdateProject,
@@ -48,6 +49,7 @@ export const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { showSuccess, showError } = useToast();
+  const { canManageProjects, canDeploy, isViewer } = useRole();
 
   // React Query hooks
   const { data: projects = [], isLoading, error, refetch } = useProjects(true);
@@ -176,14 +178,16 @@ export const ProjectsPage: React.FC = () => {
           >
             {t("common.refresh")}
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{ height: "2.5rem" }}
-          >
-            {t("projects.createProject")}
-          </Button>
+          {canManageProjects && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+              sx={{ height: "2.5rem" }}
+            >
+              {t("projects.createProject")}
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -211,13 +215,15 @@ export const ProjectsPage: React.FC = () => {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Create your first project to get started
                 </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => handleOpenDialog()}
-                >
-                  {t("projects.createProject")}
-                </Button>
+                {canManageProjects && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleOpenDialog()}
+                  >
+                    {t("projects.createProject")}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -287,18 +293,22 @@ export const ProjectsPage: React.FC = () => {
                         >
                           {t("projects.viewDetails")}
                         </Button>
-                        <Button
-                          size="small"
-                          startIcon={<DeployIcon />}
-                          onClick={() => handleOpenDeploy(project)}
-                          color="primary"
-                        >
-                          {t("projects.deploy")}
-                        </Button>
+                        {canDeploy && (
+                          <Button
+                            size="small"
+                            startIcon={<DeployIcon />}
+                            onClick={() => handleOpenDeploy(project)}
+                            color="primary"
+                          >
+                            {t("projects.deploy")}
+                          </Button>
+                        )}
                       </Box>
-                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, project)}>
-                        <MoreVertIcon />
-                      </IconButton>
+                      {!isViewer && (
+                        <IconButton size="small" onClick={(e) => handleMenuOpen(e, project)}>
+                          <MoreVertIcon />
+                        </IconButton>
+                      )}
                     </CardActions>
                   </Card>
                 </Grid>

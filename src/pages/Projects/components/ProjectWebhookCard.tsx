@@ -18,6 +18,7 @@ import {
   Autorenew as RegenerateIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useRole } from '@/contexts/RoleContext';
 import type { IProject } from '@/types';
 
 interface IProjectWebhookCardProps {
@@ -34,6 +35,7 @@ export const ProjectWebhookCard: React.FC<IProjectWebhookCardProps> = ({
   regeneratingWebhook,
 }) => {
   const { t } = useTranslation();
+  const { canManageProjects } = useRole();
   const [showWebhook, setShowWebhook] = useState(false);
 
   return (
@@ -73,18 +75,20 @@ export const ProjectWebhookCard: React.FC<IProjectWebhookCardProps> = ({
           sx={{ mb: 0.5 }}
         />
 
-        <Button
-          variant="outlined"
-          color="warning"
-          startIcon={
-            regeneratingWebhook ? <CircularProgress size={20} /> : <RegenerateIcon />
-          }
-          onClick={onRegenerateWebhook}
-          disabled={regeneratingWebhook}
-          fullWidth
-        >
-          {t('projects.regenerateSecret')}
-        </Button>
+        {canManageProjects && (
+          <Button
+            variant="outlined"
+            color="warning"
+            startIcon={
+              regeneratingWebhook ? <CircularProgress size={20} /> : <RegenerateIcon />
+            }
+            onClick={onRegenerateWebhook}
+            disabled={regeneratingWebhook}
+            fullWidth
+          >
+            {t('projects.regenerateSecret')}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

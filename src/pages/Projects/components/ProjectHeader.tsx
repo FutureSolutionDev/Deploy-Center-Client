@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useRole } from '@/contexts/RoleContext';
 import type { IProject } from '@/types';
 
 interface IProjectHeaderProps {
@@ -41,6 +42,7 @@ export const ProjectHeader: React.FC<IProjectHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { canManageProjects, canDeploy } = useRole();
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -70,46 +72,52 @@ export const ProjectHeader: React.FC<IProjectHeaderProps> = ({
           <IconButton onClick={onRefresh}>
             <RefreshIcon />
           </IconButton>
-          <Button
-            variant="outlined"
-            startIcon={<EditIcon />}
-            onClick={() => navigate(`/projects/edit/${project.Id}`)}
-          >
-            {t('common.edit')}
-          </Button>
-          <Button
-            variant="outlined"
-            color={project.IsActive ? 'warning' : 'success'}
-            startIcon={
-              togglingActive ? (
-                <CircularProgress size={20} />
-              ) : project.IsActive ? (
-                <PowerOffIcon />
-              ) : (
-                <PowerIcon />
-              )
-            }
-            onClick={onToggleActive}
-            disabled={togglingActive}
-          >
-            {project.IsActive ? t('common.deactivate') : t('common.activate')}
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={onDelete}
-          >
-            {t('common.delete')}
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<DeployIcon />}
-            onClick={onDeploy}
-            disabled={deploying || !project.IsActive}
-          >
-            {t('projects.deployNow')}
-          </Button>
+          {canManageProjects && (
+            <>
+              <Button
+                variant="outlined"
+                startIcon={<EditIcon />}
+                onClick={() => navigate(`/projects/edit/${project.Id}`)}
+              >
+                {t('common.edit')}
+              </Button>
+              <Button
+                variant="outlined"
+                color={project.IsActive ? 'warning' : 'success'}
+                startIcon={
+                  togglingActive ? (
+                    <CircularProgress size={20} />
+                  ) : project.IsActive ? (
+                    <PowerOffIcon />
+                  ) : (
+                    <PowerIcon />
+                  )
+                }
+                onClick={onToggleActive}
+                disabled={togglingActive}
+              >
+                {project.IsActive ? t('common.deactivate') : t('common.activate')}
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={onDelete}
+              >
+                {t('common.delete')}
+              </Button>
+            </>
+          )}
+          {canDeploy && (
+            <Button
+              variant="contained"
+              startIcon={<DeployIcon />}
+              onClick={onDeploy}
+              disabled={deploying || !project.IsActive}
+            >
+              {t('projects.deployNow')}
+            </Button>
+          )}
         </Box>
       </Box>
     </Box>

@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -16,7 +16,6 @@ import {
   CircularProgress,
   InputAdornment,
   IconButton,
-  Link,
 } from "@mui/material";
 import {
   Visibility,
@@ -272,15 +271,6 @@ export const LoginPage: React.FC = () => {
             >
               {Loading ? t("auth.loggingIn") : t("auth.login")}
             </Button>
-
-            <Box sx={{ textAlign: "center" }}>
-              <Typography variant="body2" color="text.secondary">
-                {t("auth.noAccount")}{" "}
-                <Link component={RouterLink} to="/register" underline="hover">
-                  {t("auth.register")}
-                </Link>
-              </Typography>
-            </Box>
           </form>
         </CardContent>
       </Card>
