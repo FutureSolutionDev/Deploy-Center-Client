@@ -1,8 +1,23 @@
 {
-  "name": "client",
+  "name": "deploy-center-client",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.1.0",
+  "description": "Deploy Center - Frontend Application | Comprehensive deployment automation platform with real-time monitoring, RBAC, and CI/CD integration",
   "type": "module",
+  "author": "Deploy Center Team",
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": [
+    "deployment",
+    "ci-cd",
+    "automation",
+    "react",
+    "material-ui",
+    "devops",
+    "webhook",
+    "github",
+    "deployment-platform",
+    "continuous-deployment"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
