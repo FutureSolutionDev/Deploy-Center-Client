@@ -9,11 +9,11 @@ import {
 } from "@mui/icons-material";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRole } from "@/contexts/RoleContext";
+import { UserRole } from "@/contexts/RoleContext";
 import ProfileTab from "@/components/Settings/ProfileTab";
 import PreferencesTab from "@/components/Settings/PreferencesTab";
 import NotificationsTab from "@/components/Settings/NotificationsTab";
 import SecurityTab from "@/components/Settings/SecurityTab";
-import AccountTab from "@/components/Settings/AccountTab";
 import ApiKeysTab from "@/components/Settings/ApiKeysTab";
 import SessionsTab from "@/components/Settings/SessionsTab";
 
@@ -35,12 +35,12 @@ interface ITabConfig {
   label: string;
   icon: React.ReactElement;
   component: React.ReactElement;
-  allowedForViewer: boolean;
+  allowedRoles?: UserRole[]; // If not specified, allowed for all roles
 }
 
 export const SettingsPage: React.FC = () => {
   const { t } = useLanguage();
-  const { isViewer } = useRole();
+  const { role } = useRole();
   const [tabValue, setTabValue] = useState(0);
 
   // Define all tabs with role permissions
@@ -49,53 +49,51 @@ export const SettingsPage: React.FC = () => {
       label: t("settings.profile"),
       icon: <PersonIcon />,
       component: <ProfileTab t={t} />,
-      allowedForViewer: true,
+      // Allowed for all roles
     },
     {
       label: t("settings.preferences"),
       icon: <PaletteIcon />,
       component: <PreferencesTab t={t} />,
-      allowedForViewer: true,
+      // Allowed for all roles
     },
     {
       label: t("settings.notifications"),
       icon: <NotificationsIcon />,
       component: <NotificationsTab t={t} />,
-      allowedForViewer: true,
+      // Allowed for all roles
     },
     {
       label: t("settings.apiKeys"),
       icon: <SecurityIcon />,
       component: <ApiKeysTab t={t} />,
-      allowedForViewer: false, // API Keys hidden from Viewer
+      allowedRoles: [UserRole.Admin, UserRole.Manager], // Only Admin and Manager
     },
     {
       label: t("settings.sessions"),
       icon: <AccountIcon />,
       component: <SessionsTab t={t} />,
-      allowedForViewer: true, // Sessions are personal, allowed
+      // Allowed for all roles (personal security)
     },
     {
       label: t("settings.security"),
       icon: <SecurityIcon />,
       component: <SecurityTab t={t} />,
-      allowedForViewer: true,
-    },
-    {
-      label: t("settings.account"),
-      icon: <AccountIcon />,
-      component: <AccountTab t={t} />,
-      allowedForViewer: false, // Delete Account hidden from Viewer
+      // Allowed for all roles
     },
   ], [t]);
 
   // Filter tabs based on user role
   const visibleTabs = useMemo(() => {
-    if (isViewer) {
-      return allTabs.filter(tab => tab.allowedForViewer);
-    }
-    return allTabs;
-  }, [allTabs, isViewer]);
+    return allTabs.filter(tab => {
+      // If no allowedRoles specified, tab is allowed for all roles
+      if (!tab.allowedRoles) {
+        return true;
+      }
+      // Check if current user role is in the allowed roles list
+      return role ? tab.allowedRoles.includes(role) : false;
+    });
+  }, [allTabs, role]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => setTabValue(newValue);
 
