@@ -371,7 +371,6 @@ export const UsersManagementPage: React.FC = () => {
                 label="Role"
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
-                <MenuItem value="admin">Admin</MenuItem>
                 <MenuItem value="manager">Manager</MenuItem>
                 <MenuItem value="developer">Developer</MenuItem>
                 <MenuItem value="viewer">Viewer</MenuItem>
