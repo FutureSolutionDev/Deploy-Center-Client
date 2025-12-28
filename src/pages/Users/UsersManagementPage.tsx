@@ -75,7 +75,7 @@ export const UsersManagementPage: React.FC = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const response = await ApiInstance.get('/api/users');
+      const response = await ApiInstance.get('/users');
       return response.data.Data as IUser[];
     },
     enabled: isAdminOrManager,
@@ -84,7 +84,7 @@ export const UsersManagementPage: React.FC = () => {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: IUserFormData) => {
-      const response = await ApiInstance.post('/api/users', data);
+      const response = await ApiInstance.post('/users', data);
       return response.data;
     },
     onSuccess: () => {
@@ -101,7 +101,7 @@ export const UsersManagementPage: React.FC = () => {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<IUserFormData> }) => {
-      const response = await ApiInstance.put(`/api/users/${id}`, data);
+      const response = await ApiInstance.put(`/users/${id}`, data);
       return response.data;
     },
     onSuccess: () => {
@@ -118,7 +118,7 @@ export const UsersManagementPage: React.FC = () => {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await ApiInstance.delete(`/api/users/${id}`);
+      const response = await ApiInstance.delete(`/users/${id}`);
       return response.data;
     },
     onSuccess: () => {
@@ -135,7 +135,7 @@ export const UsersManagementPage: React.FC = () => {
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
       const endpoint = isActive ? 'deactivate' : 'activate';
-      const response = await ApiInstance.patch(`/api/users/${id}/${endpoint}`);
+      const response = await ApiInstance.patch(`/users/${id}/${endpoint}`);
       return response.data;
     },
     onSuccess: () => {

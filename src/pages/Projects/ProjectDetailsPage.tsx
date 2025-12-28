@@ -18,6 +18,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useDateFormatter } from "@/hooks/useDateFormatter";
+import { useRole } from "@/contexts/RoleContext";
 import type { IDeploymentRequest } from "@/types";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
 import { SshKeyManagement } from "@/components/Projects/SshKeyManagement";
@@ -47,6 +48,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormatter();
   const { showSuccess, showError } = useToast();
+  const { isViewer } = useRole();
 
   // React Query hooks
   const { data: project, isLoading, error, refetch } = useProject(Number(id));
