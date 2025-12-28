@@ -8,6 +8,7 @@ import { useAuth } from './AuthContext';
 
 export const UserRole = {
   Admin: 'admin',
+  Manager: 'manager',
   Developer: 'developer',
   Viewer: 'viewer',
 } as const;
@@ -17,9 +18,12 @@ export type UserRole = typeof UserRole[keyof typeof UserRole];
 interface IRoleContext {
   role: UserRole | null;
   isAdmin: boolean;
+  isManager: boolean;
   isDeveloper: boolean;
   isViewer: boolean;
+  isAdminOrManager: boolean;
   canManageProjects: boolean;
+  canManageUsers: boolean;
   canDeploy: boolean;
   canViewReports: boolean;
   hasRole: (roles: UserRole[]) => boolean;
@@ -33,17 +37,22 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const roleUtils = useMemo(() => {
     const role = User?.Role as UserRole | null;
     const isAdmin = role === UserRole.Admin;
+    const isManager = role === UserRole.Manager;
     const isDeveloper = role === UserRole.Developer;
     const isViewer = role === UserRole.Viewer;
+    const isAdminOrManager = isAdmin || isManager;
 
     return {
       role,
       isAdmin,
+      isManager,
       isDeveloper,
       isViewer,
-      canManageProjects: isAdmin || isDeveloper,
-      canDeploy: isAdmin || isDeveloper,
-      canViewReports: isAdmin,
+      isAdminOrManager,
+      canManageProjects: isAdmin || isManager || isDeveloper,
+      canManageUsers: isAdmin || isManager,
+      canDeploy: isAdmin || isManager || isDeveloper,
+      canViewReports: isAdmin || isManager,
       hasRole: (roles: UserRole[]) => (role ? roles.includes(role) : false),
     };
   }, [User?.Role]);

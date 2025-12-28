@@ -36,6 +36,7 @@ import {
   Brightness4,
   Brightness7,
   Language as LanguageIcon,
+  People as PeopleIcon,
 } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -82,7 +83,14 @@ const MenuItems: IMenuItem[] = [
     TitleAr: "التقارير",
     Path: "/reports",
     Icon: <ReportsIcon />,
-    AllowedRoles: [UserRole.Admin], // Only Admin can access Reports
+    AllowedRoles: [UserRole.Admin, UserRole.Manager], // Admin and Manager can access Reports
+  },
+  {
+    Title: "Users",
+    TitleAr: "المستخدمون",
+    Path: "/users",
+    Icon: <PeopleIcon />,
+    AllowedRoles: [UserRole.Admin, UserRole.Manager], // Admin and Manager can manage users
   },
   {
     Title: "Settings",

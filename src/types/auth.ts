@@ -4,6 +4,7 @@
 
 export const EUserRole = {
   Admin: 'admin',
+  Manager: 'manager',
   Developer: 'developer',
   Viewer: 'viewer',
 } as const;

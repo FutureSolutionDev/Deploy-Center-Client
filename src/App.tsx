@@ -30,7 +30,6 @@ const queryClient = new QueryClient({
 });
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { LoginPage } from '@/pages/Auth/LoginPage';
-import { RegisterPage } from '@/pages/Auth/RegisterPage';
 import { DashboardPage } from '@/pages/Dashboard/DashboardPage';
 import { ProjectsPage } from '@/pages/Projects/ProjectsPage';
 import { ProjectDetailsPage } from '@/pages/Projects/ProjectDetailsPage';
@@ -39,6 +38,7 @@ import { DeploymentDetailsPage } from '@/pages/Deployments/DeploymentDetailsPage
 import { ReportsPage } from '@/pages/Reports/ReportsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
 import { QueuePage } from '@/pages/Queue/QueuePage';
+import { UsersManagementPage } from '@/pages/Users/UsersManagementPage';
 import { Loader } from './components/Common';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -157,15 +157,6 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <RegisterPage />
-          </PublicRoute>
-        }
-      />
-
       {/* Protected Routes */}
       <Route
         path="/"
@@ -183,6 +174,7 @@ const AppRoutes: React.FC = () => {
         <Route path="deployments/:id" element={<DeploymentDetailsPage />} />
         <Route path="queue" element={<QueuePage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="users" element={<UsersManagementPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
