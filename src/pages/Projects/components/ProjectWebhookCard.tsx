@@ -38,6 +38,9 @@ export const ProjectWebhookCard: React.FC<IProjectWebhookCardProps> = ({
   const { canManageProjects } = useRole();
   const [showWebhook, setShowWebhook] = useState(false);
 
+  // Build webhook URL from current window location
+  const webhookUrl = `${window.location.protocol}//${window.location.host}/api/webhooks/github/${project.Name}`;
+
   return (
     <Card sx={{ mb: 1 }}>
       <CardContent>
@@ -48,6 +51,29 @@ export const ProjectWebhookCard: React.FC<IProjectWebhookCardProps> = ({
         <Typography variant="body2" color="text.secondary" paragraph>
           {t('projects.webhook')}
         </Typography>
+
+        <TextField
+          fullWidth
+          label={t('projects.webhookUrl')}
+          type="text"
+          value={webhookUrl}
+          InputProps={{
+            readOnly: true,
+            endAdornment: (
+              <InputAdornment position="end">
+                <Tooltip title={t('common.copy')}>
+                  <IconButton
+                    onClick={() => onCopyToClipboard(webhookUrl)}
+                    edge="end"
+                  >
+                    <CopyIcon />
+                  </IconButton>
+                </Tooltip>
+              </InputAdornment>
+            ),
+          }}
+          sx={{ mb: 2 }}
+        />
 
         <TextField
           fullWidth

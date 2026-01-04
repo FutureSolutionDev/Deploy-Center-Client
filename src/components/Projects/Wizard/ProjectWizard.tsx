@@ -17,6 +17,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { Step1BasicInfo } from './Step1BasicInfo';
 import { Step2Configuration } from './Step2Configuration';
 import { Step3Pipeline } from './Step3Pipeline';
+import { PostDeploymentPipeline } from './PostDeploymentPipeline';
 import { Step4Notifications } from './Step4Notifications';
 
 interface IProjectWizardProps {
@@ -24,7 +25,7 @@ interface IProjectWizardProps {
     onClose: () => void;
 }
 
-const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Notifications'];
+const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Post-Deployment', 'Notifications'];
 
 export const ProjectWizard: React.FC<IProjectWizardProps> = ({
     initialData,
@@ -54,12 +55,14 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
             Environment: 'production',
             DeployOnPaths: [],
             Pipeline: [],
+            PostDeploymentPipeline: [],
             Notifications: {
                 OnSuccess: true,
                 OnFailure: true,
                 OnStart: false,
             },
             Variables: {},
+            EnableRollbackOnPostDeployFailure: true,
         } as IProjectConfig,
         ...initialData,
     });
@@ -140,6 +143,15 @@ export const ProjectWizard: React.FC<IProjectWizardProps> = ({
                     />
                 );
             case 3:
+                return (
+                    <PostDeploymentPipeline
+                        pipeline={formData.Config!.PostDeploymentPipeline || []}
+                        enableRollback={formData.Config?.EnableRollbackOnPostDeployFailure !== false}
+                        onChange={(pipeline) => updateConfig({ PostDeploymentPipeline: pipeline })}
+                        onEnableRollbackChange={(enabled) => updateConfig({ EnableRollbackOnPostDeployFailure: enabled })}
+                    />
+                );
+            case 4:
                 return (
                     <Step4Notifications
                         notifications={formData.Config?.Notifications || {

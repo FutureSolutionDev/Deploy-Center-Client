@@ -47,13 +47,15 @@ export interface IProjectConfig {
   DeployOnPaths?: string[];
   Environment?: string;
   Variables: Record<string, string>;
-  Pipeline: IPipelineStep[];
+  Pipeline: IPipelineStep[]; // Runs in temp directory (before rsync)
+  PostDeploymentPipeline?: IPipelineStep[]; // Runs in production path (after rsync)
   Notifications?: INotificationConfig;
   HealthCheck?: IHealthCheckConfig;
   Url?: string;
   BuildOutput?: string; // Build output directory to sync (e.g., 'build', 'dist' for React/Vue projects)
   SyncIgnorePatterns?: string[]; // Custom patterns to ignore during sync (e.g., node_modules, Backup, Logs)
   RsyncOptions?: string; // Custom rsync options (e.g., '--no-perms --no-owner --no-group --omit-dir-times')
+  EnableRollbackOnPostDeployFailure?: boolean; // Enable automatic rollback if post-deployment pipeline fails (default: true)
 }
 
 export interface IPipelineStep {

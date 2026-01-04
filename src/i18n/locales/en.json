@@ -166,7 +166,8 @@
     "generateSshKeyDescription": "This will generate a new ED25519 SSH key pair for this project. You will need to add the public key to your GitHub repository as a deploy key.",
     "regenerateSshKeyWarning": "This will generate a new SSH key and invalidate the old one. You must update the deploy key in your GitHub repository. This action cannot be undone.",
     "deleteSshKeyWarning": "This will delete the SSH key from this project. Deployments will fall back to HTTPS. This action cannot be undone.",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "webhookUrl": "Webhook URL"
   },
   "deployments": {
     "title": "Deployments",
