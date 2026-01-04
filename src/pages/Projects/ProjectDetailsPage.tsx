@@ -42,6 +42,7 @@ import {
   ProjectWebhookCard,
   ProjectMembersCard,
 } from "./components";
+import { VariablesManager } from "@/components/Projects/VariablesManager";
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -206,6 +207,7 @@ export const ProjectDetailsPage: React.FC = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <ProjectInfoCard project={project} formatDateTime={formatDateTime} />
           <ProjectConfigCard project={project} />
+          <VariablesManager project={project} onUpdate={() => refetch()} />
           <ProjectPipelineCard project={project} />
         </Grid>
 
