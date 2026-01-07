@@ -21,6 +21,7 @@ import { useDateFormatter } from "@/hooks/useDateFormatter";
 import { useRole } from "@/contexts/RoleContext";
 import type { IDeploymentRequest } from "@/types";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
+import { EditProjectModal } from "@/components/Projects/EditProjectModal";
 import { SshKeyManagement } from "@/components/Projects/SshKeyManagement";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -64,6 +65,7 @@ export const ProjectDetailsPage: React.FC = () => {
   // Local UI state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deployDialogOpen, setDeployDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Filter deployments for this project
   const projectDeployments = allDeployments.filter(
@@ -195,6 +197,7 @@ export const ProjectDetailsPage: React.FC = () => {
       <ProjectHeader
         project={project}
         onRefresh={refetch}
+        onEdit={() => setEditDialogOpen(true)}
         onToggleActive={handleToggleActive}
         onDelete={handleDeleteClick}
         onDeploy={handleOpenDeploy}
@@ -241,6 +244,16 @@ export const ProjectDetailsPage: React.FC = () => {
         Project={project}
         OnClose={() => setDeployDialogOpen(false)}
         OnDeploy={handleDeploy}
+      />
+
+      {/* Edit Project Dialog */}
+      <EditProjectModal
+        Open={editDialogOpen}
+        Project={project}
+        OnClose={() => {
+          setEditDialogOpen(false);
+          refetch(); // Refresh project data after edit
+        }}
       />
 
       {/* Delete Confirmation Dialog */}

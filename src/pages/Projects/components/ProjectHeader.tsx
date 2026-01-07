@@ -24,6 +24,7 @@ import type { IProject } from '@/types';
 interface IProjectHeaderProps {
   project: IProject;
   onRefresh: () => void;
+  onEdit: () => void;
   onToggleActive: () => void;
   onDelete: () => void;
   onDeploy: () => void;
@@ -34,6 +35,7 @@ interface IProjectHeaderProps {
 export const ProjectHeader: React.FC<IProjectHeaderProps> = ({
   project,
   onRefresh,
+  onEdit,
   onToggleActive,
   onDelete,
   onDeploy,
@@ -77,7 +79,7 @@ export const ProjectHeader: React.FC<IProjectHeaderProps> = ({
               <Button
                 variant="outlined"
                 startIcon={<EditIcon />}
-                onClick={() => navigate(`/projects/edit/${project.Id}`)}
+                onClick={onEdit}
               >
                 {t('common.edit')}
               </Button>

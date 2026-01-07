@@ -34,15 +34,22 @@ export const DeploymentDetailsPage: React.FC = () => {
     useDeploymentUpdates(deployment?.ProjectId);
 
     // Listen for deployment updates
-    useDeploymentEvents((updatedDeployment) => {
-        if (updatedDeployment.Id === Number(id)) {
-            setDeployment(updatedDeployment);
-            // Refresh logs if status changed to completed/failed
-            if (updatedDeployment.Status === 'success' || updatedDeployment.Status === 'failed') {
+    useDeploymentEvents(
+        // onUpdate callback
+        (updatedDeployment) => {
+            if (updatedDeployment.Id === Number(id)) {
+                setDeployment(updatedDeployment);
+            }
+        },
+        // onComplete callback
+        (completedDeployment) => {
+            if (completedDeployment.Id === Number(id)) {
+                setDeployment(completedDeployment);
+                // Refresh logs when deployment completes
                 fetchLogs();
             }
         }
-    });
+    );
 
     // Listen for real-time logs
     useEffect(() => {
