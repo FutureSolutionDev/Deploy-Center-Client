@@ -250,9 +250,11 @@ export const ProjectDetailsPage: React.FC = () => {
       <EditProjectModal
         Open={editDialogOpen}
         Project={project}
-        OnClose={() => {
+        OnClose={(updated) => {
           setEditDialogOpen(false);
-          refetch(); // Refresh project data after edit
+          if (updated) {
+            refetch(); // Refresh only if project was updated
+          }
         }}
       />
 
