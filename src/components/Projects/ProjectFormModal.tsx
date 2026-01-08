@@ -197,7 +197,7 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
           py: 1.5,
         }}
       >
-        {isEditMode ? 'Edit Project' : 'Create New Project'}
+        {isEditMode ? 'Edit Project' : 'Create New Project'} - ( Click on <span style={{ fontWeight: 'bold', color: 'red' }}>step</span> to Jump to that step)
         <IconButton
           onClick={handleClose}
           sx={{
@@ -211,9 +211,21 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
 
         {/* Stepper */}
         <Stepper activeStep={activeStep} sx={{ mt: 0.5 }}>
-          {steps.map((label) => (
+          {steps.map((label, index) => (
             <Step key={label}>
-              <StepLabel>{label}</StepLabel>
+              <StepLabel
+                sx={{
+                  cursor: 'pointer', '&:hover': {
+                    opacity: 0.8, color: 'primary.main', fontWeight: 'bold',
+                  },
+                  '& .MuiStepLabel-label.MuiStepLabel-alternativeLabel': {
+                    opacity: 0.8, color: 'primary.main', fontWeight: 'bold',
+                  }
+                }}
+                onClick={() => setActiveStep(index)}
+              >
+                {label}
+              </StepLabel>
             </Step>
           ))}
         </Stepper>
