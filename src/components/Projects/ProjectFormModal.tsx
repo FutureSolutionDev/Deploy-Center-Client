@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -45,32 +45,42 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   const [activeStep, setActiveStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Partial<IProject>>(
-    Project || {
-      Name: '',
-      Description: '',
-      RepoUrl: '',
+  const getDefaultFormData = (): Partial<IProject> => ({
+    Name: '',
+    Description: '',
+    RepoUrl: '',
+    Branch: 'master',
+    ProjectPath: '',
+    DeploymentPaths: [],
+    ProjectType: 'node',
+    Config: {
       Branch: 'master',
-      ProjectPath: '',
-      DeploymentPaths: [],
-      ProjectType: 'node',
-      Config: {
-        Branch: 'master',
-        AutoDeploy: true,
-        Environment: 'production',
-        DeployOnPaths: [],
-        Pipeline: [],
-        PostDeploymentPipeline: [],
-        Notifications: {
-          OnSuccess: true,
-          OnFailure: true,
-          OnStart: false,
-        },
-        Variables: {},
-        EnableRollbackOnPostDeployFailure: true,
-      } as IProjectConfig,
+      AutoDeploy: true,
+      Environment: 'production',
+      DeployOnPaths: [],
+      Pipeline: [],
+      PostDeploymentPipeline: [],
+      Notifications: {
+        OnSuccess: true,
+        OnFailure: true,
+        OnStart: false,
+      },
+      Variables: {},
+      EnableRollbackOnPostDeployFailure: true,
+    } as IProjectConfig,
+  });
+
+  const [formData, setFormData] = useState<Partial<IProject>>(getDefaultFormData());
+
+  // Reset form when modal opens/closes or project changes
+  useEffect(() => {
+    if (Open) {
+      setFormData(Project || getDefaultFormData());
+      setActiveStep(0);
+      setError(null);
     }
-  );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Open, Project?.Id]);
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -172,6 +182,7 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
 
   return (
     <Dialog
+      key={Project?.Id || 'new'}
       open={Open}
       onClose={handleClose}
       maxWidth="lg"
