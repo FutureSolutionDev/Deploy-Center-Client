@@ -42,7 +42,7 @@ import {
   useDeployProject,
 } from "@/hooks/useProjects";
 import type { IProject, IDeploymentRequest } from "@/types";
-import { ProjectWizard } from "@/components/Projects/Wizard/ProjectWizard";
+import { ProjectFormModal } from "@/components/Projects/ProjectFormModal";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
 
 export const ProjectsPage: React.FC = () => {
@@ -71,9 +71,12 @@ export const ProjectsPage: React.FC = () => {
     setOpenDialog(true);
   };
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = (updated: boolean) => {
     setOpenDialog(false);
     setEditingProject(null);
+    if (updated) {
+      refetch(); // Refresh projects list if created/updated
+    }
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, project: IProject) => {
@@ -345,23 +348,12 @@ export const ProjectsPage: React.FC = () => {
         </MenuItem>
       </Menu>
 
-      {/* Create/Edit Project Wizard Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: { minHeight: "80vh" },
-        }}
-      >
-        {openDialog && (
-          <ProjectWizard
-            initialData={editingProject || undefined}
-            onClose={handleCloseDialog}
-          />
-        )}
-      </Dialog>
+      {/* Create/Edit Project Modal */}
+      <ProjectFormModal
+        Open={openDialog}
+        Project={editingProject || undefined}
+        OnClose={handleCloseDialog}
+      />
 
       {/* Manual Deployment Dialog */}
       <DeploymentModal

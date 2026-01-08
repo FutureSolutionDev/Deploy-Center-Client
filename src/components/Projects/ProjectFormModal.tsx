@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import type { IProject, IProjectConfig } from '@/types';
-import { useUpdateProject } from '@/hooks/useProjects';
+import { useCreateProject, useUpdateProject } from '@/hooks/useProjects';
 import { useToast } from '@/contexts/ToastContext';
 import { Step1BasicInfo } from './Wizard/Step1BasicInfo';
 import { Step2Configuration } from './Wizard/Step2Configuration';
@@ -22,26 +22,55 @@ import { Step3Pipeline } from './Wizard/Step3Pipeline';
 import { PostDeploymentPipeline } from './Wizard/PostDeploymentPipeline';
 import { Step4Notifications } from './Wizard/Step4Notifications';
 
-interface IEditProjectModalProps {
+interface IProjectFormModalProps {
   Open: boolean;
-  Project: IProject;
+  Project?: IProject; // Optional - if provided, it's edit mode
   OnClose: (updated: boolean) => void;
 }
 
 const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Post-Deployment', 'Notifications'];
 
-export const EditProjectModal: React.FC<IEditProjectModalProps> = ({
+export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   Open,
   Project,
   OnClose,
 }) => {
   const { showSuccess, showError } = useToast();
+  const createProject = useCreateProject();
   const updateProject = useUpdateProject();
+
+  const isEditMode = !!Project;
+  const loading = createProject.isPending || updateProject.isPending;
 
   const [activeStep, setActiveStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Partial<IProject>>(Project);
+  const [formData, setFormData] = useState<Partial<IProject>>(
+    Project || {
+      Name: '',
+      Description: '',
+      RepoUrl: '',
+      Branch: 'master',
+      ProjectPath: '',
+      DeploymentPaths: [],
+      ProjectType: 'node',
+      Config: {
+        Branch: 'master',
+        AutoDeploy: true,
+        Environment: 'production',
+        DeployOnPaths: [],
+        Pipeline: [],
+        PostDeploymentPipeline: [],
+        Notifications: {
+          OnSuccess: true,
+          OnFailure: true,
+          OnStart: false,
+        },
+        Variables: {},
+        EnableRollbackOnPostDeployFailure: true,
+      } as IProjectConfig,
+    }
+  );
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -63,14 +92,22 @@ export const EditProjectModal: React.FC<IEditProjectModalProps> = ({
         },
       };
 
-      await updateProject.mutateAsync({
-        id: Project.Id,
-        data: dataToSubmit,
-      });
-      showSuccess('Project updated successfully');
-      OnClose(true); // Pass true to indicate update happened
+      if (isEditMode) {
+        // Update existing project
+        await updateProject.mutateAsync({
+          id: Project.Id,
+          data: dataToSubmit,
+        });
+        showSuccess('Project updated successfully');
+      } else {
+        // Create new project
+        await createProject.mutateAsync(dataToSubmit);
+        showSuccess('Project created successfully');
+      }
+
+      OnClose(true); // Pass true to indicate update/create happened
     } catch (err: unknown) {
-      const errorMessage = (err as any).message || 'Failed to update project';
+      const errorMessage = (err as any).message || 'Failed to save project';
       setError(errorMessage);
       showError(errorMessage);
     }
@@ -160,7 +197,7 @@ export const EditProjectModal: React.FC<IEditProjectModalProps> = ({
           py: 1.5,
         }}
       >
-        Edit Project
+        {isEditMode ? 'Edit Project' : 'Create New Project'}
         <IconButton
           onClick={handleClose}
           sx={{
@@ -173,7 +210,7 @@ export const EditProjectModal: React.FC<IEditProjectModalProps> = ({
         </IconButton>
 
         {/* Stepper */}
-        <Stepper activeStep={activeStep} sx={{ mt: 2 }}>
+        <Stepper activeStep={activeStep} sx={{ mt: 0.5 }}>
           {steps.map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
@@ -187,12 +224,12 @@ export const EditProjectModal: React.FC<IEditProjectModalProps> = ({
         sx={{
           flex: 1,
           overflow: 'auto',
-          py: 2,
-          px: 3,
+          py: 1,
+          px: 2,
         }}
       >
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 0.5 }}>
             {error}
           </Alert>
         )}
@@ -208,24 +245,20 @@ export const EditProjectModal: React.FC<IEditProjectModalProps> = ({
           bgcolor: 'background.paper',
           borderTop: 1,
           borderColor: 'divider',
-          py: 1.5,
-          px: 3,
+          py: 1,
+          px: 2,
         }}
       >
-        <Button disabled={activeStep === 0 || updateProject.isPending} onClick={handleBack}>
+        <Button disabled={activeStep === 0 || loading} onClick={handleBack}>
           Back
         </Button>
 
         {activeStep === steps.length - 1 ? (
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={updateProject.isPending}
-          >
-            {updateProject.isPending ? 'Saving...' : 'Finish'}
+          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Saving...' : 'Finish'}
           </Button>
         ) : (
-          <Button variant="contained" onClick={handleNext} disabled={updateProject.isPending}>
+          <Button variant="contained" onClick={handleNext} disabled={loading}>
             Next
           </Button>
         )}

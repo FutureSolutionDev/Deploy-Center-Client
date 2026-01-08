@@ -121,7 +121,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Typography variant="h6" gutterBottom>
                 Deployment Configuration
             </Typography>
@@ -138,11 +138,11 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                 <Typography variant="subtitle2" fontWeight="medium" gutterBottom>
                     Build Output Directory (Optional)
                 </Typography>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                     Select the directory to sync to production, or leave empty to sync entire project
                 </Typography>
 
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
                     {[
                         { value: null, label: 'Entire Project', description: 'Sync all files (Node.js projects)' },
                         { value: 'build', label: 'build/', description: 'React (CRA) default output' },
@@ -242,7 +242,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
             </Typography>
 
             <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
                     <Box>
                         <Typography variant="subtitle1" fontWeight="medium">
                             Deploy On Paths (Optional)
@@ -274,19 +274,19 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                         <Typography variant="body2" color="text.secondary">
                             No path filters configured. Deployment will trigger on any change.
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                             Click "Add Path" to add glob patterns (e.g., src/**, *.ts, public/**)
                         </Typography>
                     </Paper>
                 ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         {paths.map((path, index) => (
                             <Box
                                 key={index}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'flex-start',
-                                    gap: 1,
+                                    gap: 0.5,
                                 }}
                             >
                                 <TextField
@@ -313,7 +313,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                     </Box>
                 )}
 
-                <Box sx={{ mt: 2, p: 2, bgcolor: 'info.lighter', borderRadius: 1 }}>
+                <Box sx={{ mt: 0.5, p: 2, bgcolor: 'info.lighter', borderRadius: 1 }}>
                     <Typography variant="caption" fontWeight="medium" display="block" gutterBottom>
                         Examples:
                     </Typography>
@@ -327,7 +327,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
             </Box>
 
             <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
                     <Box>
                         <Typography variant="subtitle1" fontWeight="medium">
                             Sync Ignore Patterns (Optional)
@@ -359,19 +359,19 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                         <Typography variant="body2" color="text.secondary">
                             No ignore patterns configured. Only system files (.env, .htaccess, etc.) will be preserved.
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                             Click "Add Pattern" to preserve custom files/folders (e.g., node_modules, Backup, Logs)
                         </Typography>
                     </Paper>
                 ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         {ignorePatterns.map((pattern, index) => (
                             <Box
                                 key={index}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'flex-start',
-                                    gap: 1,
+                                    gap: 0.5,
                                 }}
                             >
                                 <TextField
@@ -398,7 +398,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                     </Box>
                 )}
 
-                <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.lighter', borderRadius: 1 }}>
+                <Box sx={{ mt: 0.5, p: 2, bgcolor: 'warning.lighter', borderRadius: 1 }}>
                     <Typography variant="caption" fontWeight="medium" display="block" gutterBottom>
                         Common Patterns:
                     </Typography>
@@ -410,7 +410,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                         • <code>_RateLimits</code> - Rate limit data<br />
                         • <code>uploads</code> - User uploads folder
                     </Typography>
-                    <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                    <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 0.5, fontStyle: 'italic' }}>
                         Note: System files (.env, .htaccess, web.config, php.ini) are always preserved automatically.
                     </Typography>
                 </Box>
@@ -420,7 +420,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                 <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
                     Advanced Rsync Options (Optional)
                 </Typography>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                     Select rsync options for syncing files to production
                 </Typography>
 
@@ -474,7 +474,7 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
                 </Paper>
 
                 {selectedOptions.size > 0 && (
-                    <Box sx={{ mt: 2, p: 2, bgcolor: 'success.lighter', borderRadius: 1 }}>
+                    <Box sx={{ mt: 0.5, p: 2, bgcolor: 'success.lighter', borderRadius: 1 }}>
                         <Typography variant="caption" fontWeight="medium" display="block" gutterBottom>
                             Generated Command:
                         </Typography>

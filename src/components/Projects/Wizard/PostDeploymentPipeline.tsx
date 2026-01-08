@@ -79,18 +79,18 @@ export const PostDeploymentPipeline: React.FC<IPostDeploymentPipelineProps> = ({
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                     <RocketLaunch color="primary" />
                     <Typography variant="h6">Post-Deployment Pipeline</Typography>
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                     These steps run in the production path <strong>after rsync</strong>.
                     Use this for restarting services, clearing caches, or running migrations.
                 </Typography>
 
-                <Alert severity="info" sx={{ mb: 2 }}>
+                <Alert severity="info" sx={{ mb: 0.5 }}>
                     <Typography variant="body2">
                         <strong>Execution Path:</strong> Production directory (after deployment)<br />
                         <strong>When:</strong> After rsync completes<br />
@@ -131,7 +131,7 @@ export const PostDeploymentPipeline: React.FC<IPostDeploymentPipelineProps> = ({
             {pipeline.map((step, stepIndex) => (
                 <Card key={stepIndex} variant="outlined">
                     <CardContent>
-                        <Grid container spacing={2} alignItems="center">
+                        <Grid container spacing={0.5} alignItems="center">
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
@@ -142,7 +142,7 @@ export const PostDeploymentPipeline: React.FC<IPostDeploymentPipelineProps> = ({
                                     placeholder="e.g., Restart PM2, Clear Cache"
                                 />
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                                 <IconButton size="small" onClick={() => moveStep(stepIndex, 'up')} disabled={stepIndex === 0}>
                                     <ArrowUpward />
                                 </IconButton>
@@ -155,9 +155,9 @@ export const PostDeploymentPipeline: React.FC<IPostDeploymentPipelineProps> = ({
                             </Grid>
 
                             <Grid size={{ xs: 12 }}>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Commands:</Typography>
+                                <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Commands:</Typography>
                                 {step.Run.map((command, commandIndex) => (
-                                    <Box key={commandIndex} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                                    <Box key={commandIndex} sx={{ display: 'flex', gap: 0.5, mb: 0.5 }}>
                                         <TextField
                                             fullWidth
                                             value={command}

@@ -52,11 +52,11 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Typography variant="h6">Notifications</Typography>
 
             {/* Global Triggers */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', gap: 0.5, mb: 0.5 }}>
                 <FormControlLabel
                     control={
                         <Switch
@@ -151,7 +151,7 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
                     />
                 </AccordionSummary>
                 <AccordionDetails>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={0.5}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
@@ -189,7 +189,7 @@ export const Step4Notifications: React.FC<IStep4Props> = ({ notifications, onCha
                     />
                 </AccordionSummary>
                 <AccordionDetails>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={0.5}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth

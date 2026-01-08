@@ -21,7 +21,7 @@ import { useDateFormatter } from "@/hooks/useDateFormatter";
 import { useRole } from "@/contexts/RoleContext";
 import type { IDeploymentRequest } from "@/types";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
-import { EditProjectModal } from "@/components/Projects/EditProjectModal";
+import { ProjectFormModal } from "@/components/Projects/ProjectFormModal";
 import { SshKeyManagement } from "@/components/Projects/SshKeyManagement";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -247,7 +247,7 @@ export const ProjectDetailsPage: React.FC = () => {
       />
 
       {/* Edit Project Dialog */}
-      <EditProjectModal
+      <ProjectFormModal
         Open={editDialogOpen}
         Project={project}
         OnClose={(updated) => {

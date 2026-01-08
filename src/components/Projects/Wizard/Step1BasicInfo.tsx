@@ -56,7 +56,7 @@ export const Step1BasicInfo: React.FC<IStep1Props> = ({ data, onChange }) => {
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Typography variant="h6" gutterBottom>
                 Basic Information
             </Typography>
@@ -99,16 +99,16 @@ export const Step1BasicInfo: React.FC<IStep1Props> = ({ data, onChange }) => {
             />
 
             <Box>
-                <Typography variant="subtitle1" gutterBottom sx={{ mb: 2, fontWeight: 500 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ mb: 0.5, fontWeight: 500 }}>
                     Deployment Paths
                 </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                     Add one or more absolute paths where the project should be deployed on the server
                 </Typography>
 
-                <Stack spacing={2}>
+                <Stack spacing={0.5}>
                     {deploymentPaths.map((path, index) => (
-                        <Stack key={index} direction="row" spacing={1} alignItems="flex-start">
+                        <Stack key={index} direction="row" spacing={0.5} alignItems="flex-start">
                             <TextField
                                 fullWidth
                                 label={`Deployment Path ${index + 1}`}
@@ -122,7 +122,7 @@ export const Step1BasicInfo: React.FC<IStep1Props> = ({ data, onChange }) => {
                                 <IconButton
                                     color="error"
                                     onClick={() => handleRemovePath(index)}
-                                    sx={{ mt: 1 }}
+                                    sx={{ mt: 0.5 }}
                                     title="Remove this path"
                                 >
                                     <DeleteIcon />

@@ -51,7 +51,7 @@ export const Step3Pipeline: React.FC<IStep3Props> = ({ pipeline, onChange }) => 
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">Pipeline Steps</Typography>
                 <Button startIcon={<AddIcon />} variant="outlined" onClick={addStep}>
@@ -68,7 +68,7 @@ export const Step3Pipeline: React.FC<IStep3Props> = ({ pipeline, onChange }) => 
             {pipeline.map((step, index) => (
                 <Card key={index} variant="outlined">
                     <CardContent>
-                        <Grid container spacing={2} alignItems="center">
+                        <Grid container spacing={0.5} alignItems="center">
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
@@ -78,7 +78,7 @@ export const Step3Pipeline: React.FC<IStep3Props> = ({ pipeline, onChange }) => 
                                     size="small"
                                 />
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                                 <IconButton size="small" onClick={() => moveStep(index, 'up')} disabled={index === 0}>
                                     <ArrowUpward />
                                 </IconButton>
