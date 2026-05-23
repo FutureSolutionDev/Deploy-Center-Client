@@ -16,6 +16,8 @@ import NotificationsTab from "@/components/Settings/NotificationsTab";
 import SecurityTab from "@/components/Settings/SecurityTab";
 import ApiKeysTab from "@/components/Settings/ApiKeysTab";
 import SessionsTab from "@/components/Settings/SessionsTab";
+import NotificationProvidersTab from "@/components/Settings/NotificationProvidersTab"; // v3.0 F-006
+import NotificationChannelsTab from "@/components/Settings/NotificationChannelsTab";   // v3.0 F-006
 
 interface ITabPanelProps {
   children?: React.ReactNode;
@@ -68,6 +70,20 @@ export const SettingsPage: React.FC = () => {
       icon: <SecurityIcon />,
       component: <ApiKeysTab t={t} />,
       allowedRoles: [UserRole.Admin, UserRole.Manager], // Only Admin and Manager
+    },
+    // v3.0 F-006 — Notification Providers (Admin only, holds credentials)
+    {
+      label: "Notification Providers",
+      icon: <NotificationsIcon />,
+      component: <NotificationProvidersTab t={t} />,
+      allowedRoles: [UserRole.Admin],
+    },
+    // v3.0 F-006 — Notification Channels (Admin/Manager)
+    {
+      label: "Notification Channels",
+      icon: <NotificationsIcon />,
+      component: <NotificationChannelsTab t={t} />,
+      allowedRoles: [UserRole.Admin, UserRole.Manager],
     },
     {
       label: t("settings.sessions"),

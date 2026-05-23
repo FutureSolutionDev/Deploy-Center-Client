@@ -45,6 +45,7 @@ import {
 } from "./components";
 import { VariablesManager } from "@/components/Projects/VariablesManager";
 import EnvironmentVariablesCard from "./components/EnvironmentVariablesCard"; // v3.0 F-003
+import ProjectNotificationsCard from "./components/ProjectNotificationsCard"; // v3.0 F-006
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -238,6 +239,8 @@ export const ProjectDetailsPage: React.FC = () => {
           )}
           {/* v3.0 F-003 — encrypted env vars, Admin/Manager only (canManageProjects). */}
           {canManageProjects && <EnvironmentVariablesCard projectId={project.Id} />}
+          {/* v3.0 F-006 — notification subscriptions, Admin/Manager only. */}
+          {canManageProjects && <ProjectNotificationsCard projectId={project.Id} />}
         </Grid>
       </Grid>
 
