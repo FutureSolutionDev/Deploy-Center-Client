@@ -1,11 +1,17 @@
 import React from 'react';
 import { Box, Paper, Typography, Grid } from '@mui/material';
 import type { IDeployment } from '@/types';
+import DownloadLogButton from './DownloadLogButton';      // v3.0 F-004
+import CopyLogButton from './CopyLogButton';              // v3.0 F-004
+import AutoScrollToggle from './AutoScrollToggle';        // v3.0 F-004
 
 interface IDeploymentLogsTabProps {
     deployment: IDeployment;
     logs: string;
     logsEndRef: React.RefObject<HTMLDivElement | null>;
+    /** v3.0 F-004 — parent owns the toggle so its scrollIntoView effect can honor it. */
+    autoScroll: boolean;
+    onAutoScrollChange: (next: boolean) => void;
     t: (key: string) => string;
 }
 
@@ -13,6 +19,8 @@ export const DeploymentLogsTab: React.FC<IDeploymentLogsTabProps> = ({
     deployment,
     logs,
     logsEndRef,
+    autoScroll,
+    onAutoScrollChange,
     t,
 }) => {
     const getLogColor = (log: string) => {
@@ -95,37 +103,46 @@ export const DeploymentLogsTab: React.FC<IDeploymentLogsTabProps> = ({
                             </Typography>
                         </Box>
 
-                        {/* Live indicator for in-progress deployments */}
-                        {deployment.Status === 'inProgress' && (
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    bgcolor: 'rgba(0,0,0,0.3)',
-                                    px: 2,
-                                    py: 0.5,
-                                    borderRadius: 1,
-                                }}
-                            >
+                        {/* Right-side controls: LIVE indicator + F-004 controls */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            {deployment.Status === 'inProgress' && (
                                 <Box
                                     sx={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: '50%',
-                                        bgcolor: '#27c93f',
-                                        animation: 'pulse 2s infinite',
-                                        '@keyframes pulse': {
-                                            '0%, 100%': { opacity: 1 },
-                                            '50%': { opacity: 0.3 },
-                                        },
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        bgcolor: 'rgba(0,0,0,0.3)',
+                                        px: 2,
+                                        py: 0.5,
+                                        borderRadius: 1,
                                     }}
-                                />
-                                <Typography variant="caption" sx={{ color: '#27c93f', fontWeight: 600 }}>
-                                    {t('deployments.liveIndicator') || 'LIVE'}
-                                </Typography>
-                            </Box>
-                        )}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: '50%',
+                                            bgcolor: '#27c93f',
+                                            animation: 'pulse 2s infinite',
+                                            '@keyframes pulse': {
+                                                '0%, 100%': { opacity: 1 },
+                                                '50%': { opacity: 0.3 },
+                                            },
+                                        }}
+                                    />
+                                    <Typography variant="caption" sx={{ color: '#27c93f', fontWeight: 600 }}>
+                                        {t('deployments.liveIndicator') || 'LIVE'}
+                                    </Typography>
+                                </Box>
+                            )}
+
+                            {/* v3.0 F-004 (T038/T039) — auto-scroll, copy, download */}
+                            {deployment.Status === 'inProgress' && (
+                                <AutoScrollToggle enabled={autoScroll} onChange={onAutoScrollChange} />
+                            )}
+                            <CopyLogButton text={logs} />
+                            <DownloadLogButton deploymentId={deployment.Id} />
+                        </Box>
                     </Box>
 
                     {/* Logs Content - Scrollable */}

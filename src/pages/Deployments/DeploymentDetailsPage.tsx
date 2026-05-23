@@ -22,6 +22,8 @@ export const DeploymentDetailsPage: React.FC = () => {
     const { t } = useTranslation();
     const { formatDateTime } = useDateFormatter();
     const logsEndRef = useRef<HTMLDivElement>(null);
+    // v3.0 F-004 — auto-scroll toggle owned at parent so logsEndRef effect honors it.
+    const [autoScroll, setAutoScroll] = useState<boolean>(true);
     const { socket } = useSocket();
 
     const [deployment, setDeployment] = useState<IDeployment | null>(null);
@@ -99,9 +101,11 @@ export const DeploymentDetailsPage: React.FC = () => {
     }, [id]);
 
     useEffect(() => {
-        // Auto-scroll logs
-        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [logs]);
+        // v3.0 F-004 — gate auto-scroll on the toggle. Default ON.
+        if (autoScroll) {
+            logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [logs, autoScroll]);
 
     const handleBack = () => {
         navigate('/deployments');
@@ -185,7 +189,14 @@ export const DeploymentDetailsPage: React.FC = () => {
             {activeTab === 2 && <DeploymentVariablesTab deployment={deployment} />}
 
             {activeTab === 3 && (
-                <DeploymentLogsTab deployment={deployment} logs={logs} logsEndRef={logsEndRef} t={t} />
+                <DeploymentLogsTab
+                    deployment={deployment}
+                    logs={logs}
+                    logsEndRef={logsEndRef}
+                    autoScroll={autoScroll}
+                    onAutoScrollChange={setAutoScroll}
+                    t={t}
+                />
             )}
         </Box>
     );
