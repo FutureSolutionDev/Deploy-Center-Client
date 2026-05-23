@@ -39,6 +39,7 @@ import { ReportsPage } from '@/pages/Reports/ReportsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
 import { QueuePage } from '@/pages/Queue/QueuePage';
 import { UsersManagementPage } from '@/pages/Users/UsersManagementPage';
+import { WorkspacesPage } from '@/pages/Workspaces/WorkspacesPage'; // v3.0 F-009
 import { Loader } from './components/Common';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
