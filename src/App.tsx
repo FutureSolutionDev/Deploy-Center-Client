@@ -171,6 +171,7 @@ const AppRoutes: React.FC = () => {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectDetailsPage />} />
+        <Route path="workspaces" element={<WorkspacesPage />} /> {/* v3.0 F-009 */}
         <Route path="deployments" element={<DeploymentsPage />} />
         <Route path="deployments/:id" element={<DeploymentDetailsPage />} />
         <Route path="queue" element={<QueuePage />} />

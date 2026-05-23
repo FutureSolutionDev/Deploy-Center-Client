@@ -27,6 +27,7 @@ export interface IProject {
   Config: IProjectConfig;
   CreatedAt: Date;
   UpdatedAt: Date;
+  WorkspaceId?: number | null; // v3.0 F-009 — null = "Unassigned"
 
   // SSH Key Management Fields
   UseSshKey: boolean;
