@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeploymentsService } from '@/services/deploymentsService';
-import type { IDeployment } from '@/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DeploymentsService } from "@/services/deploymentsService";
+import type { IDeployment } from "@/types";
 
 interface IUseDeploymentsOptions {
   limit?: number;
@@ -16,13 +16,14 @@ export const useDeployments = (options: IUseDeploymentsOptions = {}) => {
   const { projectId } = options;
 
   return useQuery<IDeployment[], Error>({
-    queryKey: ['deployments', { projectId }],
+    queryKey: ["deployments", { projectId }],
     queryFn: async () => {
       if (projectId) {
         return DeploymentsService.getByProject(projectId);
       }
       return DeploymentsService.getAll();
     },
+    refetchOnMount: true,
   });
 };
 
@@ -32,14 +33,15 @@ export const useDeployments = (options: IUseDeploymentsOptions = {}) => {
  */
 export const useDeployment = (
   id: number | undefined,
-  options: { enabled?: boolean; refetchInterval?: number } = {}
+  options: { enabled?: boolean; refetchInterval?: number } = {},
 ) => {
   const { enabled = true, refetchInterval } = options;
 
   return useQuery<IDeployment, Error>({
-    queryKey: ['deployments', id],
+    queryKey: ["deployments", id],
     queryFn: () => DeploymentsService.getById(id!),
     enabled: enabled && id !== undefined,
+    refetchOnMount: true,
     refetchInterval: refetchInterval, // Can be used for auto-refresh on deployment details page
   });
 };
@@ -47,15 +49,18 @@ export const useDeployment = (
 /**
  * Custom hook to get deployment logs
  */
-export const useDeploymentLogs = (id: number | undefined, enabled: boolean = true) => {
+export const useDeploymentLogs = (
+  id: number | undefined,
+  enabled: boolean = true,
+) => {
   return useQuery<string, Error>({
-    queryKey: ['deployments', id, 'logs'],
+    queryKey: ["deployments", id, "logs"],
     queryFn: () => DeploymentsService.getLogs(id!),
     enabled: enabled && id !== undefined,
     refetchInterval: (query) => {
       // Auto-refresh logs every 3 seconds if deployment is still running
       const data = query.state.data;
-      return data && data.includes('Status: running') ? 3000 : false;
+      return data && data.includes("Status: running") ? 3000 : false;
     },
   });
 };
@@ -70,9 +75,11 @@ export const useCancelDeployment = () => {
     mutationFn: (id) => DeploymentsService.cancel(id),
     onSuccess: (_, deploymentId) => {
       // Invalidate the specific deployment and deployments list
-      queryClient.invalidateQueries({ queryKey: ['deployments', deploymentId] });
-      queryClient.invalidateQueries({ queryKey: ['deployments'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({
+        queryKey: ["deployments", deploymentId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["deployments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 };
@@ -87,19 +94,18 @@ export const useRetryDeployment = () => {
     mutationFn: (id) => DeploymentsService.retry(id),
     onSuccess: () => {
       // Invalidate deployments to show the new retry deployment
-      queryClient.invalidateQueries({ queryKey: ['deployments'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ["deployments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 };
-
 
 /**
  * Custom hook to get queue status
  */
 export const useQueueStatus = () => {
   return useQuery({
-    queryKey: ['queue', 'status'],
+    queryKey: ["queue", "status"],
     queryFn: () => DeploymentsService.getQueueStatus(),
     refetchInterval: 5000, // Auto-refresh queue status every 5 seconds
   });
