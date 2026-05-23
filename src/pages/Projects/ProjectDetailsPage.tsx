@@ -44,6 +44,7 @@ import {
   ProjectMembersCard,
 } from "./components";
 import { VariablesManager } from "@/components/Projects/VariablesManager";
+import EnvironmentVariablesCard from "./components/EnvironmentVariablesCard"; // v3.0 F-003
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -235,6 +236,8 @@ export const ProjectDetailsPage: React.FC = () => {
           {canManageProjects && (
             <ProjectMembersCard projectId={project.Id} projectName={project.Name} />
           )}
+          {/* v3.0 F-003 — encrypted env vars, Admin/Manager only (canManageProjects). */}
+          {canManageProjects && <EnvironmentVariablesCard projectId={project.Id} />}
         </Grid>
       </Grid>
 
