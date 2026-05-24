@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -20,7 +20,15 @@ import { Step1BasicInfo } from './Wizard/Step1BasicInfo';
 import { Step2Configuration } from './Wizard/Step2Configuration';
 import { Step3Pipeline } from './Wizard/Step3Pipeline';
 import { PostDeploymentPipeline } from './Wizard/PostDeploymentPipeline';
-import { Step4Notifications } from './Wizard/Step4Notifications';
+// v3.0 F-006: replaces the legacy in-Config notifications form with the
+// Provider/Channel/Subscription model. The legacy step is no longer mounted.
+import {
+  Step4NotificationSubscriptions,
+  type ISubscriptionSelection,
+} from './Wizard/Step4NotificationSubscriptions';
+import {
+  ProjectNotificationSubscriptionService,
+} from '@/services/projectNotificationSubscriptionService';
 
 interface IProjectFormModalProps {
   Open: boolean;
@@ -80,6 +88,17 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
 
   const [formData, setFormData] = useState<Partial<IProject>>(getDefaultFormData());
 
+  // v3.0 F-006 — desired subscription set; reconciled in handleSubmit.
+  const [subscriptionState, setSubscriptionState] = useState<ISubscriptionSelection[]>([]);
+  // Track what the server had at mount time so we can compute deletes.
+  const [initialSubscriptionState, setInitialSubscriptionState] = useState<
+    ISubscriptionSelection[]
+  >([]);
+  // Once the step has seeded itself we keep `initialSubscriptionState` frozen
+  // to the first-load snapshot. We capture it on the first emit when in edit
+  // mode (the step's seedFromServer call).
+  const subsSeededRef = useRef(false);
+
   // Reset form when modal opens/closes or project changes
   useEffect(() => {
     if (Open) {
@@ -98,6 +117,10 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
       }
       setActiveStep(0);
       setError(null);
+      // v3.0 F-006 — reset subscription state for every (re)open
+      setSubscriptionState([]);
+      setInitialSubscriptionState([]);
+      subsSeededRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Open, Project?.Id, PrefillConfig]);
@@ -122,17 +145,35 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
         },
       };
 
+      let resolvedProjectId: number | null = null;
       if (isEditMode) {
         // Update existing project
         await updateProject.mutateAsync({
           id: Project.Id,
           data: dataToSubmit,
         });
+        resolvedProjectId = Project.Id;
         showSuccess('Project updated successfully');
       } else {
         // Create new project
-        await createProject.mutateAsync(dataToSubmit);
+        const created = (await createProject.mutateAsync(dataToSubmit)) as {
+          Id?: number;
+          Project?: { Id?: number };
+        };
+        resolvedProjectId = (created?.Id ?? created?.Project?.Id) ?? null;
         showSuccess('Project created successfully');
+      }
+
+      // v3.0 F-006 — apply notification subscriptions now that we have an id.
+      if (resolvedProjectId) {
+        try {
+          await reconcileSubscriptions(resolvedProjectId);
+        } catch (subErr) {
+          // Subscriptions are non-fatal — surface as a toast but still close.
+          showError(
+            `Project saved, but failed to update notification subscriptions: ${(subErr as Error).message}`
+          );
+        }
       }
 
       OnClose(true); // Pass true to indicate update/create happened
@@ -184,19 +225,90 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
         );
       case 4:
         return (
-          <Step4Notifications
-            notifications={
-              formData.Config?.Notifications || {
-                OnSuccess: true,
-                OnFailure: true,
-                OnStart: false,
+          <Step4NotificationSubscriptions
+            projectId={Project?.Id ?? null}
+            value={subscriptionState}
+            onChange={(next) => {
+              // In edit mode, the very first non-empty emit IS the server
+              // seed — capture it as the baseline for delete-diffing later.
+              if (isEditMode && !subsSeededRef.current) {
+                subsSeededRef.current = true;
+                setInitialSubscriptionState(next);
               }
-            }
-            onChange={(notifications) => updateConfig({ Notifications: notifications })}
+              setSubscriptionState(next);
+            }}
+            seedFromServer={isEditMode}
           />
         );
       default:
         return 'Unknown step';
+    }
+  };
+
+  /**
+   * v3.0 F-006 — reconcile subscriptionState against the snapshot we
+   * captured at modal open. Called after the project is created/updated
+   * so we know its id.
+   */
+  const reconcileSubscriptions = async (projectId: number): Promise<void> => {
+    const baseline = initialSubscriptionState;
+    const desired = subscriptionState;
+
+    // existingSubs lookup we need: id per channel. We fetch fresh to avoid
+    // stale ids (cache may not be primed if the modal closed/reopened).
+    const existingSubs = isEditMode
+      ? await ProjectNotificationSubscriptionService.list(projectId)
+      : [];
+
+    const existingByChannel = new Map<number, { Id: number; Events: string[] }>();
+    for (const s of existingSubs) {
+      existingByChannel.set(s.ChannelId, { Id: s.Id, Events: s.Events });
+    }
+
+    const desiredByChannel = new Map<number, string[]>();
+    for (const d of desired) desiredByChannel.set(d.ChannelId, d.Events);
+
+    const ops: Promise<unknown>[] = [];
+
+    // Create + update.
+    for (const d of desired) {
+      const existing = existingByChannel.get(d.ChannelId);
+      if (!existing) {
+        // brand-new subscription
+        ops.push(
+          ProjectNotificationSubscriptionService.create(projectId, {
+            ChannelId: d.ChannelId,
+            Events: d.Events as never,
+          })
+        );
+      } else {
+        // update only if event list changed (set equality, order-insensitive)
+        const a = new Set<string>(existing.Events);
+        const b = new Set<string>(d.Events as readonly string[]);
+        const same = a.size === b.size && [...a].every((e) => b.has(e));
+        if (!same) {
+          ops.push(
+            ProjectNotificationSubscriptionService.update(projectId, existing.Id, {
+              Events: d.Events as never,
+              IsActive: true,
+            })
+          );
+        }
+      }
+    }
+
+    // Deletes — anything in baseline (or existingSubs) that's no longer desired.
+    for (const s of existingSubs) {
+      if (!desiredByChannel.has(s.ChannelId)) {
+        ops.push(ProjectNotificationSubscriptionService.remove(projectId, s.Id));
+      }
+    }
+    // Also catch baseline rows that may have come from the seed snapshot but
+    // somehow weren't in the server list (edge case during creation race).
+    void baseline;
+
+    if (ops.length > 0) {
+      await Promise.allSettled(ops);
     }
   };
 
