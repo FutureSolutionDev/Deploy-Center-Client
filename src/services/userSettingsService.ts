@@ -2,7 +2,6 @@ import ApiInstance from './api';
 import type {
   IApiKey,
   IApiKeyCreateResponse,
-  INotificationSettings,
   IUser,
   IUserPreferences,
   IUserProfile,
@@ -17,20 +16,9 @@ export const UserSettingsService = {
     return response.data.Data?.Settings;
   },
 
-  updateNotificationSettings: async (
-    settings: INotificationSettings
-  ): Promise<IUserSettings> => {
-    const response = await ApiInstance.put('/users/me/settings/notifications', settings);
-    return response.data.Data?.Settings;
-  },
-
   updatePreferences: async (preferences: IUserPreferences): Promise<IUserSettings> => {
     const response = await ApiInstance.put('/users/me/settings/preferences', preferences);
     return response.data.Data?.Settings;
-  },
-
-  testNotification: async (type: 'discord' | 'slack'): Promise<void> => {
-    await ApiInstance.post('/users/me/settings/notifications/test', { Type: type });
   },
 
   // Profile

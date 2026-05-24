@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import UserSettingsService from '@/services/userSettingsService';
 import type {
   IUserSettings,
-  INotificationSettings,
   IUserPreferences,
   IApiKey,
   IApiKeyCreateResponse,
@@ -64,20 +63,6 @@ export const useUpdateProfile = () => {
 };
 
 /**
- * Custom hook to update notification settings
- */
-export const useUpdateNotificationSettings = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<unknown, Error, INotificationSettings>({
-    mutationFn: (data) => UserSettingsService.updateNotificationSettings(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userSettings'] });
-    },
-  });
-};
-
-/**
  * Custom hook to update user preferences
  */
 export const useUpdatePreferences = () => {
@@ -88,15 +73,6 @@ export const useUpdatePreferences = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userSettings'] });
     },
-  });
-};
-
-/**
- * Custom hook to test notification
- */
-export const useTestNotification = () => {
-  return useMutation<void, Error, 'discord' | 'slack'>({
-    mutationFn: (type) => UserSettingsService.testNotification(type),
   });
 };
 

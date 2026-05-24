@@ -12,12 +12,16 @@ import { useRole } from "@/contexts/RoleContext";
 import { UserRole } from "@/contexts/RoleContext";
 import ProfileTab from "@/components/Settings/ProfileTab";
 import PreferencesTab from "@/components/Settings/PreferencesTab";
-import NotificationsTab from "@/components/Settings/NotificationsTab";
 import SecurityTab from "@/components/Settings/SecurityTab";
 import ApiKeysTab from "@/components/Settings/ApiKeysTab";
 import SessionsTab from "@/components/Settings/SessionsTab";
-import NotificationProvidersTab from "@/components/Settings/NotificationProvidersTab"; // v3.0 F-006
-import NotificationChannelsTab from "@/components/Settings/NotificationChannelsTab";   // v3.0 F-006
+// v3.0 F-006 — central notification config. The legacy per-user
+// NotificationsTab (UserSettings.DiscordWebhookUrl + Notify* flags) was
+// deleted in this release; nothing on the server fanned those values out
+// for real deployment notifications. Use Providers + Channels (here) plus
+// per-project Subscriptions (on ProjectDetailsPage) instead.
+import NotificationProvidersTab from "@/components/Settings/NotificationProvidersTab";
+import NotificationChannelsTab from "@/components/Settings/NotificationChannelsTab";
 
 interface ITabPanelProps {
   children?: React.ReactNode;
@@ -57,12 +61,6 @@ export const SettingsPage: React.FC = () => {
       label: t("settings.preferences"),
       icon: <PaletteIcon />,
       component: <PreferencesTab t={t} />,
-      // Allowed for all roles
-    },
-    {
-      label: t("settings.notifications"),
-      icon: <NotificationsIcon />,
-      component: <NotificationsTab t={t} />,
       // Allowed for all roles
     },
     {
