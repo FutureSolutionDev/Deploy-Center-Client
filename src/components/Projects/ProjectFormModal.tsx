@@ -28,6 +28,7 @@ import {
 } from './Wizard/Step4NotificationSubscriptions';
 import {
   ProjectNotificationSubscriptionService,
+  type TNotificationEvent,
 } from '@/services/projectNotificationSubscriptionService';
 
 interface IProjectFormModalProps {
@@ -89,14 +90,14 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   const [formData, setFormData] = useState<Partial<IProject>>(getDefaultFormData());
 
   // v3.0 F-006 — desired subscription set; reconciled in handleSubmit.
+  // Seeded at the PARENT level (not inside the step) so that the seed runs
+  // unconditionally when the modal opens in edit mode — even if the user
+  // never navigates to the Notifications step. Without this, the
+  // reconcileSubscriptions diff would see desired=[] vs existing=N and
+  // delete every existing subscription on Save. (Bug found post-v3.0.)
   const [subscriptionState, setSubscriptionState] = useState<ISubscriptionSelection[]>([]);
-  // Track what the server had at mount time so we can compute deletes.
-  const [initialSubscriptionState, setInitialSubscriptionState] = useState<
-    ISubscriptionSelection[]
-  >([]);
-  // Once the step has seeded itself we keep `initialSubscriptionState` frozen
-  // to the first-load snapshot. We capture it on the first emit when in edit
-  // mode (the step's seedFromServer call).
+  // Track whether the parent seed has already run for the current modal
+  // session. Reset when the modal re-opens.
   const subsSeededRef = useRef(false);
 
   // Reset form when modal opens/closes or project changes
@@ -117,13 +118,47 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
       }
       setActiveStep(0);
       setError(null);
-      // v3.0 F-006 — reset subscription state for every (re)open
+      // v3.0 F-006 — reset subscription state for every (re)open. In edit
+      // mode the parent-level seed effect below will repopulate it from the
+      // server. In create mode it stays [] until the user toggles.
       setSubscriptionState([]);
-      setInitialSubscriptionState([]);
       subsSeededRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Open, Project?.Id, PrefillConfig]);
+
+  // v3.0 F-006 — seed subscriptionState from the server when editing.
+  // Runs at the parent level (not inside the step) so it fires regardless
+  // of which step the user is viewing. Idempotent via subsSeededRef.
+  useEffect(() => {
+    if (!Open) return;
+    if (!isEditMode || !Project) return;
+    if (subsSeededRef.current) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const subs = await ProjectNotificationSubscriptionService.list(Project.Id);
+        if (cancelled) return;
+        const seed: ISubscriptionSelection[] = subs.map((s) => ({
+          ChannelId: s.ChannelId,
+          Events: (s.Events.length > 0
+            ? s.Events
+            : (['DeploymentFailed'] as TNotificationEvent[])),
+        }));
+        setSubscriptionState(seed);
+        subsSeededRef.current = true;
+      } catch {
+        // Non-fatal: the modal still works for the project fields. If the
+        // user never touches Notifications, subsSeededRef stays false and
+        // reconcileSubscriptions will skip the fetch-and-diff entirely.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [Open, isEditMode, Project?.Id]);
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -224,20 +259,14 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
           />
         );
       case 4:
+        // The parent seeded subscriptionState from the server already
+        // (see useEffect above), so the step is a pure controlled UI.
         return (
           <Step4NotificationSubscriptions
             projectId={Project?.Id ?? null}
             value={subscriptionState}
-            onChange={(next) => {
-              // In edit mode, the very first non-empty emit IS the server
-              // seed — capture it as the baseline for delete-diffing later.
-              if (isEditMode && !subsSeededRef.current) {
-                subsSeededRef.current = true;
-                setInitialSubscriptionState(next);
-              }
-              setSubscriptionState(next);
-            }}
-            seedFromServer={isEditMode}
+            onChange={setSubscriptionState}
+            seedFromServer={false}
           />
         );
       default:
@@ -246,12 +275,21 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   };
 
   /**
-   * v3.0 F-006 — reconcile subscriptionState against the snapshot we
-   * captured at modal open. Called after the project is created/updated
-   * so we know its id.
+   * v3.0 F-006 — reconcile subscriptionState against the live server state.
+   * Called after the project is created/updated so we know its id.
+   *
+   * Safety guard: in edit mode, if the parent seed effect never completed
+   * (network failure / modal closed before seed finished), subsSeededRef
+   * stays false. We then SKIP reconcile entirely — otherwise desired=[] vs
+   * existing=N would delete every existing subscription. The user can
+   * still manage subs on the Project → Notifications card.
    */
   const reconcileSubscriptions = async (projectId: number): Promise<void> => {
-    const baseline = initialSubscriptionState;
+    if (isEditMode && !subsSeededRef.current) {
+      // Seed never finished → unsafe to diff. Bail out.
+      return;
+    }
+
     const desired = subscriptionState;
 
     // existingSubs lookup we need: id per channel. We fetch fresh to avoid
@@ -297,15 +335,12 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
       }
     }
 
-    // Deletes — anything in baseline (or existingSubs) that's no longer desired.
+    // Deletes — anything in existingSubs that's no longer desired.
     for (const s of existingSubs) {
       if (!desiredByChannel.has(s.ChannelId)) {
         ops.push(ProjectNotificationSubscriptionService.remove(projectId, s.Id));
       }
     }
-    // Also catch baseline rows that may have come from the seed snapshot but
-    // somehow weren't in the server list (edge case during creation race).
-    void baseline;
 
     if (ops.length > 0) {
       await Promise.allSettled(ops);
