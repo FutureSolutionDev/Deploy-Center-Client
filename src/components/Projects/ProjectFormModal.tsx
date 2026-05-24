@@ -143,7 +143,10 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
 
       OnClose(true); // Pass true to indicate update/create happened
     } catch (err: unknown) {
-      const errorMessage = (err as any).message || 'Failed to save project';
+      const errorMessage =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Failed to save project';
       setError(errorMessage);
       showError(errorMessage);
     }

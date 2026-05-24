@@ -26,12 +26,15 @@ interface IProps {
 }
 
 export const RollbackButton: React.FC<IProps> = ({ deployment, onRolledBack }) => {
+  // CRITICAL: all hooks MUST run unconditionally on every render. Previous
+  // version had an early `return null` BEFORE the hooks below it, which
+  // crashed React with Rules-of-Hooks violation whenever a socket update
+  // flipped `deployment.Status` between Failed and not-Failed on the same
+  // component instance. We declare hooks first, then short-circuit the
+  // render at the bottom — and gate the network query with `enabled` so we
+  // don't waste a fetch when the deployment isn't Failed.
   const [modalOpen, setModalOpen] = useState(false);
-
-  // FR-029: rollback only on failed deployments.
-  if (deployment.Status !== EDeploymentStatus.Failed) {
-    return null;
-  }
+  const isFailed = deployment.Status === EDeploymentStatus.Failed;
 
   // Look up the last successful deployment for this project. We pull the
   // list, filter to Success, sort by CreatedAt desc, and take the first one
@@ -51,7 +54,9 @@ export const RollbackButton: React.FC<IProps> = ({ deployment, onRolledBack }) =
         );
       return successes[0] ?? null;
     },
-    // Cheap, stable for the lifetime of the page.
+    // Cheap, stable for the lifetime of the page; only run when the
+    // deployment is actually Failed.
+    enabled: isFailed,
     staleTime: 30_000,
   });
 
@@ -63,6 +68,12 @@ export const RollbackButton: React.FC<IProps> = ({ deployment, onRolledBack }) =
     }
     return null;
   }, [candidate, isLoading, deployment.Commit]);
+
+  // FR-029: render nothing unless the deployment is in Failed state.
+  // Safe to short-circuit here because every hook above has already run.
+  if (!isFailed) {
+    return null;
+  }
 
   const button = (
     <span>

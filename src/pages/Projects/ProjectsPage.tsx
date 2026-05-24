@@ -372,7 +372,7 @@ export const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { showSuccess, showError } = useToast();
-  const { canManageProjects, canDeploy, isViewer, role } = useRole();
+  const { canManageProjects, canDeploy, isViewer } = useRole();
   const queryClient = useQueryClient();
 
   // Projects (existing infrastructure)
@@ -666,8 +666,14 @@ export const ProjectsPage: React.FC = () => {
       Color: ws.Color,
       Icon: ws.Icon,
     });
-  const canEditWorkspace = (ws: IWorkspaceListItem): boolean =>
-    role === "admin" || (!!ws.CreatedBy && false); // backend rechecks; UI shows for admin
+  // Admin can edit any workspace; owners can edit their own workspaces
+  // (the backend re-checks ownership on every mutation regardless).
+  const canEditWorkspace = (_ws: IWorkspaceListItem): boolean => {
+    // Show Edit/Delete affordances to Admin + Manager; owner-only mutation
+    // is enforced server-side, so showing the buttons to non-owners just
+    // gives them a 403 if they try. Keep UI simple here.
+    return canManageProjects;
+  };
 
   return (
     <Box>
