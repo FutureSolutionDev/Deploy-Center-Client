@@ -15,6 +15,8 @@ import {
     DeploymentVariablesTab,
     DeploymentLogsTab,
 } from './components';
+// v3.0 F-007 (T072) — rollback control rendered only for failed deployments
+import { RollbackButton } from './components/RollbackButton';
 
 export const DeploymentDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -168,6 +170,14 @@ export const DeploymentDetailsPage: React.FC = () => {
                 onRetry={handleRetry}
                 t={t}
             />
+
+            {/* v3.0 F-007 — Rollback action (renders only on failed deployments) */}
+            <Box sx={{ px: 2, pb: 2 }}>
+                <RollbackButton
+                    deployment={deployment}
+                    onRolledBack={handleRefresh}
+                />
+            </Box>
 
             {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
