@@ -73,6 +73,9 @@ import {
 import type { IProject, IDeploymentRequest } from "@/types";
 import { ProjectFormModal } from "@/components/Projects/ProjectFormModal";
 import { DeploymentModal } from "@/components/Projects/DeploymentModal";
+import { ProjectTemplateWizard } from "@/pages/Projects/components/ProjectTemplateWizard"; // v3.0 F-008
+import type { IProjectTemplate } from "@/services/projectTemplateService";
+import type { IProjectConfig } from "@/types";
 import {
   WorkspaceService,
   type IWorkspaceListItem,
@@ -500,6 +503,11 @@ export const ProjectsPage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<IProject | null>(null);
+  // v3.0 F-008 — template wizard precedes the create-project modal
+  const [templateWizardOpen, setTemplateWizardOpen] = useState(false);
+  const [prefillConfig, setPrefillConfig] = useState<Partial<IProjectConfig> | undefined>(
+    undefined,
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deployDialogOpen, setDeployDialogOpen] = useState(false);
   const [deployingProject, setDeployingProject] = useState<IProject | null>(
@@ -571,11 +579,31 @@ export const ProjectsPage: React.FC = () => {
   };
   const handleOpenProjectDialog = (p?: IProject): void => {
     setEditingProject(p ?? null);
+    // v3.0 F-008 — editing skips the wizard; creating goes through it.
+    if (p) {
+      setPrefillConfig(undefined);
+      setOpenDialog(true);
+    } else {
+      setTemplateWizardOpen(true);
+    }
+  };
+  const handleTemplateWizardClose = (
+    chosen: IProjectTemplate | null | "cancel",
+  ): void => {
+    setTemplateWizardOpen(false);
+    if (chosen === "cancel") {
+      setPrefillConfig(undefined);
+      return;
+    }
+    setPrefillConfig(
+      chosen ? (chosen.DefaultConfig as Partial<IProjectConfig>) : undefined,
+    );
     setOpenDialog(true);
   };
   const handleProjectDialogClose = (updated: boolean): void => {
     setOpenDialog(false);
     setEditingProject(null);
+    setPrefillConfig(undefined);
     if (updated) refetch();
   };
   const handleDeleteConfirm = (): void => {
@@ -851,11 +879,20 @@ export const ProjectsPage: React.FC = () => {
         )}
       </Menu>
 
+      {/* v3.0 F-008 — Template picker (Step 0 of Create-Project flow) */}
+      {templateWizardOpen && (
+        <ProjectTemplateWizard
+          open={templateWizardOpen}
+          onClose={handleTemplateWizardClose}
+        />
+      )}
+
       {/* Project form modal */}
       {openDialog && (
         <ProjectFormModal
           Open={openDialog}
           Project={editingProject ?? undefined}
+          PrefillConfig={prefillConfig}
           OnClose={handleProjectDialogClose}
         />
       )}

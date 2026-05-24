@@ -25,6 +25,13 @@ import { Step4Notifications } from './Wizard/Step4Notifications';
 interface IProjectFormModalProps {
   Open: boolean;
   Project?: IProject; // Optional - if provided, it's edit mode
+  /**
+   * v3.0 F-008 (T084): when set (and Project is NOT set), pre-fills the
+   * Create form with these defaults. Typically supplied by
+   * ProjectTemplateWizard's selected template's `DefaultConfig`.
+   * Ignored in edit mode.
+   */
+  PrefillConfig?: Partial<import('@/types').IProjectConfig>;
   OnClose: (updated: boolean) => void;
 }
 
@@ -33,6 +40,7 @@ const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Post-Deployment', 'No
 export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   Open,
   Project,
+  PrefillConfig,
   OnClose,
 }) => {
   const { showSuccess, showError } = useToast();
@@ -75,12 +83,24 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   // Reset form when modal opens/closes or project changes
   useEffect(() => {
     if (Open) {
-      setFormData(Project || getDefaultFormData());
+      if (Project) {
+        setFormData(Project);
+      } else if (PrefillConfig) {
+        // v3.0 F-008 — merge template DefaultConfig over the create defaults,
+        // user can still edit every field in subsequent steps.
+        const defaults = getDefaultFormData();
+        setFormData({
+          ...defaults,
+          Config: { ...defaults.Config!, ...PrefillConfig },
+        });
+      } else {
+        setFormData(getDefaultFormData());
+      }
       setActiveStep(0);
       setError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Open, Project?.Id]);
+  }, [Open, Project?.Id, PrefillConfig]);
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);

@@ -25,11 +25,12 @@ export default mergeConfig(
           "src/**/__tests__/**",
         ],
         thresholds: {
-          // Ratcheted; bumped to 30% global lines by T094 (GA gate).
-          lines: 0,
-          statements: 0,
-          functions: 0,
-          branches: 0,
+          // v3.0 GA gate per NFR-006 — raised to 30% by T094 (Phase 13).
+          // wk1=0 → wk2=15 → wk3=22 → wk4=30 (current).
+          lines: 30,
+          statements: 30,
+          functions: 25,
+          branches: 25,
         },
       },
     },
