@@ -39,7 +39,6 @@ import { ReportsPage } from '@/pages/Reports/ReportsPage';
 import { SettingsPage } from '@/pages/Settings/SettingsPage';
 import { QueuePage } from '@/pages/Queue/QueuePage';
 import { UsersManagementPage } from '@/pages/Users/UsersManagementPage';
-import { WorkspacesPage } from '@/pages/Workspaces/WorkspacesPage'; // v3.0 F-009
 import { Loader } from './components/Common';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -171,7 +170,8 @@ const AppRoutes: React.FC = () => {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectDetailsPage />} />
-        <Route path="workspaces" element={<WorkspacesPage />} /> {/* v3.0 F-009 */}
+        {/* v3.0 F-009 — Workspaces merged into ProjectsPage; redirect any deep links */}
+        <Route path="workspaces" element={<Navigate to="/projects" replace />} />
         <Route path="deployments" element={<DeploymentsPage />} />
         <Route path="deployments/:id" element={<DeploymentDetailsPage />} />
         <Route path="queue" element={<QueuePage />} />

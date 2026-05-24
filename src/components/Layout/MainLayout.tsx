@@ -31,7 +31,6 @@ import {
   Rocket as DeploymentsIcon,
   ReceiptLong as ReportsIcon,
   Settings as SettingsIcon,
-  Workspaces as WorkspacesIcon,
   Logout as LogoutIcon,
   AccountCircle,
   Brightness4,
@@ -66,13 +65,6 @@ const MenuItems: IMenuItem[] = [
     TitleAr: "المشاريع",
     Path: "/projects",
     Icon: <ProjectsIcon />,
-  },
-  // v3.0 F-009 — Workspaces (open to all authenticated users)
-  {
-    Title: "Workspaces",
-    TitleAr: "مساحات العمل",
-    Path: "/workspaces",
-    Icon: <WorkspacesIcon />,
   },
   {
     Title: "Deployments",
