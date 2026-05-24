@@ -1,4 +1,24 @@
-import React, { useState } from "react";
+/**
+ * ProjectDetailsPage — Deploy Center v3.0.
+ *
+ * Re-organized into a tabbed layout (consistent with DeploymentDetailsPage)
+ * after Sabry feedback on the previous 10-card vertical wall.
+ *
+ * Tabs (visibility depends on role):
+ *   Overview      — info + stats (everyone)
+ *   Configuration — config card (everyone)
+ *   Pipeline      — pipeline card (everyone)
+ *   Variables     — F-003 encrypted env vars (Admin / Manager)
+ *   Deployments   — recent deployments table (everyone)
+ *   Notifications — F-006 per-project subscriptions (Admin / Manager)
+ *   Access        — members + webhook + ssh key (non-viewer)
+ *
+ * v3.0: legacy `VariablesManager` (which edited Project.Config.Variables JSON)
+ * was deleted; encrypted env vars in the new `EnvironmentVariables` table are
+ * the single source of truth on the Variables tab.
+ */
+
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Grid,
@@ -10,10 +30,20 @@ import {
   DialogContent,
   DialogActions,
   Typography,
+  Tabs,
+  Tab,
+  Card,
 } from "@mui/material";
 import {
   ArrowBack as BackIcon,
   Delete as DeleteIcon,
+  Info as InfoIcon,
+  Settings as SettingsIcon,
+  AccountTree as PipelineIcon,
+  VpnKey as VariablesIcon,
+  Rocket as DeploymentsIcon,
+  NotificationsActive as NotificationsIcon,
+  Lock as AccessIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -43,9 +73,20 @@ import {
   ProjectWebhookCard,
   ProjectMembersCard,
 } from "./components";
-import { VariablesManager } from "@/components/Projects/VariablesManager";
 import EnvironmentVariablesCard from "./components/EnvironmentVariablesCard"; // v3.0 F-003
 import ProjectNotificationsCard from "./components/ProjectNotificationsCard"; // v3.0 F-006
+
+interface ITabPanelProps {
+  children: React.ReactNode;
+  value: number;
+  index: number;
+}
+
+const TabPanel: React.FC<ITabPanelProps> = ({ children, value, index }) => (
+  <div role="tabpanel" hidden={value !== index}>
+    {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+  </div>
+);
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,60 +109,57 @@ export const ProjectDetailsPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deployDialogOpen, setDeployDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [tabIndex, setTabIndex] = useState(0);
 
   // Filter deployments for this project
-  const projectDeployments = allDeployments.filter(
-    (d) => d.ProjectId === Number(id) || d.ProjectName === project?.Name
+  const projectDeployments = useMemo(
+    () =>
+      allDeployments.filter(
+        (d) => d.ProjectId === Number(id) || d.ProjectName === project?.Name
+      ),
+    [allDeployments, id, project?.Name]
   );
 
-  const handleOpenDeploy = () => {
+  const handleOpenDeploy = (): void => {
     setDeployDialogOpen(true);
   };
 
-  const handleDeploy = async (data: IDeploymentRequest) => {
+  const handleDeploy = async (data: IDeploymentRequest): Promise<void> => {
     if (!project) return;
-
     try {
       await deployProject.mutateAsync({ id: data.ProjectId, data });
       showSuccess(t("deployments.startedSuccessfully"));
       setDeployDialogOpen(false);
       refetch();
-    } catch (error: unknown) {
+    } catch (err: unknown) {
       const errorMessage =
-        error && typeof error === 'object' && 'message' in error
-          ? String(error.message)
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
           : t("deployments.failedToStart");
       throw new Error(errorMessage);
     }
   };
 
-  const handleDeleteClick = () => {
-    setDeleteDialogOpen(true);
-  };
+  const handleDeleteClick = (): void => setDeleteDialogOpen(true);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = async (): Promise<void> => {
     if (!project) return;
-
     deleteProject.mutate(project.Id, {
       onSuccess: () => {
         showSuccess(t("projects.deletedSuccessfully"));
         navigate("/projects");
       },
-      onError: (error: Error) => {
-        showError(error?.message || t("projects.failedToDelete"));
+      onError: (err: Error) => {
+        showError(err?.message || t("projects.failedToDelete"));
         setDeleteDialogOpen(false);
       },
     });
   };
 
-  const handleToggleActive = async () => {
+  const handleToggleActive = async (): Promise<void> => {
     if (!project) return;
-
     updateProject.mutate(
-      {
-        id: project.Id,
-        data: { IsActive: !project.IsActive },
-      },
+      { id: project.Id, data: { IsActive: !project.IsActive } },
       {
         onSuccess: () => {
           showSuccess(
@@ -130,28 +168,23 @@ export const ProjectDetailsPage: React.FC = () => {
               : t("projects.activatedSuccessfully")
           );
         },
-        onError: (error: Error) => {
-          showError(error?.message || t("projects.failedToToggleActive"));
-        },
+        onError: (err: Error) =>
+          showError(err?.message || t("projects.failedToToggleActive")),
       }
     );
   };
 
-  const handleRegenerateWebhook = async () => {
+  const handleRegenerateWebhook = async (): Promise<void> => {
     if (!project) return;
     if (!window.confirm(t("projects.webhookRegenerationWarning"))) return;
-
     regenerateWebhook.mutate(project.Id, {
-      onSuccess: () => {
-        showSuccess(t("projects.webhookRegenerated"));
-      },
-      onError: (error: Error) => {
-        showError(error?.message || t("projects.failedToRegenerateWebhook"));
-      },
+      onSuccess: () => showSuccess(t("projects.webhookRegenerated")),
+      onError: (err: Error) =>
+        showError(err?.message || t("projects.failedToRegenerateWebhook")),
     });
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string): void => {
     navigator.clipboard.writeText(text);
     showSuccess(t("common.copiedToClipboard"));
   };
@@ -193,6 +226,110 @@ export const ProjectDetailsPage: React.FC = () => {
     );
   }
 
+  // ─── tab definitions (role-gated) ─────────────────────────────────────
+  interface ITabDef {
+    key: string;
+    label: string;
+    icon: React.ReactElement;
+    visible: boolean;
+    render: () => React.ReactNode;
+  }
+
+  const tabs: ITabDef[] = [
+    {
+      key: "overview",
+      label: "Overview",
+      icon: <InfoIcon />,
+      visible: true,
+      render: () => (
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ProjectInfoCard project={project} formatDateTime={formatDateTime} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ProjectStatsCard stats={stats || null} />
+          </Grid>
+        </Grid>
+      ),
+    },
+    {
+      key: "configuration",
+      label: "Configuration",
+      icon: <SettingsIcon />,
+      visible: true,
+      render: () => <ProjectConfigCard project={project} />,
+    },
+    {
+      key: "pipeline",
+      label: "Pipeline",
+      icon: <PipelineIcon />,
+      visible: true,
+      render: () => <ProjectPipelineCard project={project} />,
+    },
+    {
+      key: "variables",
+      label: "Variables",
+      icon: <VariablesIcon />,
+      visible: canManageProjects,
+      render: () => <EnvironmentVariablesCard projectId={project.Id} />,
+    },
+    {
+      key: "deployments",
+      label: "Deployments",
+      icon: <DeploymentsIcon />,
+      visible: true,
+      render: () => (
+        <ProjectDeploymentsTable
+          deployments={projectDeployments}
+          formatDateTime={formatDateTime}
+        />
+      ),
+    },
+    {
+      key: "notifications",
+      label: "Notifications",
+      icon: <NotificationsIcon />,
+      visible: canManageProjects,
+      render: () => <ProjectNotificationsCard projectId={project.Id} />,
+    },
+    {
+      key: "access",
+      label: "Access",
+      icon: <AccessIcon />,
+      // Webhook + SSH visible to anyone but viewer; Members admin/manager only.
+      // We show the tab if any of those rows would be visible.
+      visible: !isViewer || canManageProjects,
+      render: () => (
+        <Grid container spacing={2}>
+          {!isViewer && (
+            <>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ProjectWebhookCard
+                  project={project}
+                  onRegenerateWebhook={handleRegenerateWebhook}
+                  onCopyToClipboard={copyToClipboard}
+                  regeneratingWebhook={regenerateWebhook.isPending}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <SshKeyManagement project={project} onUpdate={() => refetch()} />
+              </Grid>
+            </>
+          )}
+          {canManageProjects && (
+            <Grid size={12}>
+              <ProjectMembersCard projectId={project.Id} projectName={project.Name} />
+            </Grid>
+          )}
+        </Grid>
+      ),
+    },
+  ];
+
+  const visibleTabs = tabs.filter((tab) => tab.visible);
+  // Clamp tabIndex in case the visible-tab list shrinks (e.g., role change).
+  const safeTabIndex = tabIndex < visibleTabs.length ? tabIndex : 0;
+
   return (
     <Box>
       {/* Header */}
@@ -207,42 +344,35 @@ export const ProjectDetailsPage: React.FC = () => {
         deploying={deployProject.isPending}
       />
 
-      <Grid container spacing={1}>
-        {/* Left Column - Project Info & Configuration */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ProjectInfoCard project={project} formatDateTime={formatDateTime} />
-          <ProjectConfigCard project={project} />
-          <VariablesManager project={project} onUpdate={() => refetch()} />
-          <ProjectPipelineCard project={project} />
-        </Grid>
-
-        {/* Right Column - Statistics & History */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ProjectStatsCard stats={stats || null} />
-          <ProjectDeploymentsTable
-            deployments={projectDeployments}
-            formatDateTime={formatDateTime}
-          />
-          {!isViewer && (
-            <>
-              <ProjectWebhookCard
-                project={project}
-                onRegenerateWebhook={handleRegenerateWebhook}
-                onCopyToClipboard={copyToClipboard}
-                regeneratingWebhook={regenerateWebhook.isPending}
+      {/* Tabs */}
+      <Card sx={{ mt: 2 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={safeTabIndex}
+            onChange={(_, v: number) => setTabIndex(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+          >
+            {visibleTabs.map((tab) => (
+              <Tab
+                key={tab.key}
+                icon={tab.icon}
+                iconPosition="start"
+                label={tab.label}
+                sx={{ minHeight: 48 }}
               />
-              <SshKeyManagement project={project} onUpdate={() => refetch()} />
-            </>
-          )}
-          {canManageProjects && (
-            <ProjectMembersCard projectId={project.Id} projectName={project.Name} />
-          )}
-          {/* v3.0 F-003 — encrypted env vars, Admin/Manager only (canManageProjects). */}
-          {canManageProjects && <EnvironmentVariablesCard projectId={project.Id} />}
-          {/* v3.0 F-006 — notification subscriptions, Admin/Manager only. */}
-          {canManageProjects && <ProjectNotificationsCard projectId={project.Id} />}
-        </Grid>
-      </Grid>
+            ))}
+          </Tabs>
+        </Box>
+        <Box sx={{ p: 2 }}>
+          {visibleTabs.map((tab, idx) => (
+            <TabPanel key={tab.key} value={safeTabIndex} index={idx}>
+              {tab.render()}
+            </TabPanel>
+          ))}
+        </Box>
+      </Card>
 
       {/* Manual Deployment Dialog */}
       <DeploymentModal
@@ -258,9 +388,7 @@ export const ProjectDetailsPage: React.FC = () => {
         Project={project}
         OnClose={(updated) => {
           setEditDialogOpen(false);
-          if (updated) {
-            refetch(); // Refresh only if project was updated
-          }
+          if (updated) refetch();
         }}
       />
 
@@ -273,12 +401,12 @@ export const ProjectDetailsPage: React.FC = () => {
       >
         <DialogTitle>{t("projects.deleteProject")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            {t("projects.confirmDeleteDesc")}
-          </Typography>
+          <Typography>{t("projects.confirmDeleteDesc")}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>{t("common.cancel")}</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>
+            {t("common.cancel")}
+          </Button>
           <Button
             variant="contained"
             color="error"
