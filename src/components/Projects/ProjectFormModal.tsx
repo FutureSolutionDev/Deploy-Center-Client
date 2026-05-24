@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -20,16 +20,10 @@ import { Step1BasicInfo } from './Wizard/Step1BasicInfo';
 import { Step2Configuration } from './Wizard/Step2Configuration';
 import { Step3Pipeline } from './Wizard/Step3Pipeline';
 import { PostDeploymentPipeline } from './Wizard/PostDeploymentPipeline';
-// v3.0 F-006: replaces the legacy in-Config notifications form with the
-// Provider/Channel/Subscription model. The legacy step is no longer mounted.
-import {
-  Step4NotificationSubscriptions,
-  type ISubscriptionSelection,
-} from './Wizard/Step4NotificationSubscriptions';
-import {
-  ProjectNotificationSubscriptionService,
-  type TNotificationEvent,
-} from '@/services/projectNotificationSubscriptionService';
+// v3.0 F-006: notification subscriptions live in their own tab on the
+// Project Details page (ProjectNotificationsCard). The wizard only covers
+// project-intrinsic fields (info, config, pipeline) — same pattern as
+// Members / SSH / Webhook, which are also tab-only.
 
 interface IProjectFormModalProps {
   Open: boolean;
@@ -44,7 +38,7 @@ interface IProjectFormModalProps {
   OnClose: (updated: boolean) => void;
 }
 
-const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Post-Deployment', 'Notifications'];
+const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Post-Deployment'];
 
 export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   Open,
@@ -89,17 +83,6 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
 
   const [formData, setFormData] = useState<Partial<IProject>>(getDefaultFormData());
 
-  // v3.0 F-006 — desired subscription set; reconciled in handleSubmit.
-  // Seeded at the PARENT level (not inside the step) so that the seed runs
-  // unconditionally when the modal opens in edit mode — even if the user
-  // never navigates to the Notifications step. Without this, the
-  // reconcileSubscriptions diff would see desired=[] vs existing=N and
-  // delete every existing subscription on Save. (Bug found post-v3.0.)
-  const [subscriptionState, setSubscriptionState] = useState<ISubscriptionSelection[]>([]);
-  // Track whether the parent seed has already run for the current modal
-  // session. Reset when the modal re-opens.
-  const subsSeededRef = useRef(false);
-
   // Reset form when modal opens/closes or project changes
   useEffect(() => {
     if (Open) {
@@ -118,47 +101,9 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
       }
       setActiveStep(0);
       setError(null);
-      // v3.0 F-006 — reset subscription state for every (re)open. In edit
-      // mode the parent-level seed effect below will repopulate it from the
-      // server. In create mode it stays [] until the user toggles.
-      setSubscriptionState([]);
-      subsSeededRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Open, Project?.Id, PrefillConfig]);
-
-  // v3.0 F-006 — seed subscriptionState from the server when editing.
-  // Runs at the parent level (not inside the step) so it fires regardless
-  // of which step the user is viewing. Idempotent via subsSeededRef.
-  useEffect(() => {
-    if (!Open) return;
-    if (!isEditMode || !Project) return;
-    if (subsSeededRef.current) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const subs = await ProjectNotificationSubscriptionService.list(Project.Id);
-        if (cancelled) return;
-        const seed: ISubscriptionSelection[] = subs.map((s) => ({
-          ChannelId: s.ChannelId,
-          Events: (s.Events.length > 0
-            ? s.Events
-            : (['DeploymentFailed'] as TNotificationEvent[])),
-        }));
-        setSubscriptionState(seed);
-        subsSeededRef.current = true;
-      } catch {
-        // Non-fatal: the modal still works for the project fields. If the
-        // user never touches Notifications, subsSeededRef stays false and
-        // reconcileSubscriptions will skip the fetch-and-diff entirely.
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [Open, isEditMode, Project?.Id]);
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -180,36 +125,21 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
         },
       };
 
-      let resolvedProjectId: number | null = null;
       if (isEditMode) {
         // Update existing project
         await updateProject.mutateAsync({
           id: Project.Id,
           data: dataToSubmit,
         });
-        resolvedProjectId = Project.Id;
         showSuccess('Project updated successfully');
       } else {
         // Create new project
-        const created = (await createProject.mutateAsync(dataToSubmit)) as {
-          Id?: number;
-          Project?: { Id?: number };
-        };
-        resolvedProjectId = (created?.Id ?? created?.Project?.Id) ?? null;
+        await createProject.mutateAsync(dataToSubmit);
         showSuccess('Project created successfully');
       }
 
-      // v3.0 F-006 — apply notification subscriptions now that we have an id.
-      if (resolvedProjectId) {
-        try {
-          await reconcileSubscriptions(resolvedProjectId);
-        } catch (subErr) {
-          // Subscriptions are non-fatal — surface as a toast but still close.
-          showError(
-            `Project saved, but failed to update notification subscriptions: ${(subErr as Error).message}`
-          );
-        }
-      }
+      // v3.0 F-006 — notification subscriptions are managed on the
+      // Project Details → Notifications tab, not here. No fan-out at save.
 
       OnClose(true); // Pass true to indicate update/create happened
     } catch (err: unknown) {
@@ -258,92 +188,8 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
             }
           />
         );
-      case 4:
-        // The parent seeded subscriptionState from the server already
-        // (see useEffect above), so the step is a pure controlled UI.
-        return (
-          <Step4NotificationSubscriptions
-            projectId={Project?.Id ?? null}
-            value={subscriptionState}
-            onChange={setSubscriptionState}
-            seedFromServer={false}
-          />
-        );
       default:
         return 'Unknown step';
-    }
-  };
-
-  /**
-   * v3.0 F-006 — reconcile subscriptionState against the live server state.
-   * Called after the project is created/updated so we know its id.
-   *
-   * Safety guard: in edit mode, if the parent seed effect never completed
-   * (network failure / modal closed before seed finished), subsSeededRef
-   * stays false. We then SKIP reconcile entirely — otherwise desired=[] vs
-   * existing=N would delete every existing subscription. The user can
-   * still manage subs on the Project → Notifications card.
-   */
-  const reconcileSubscriptions = async (projectId: number): Promise<void> => {
-    if (isEditMode && !subsSeededRef.current) {
-      // Seed never finished → unsafe to diff. Bail out.
-      return;
-    }
-
-    const desired = subscriptionState;
-
-    // existingSubs lookup we need: id per channel. We fetch fresh to avoid
-    // stale ids (cache may not be primed if the modal closed/reopened).
-    const existingSubs = isEditMode
-      ? await ProjectNotificationSubscriptionService.list(projectId)
-      : [];
-
-    const existingByChannel = new Map<number, { Id: number; Events: string[] }>();
-    for (const s of existingSubs) {
-      existingByChannel.set(s.ChannelId, { Id: s.Id, Events: s.Events });
-    }
-
-    const desiredByChannel = new Map<number, string[]>();
-    for (const d of desired) desiredByChannel.set(d.ChannelId, d.Events);
-
-    const ops: Promise<unknown>[] = [];
-
-    // Create + update.
-    for (const d of desired) {
-      const existing = existingByChannel.get(d.ChannelId);
-      if (!existing) {
-        // brand-new subscription
-        ops.push(
-          ProjectNotificationSubscriptionService.create(projectId, {
-            ChannelId: d.ChannelId,
-            Events: d.Events as never,
-          })
-        );
-      } else {
-        // update only if event list changed (set equality, order-insensitive)
-        const a = new Set<string>(existing.Events);
-        const b = new Set<string>(d.Events as readonly string[]);
-        const same = a.size === b.size && [...a].every((e) => b.has(e));
-        if (!same) {
-          ops.push(
-            ProjectNotificationSubscriptionService.update(projectId, existing.Id, {
-              Events: d.Events as never,
-              IsActive: true,
-            })
-          );
-        }
-      }
-    }
-
-    // Deletes — anything in existingSubs that's no longer desired.
-    for (const s of existingSubs) {
-      if (!desiredByChannel.has(s.ChannelId)) {
-        ops.push(ProjectNotificationSubscriptionService.remove(projectId, s.Id));
-      }
-    }
-
-    if (ops.length > 0) {
-      await Promise.allSettled(ops);
     }
   };
 
