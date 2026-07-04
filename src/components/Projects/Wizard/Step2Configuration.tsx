@@ -327,6 +327,27 @@ export const Step2Configuration: React.FC<IStep2Props> = ({ config, onChange }) 
             </Box>
 
             <Box>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={config.SelfContained || false}
+                            onChange={(e) => onChange({ SelfContained: e.target.checked })}
+                        />
+                    }
+                    label={
+                        <Box>
+                            <Typography variant="subtitle1" fontWeight="medium">
+                                Self-Contained Bundle
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Sync node_modules &amp; lock files too — for pre-built bundles that carry their own dependencies (e.g. Next.js standalone). No install on the server.
+                            </Typography>
+                        </Box>
+                    }
+                />
+            </Box>
+
+            <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
                     <Box>
                         <Typography variant="subtitle1" fontWeight="medium">

@@ -55,6 +55,7 @@ export interface IProjectConfig {
   Url?: string;
   BuildOutput?: string; // Build output directory to sync (e.g., 'build', 'dist' for React/Vue projects)
   SyncIgnorePatterns?: string[]; // Custom patterns to ignore during sync (e.g., node_modules, Backup, Logs)
+  SelfContained?: boolean; // Project ships a pre-built, self-contained bundle (carries its own node_modules) — sync deps instead of preserving/excluding them
   RsyncOptions?: string; // Custom rsync options (e.g., '--no-perms --no-owner --no-group --omit-dir-times')
   EnableRollbackOnPostDeployFailure?: boolean; // Enable automatic rollback if post-deployment pipeline fails (default: true)
 }
