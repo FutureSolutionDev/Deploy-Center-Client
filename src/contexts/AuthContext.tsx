@@ -88,9 +88,11 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Does not toggle the global IsLoading flag: the route guards render a
+  // loader while it is set, which unmounted the login page and lost the 2FA
+  // dialog (and its error) after a wrong code. LoginPage has its own spinner.
   const Verify2FA = async (code: string): Promise<IAuthResponse> => {
     try {
-      setIsLoading(true);
       const response = await AuthService.Verify2FA(code);
       setUser(response.User);
       setCurrentSessionId(response.SessionId);
@@ -100,8 +102,6 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('2FA verification error:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
