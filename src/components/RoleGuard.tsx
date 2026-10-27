@@ -4,11 +4,11 @@
  */
 
 import React from 'react';
-import { useRole, UserRole } from '@/contexts/RoleContext';
+import { useRole, type TRoleName } from '@/contexts/RoleContext';
 import { Alert, Box } from '@mui/material';
 
 interface IRoleGuardProps {
-  allowedRoles: UserRole[];
+  allowedRoles: TRoleName[];
   children: React.ReactNode;
   fallback?: React.ReactNode;
   showMessage?: boolean;

@@ -68,6 +68,7 @@ export const UserSettingsProvider: React.FC<IUserSettingsProviderProps> = ({ chi
 
   // Fetch settings when user logs in
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetches settings when the signed-in user changes; pre-existing pattern, refactor tracked separately
     fetchSettings();
   }, [IsAuthenticated, User?.Id]);
 

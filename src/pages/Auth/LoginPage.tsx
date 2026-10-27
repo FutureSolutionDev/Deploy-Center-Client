@@ -3,7 +3,7 @@
  * User authentication page with login form
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -69,13 +69,6 @@ export const LoginPage: React.FC = () => {
     setInfo(null);
     setCredentials((prev) => ({ ...prev, TotpCode: "" }));
   };
-
-  // If 2FA is required at any point, always open the dialog (avoids missing it after rerenders)
-  useEffect(() => {
-    if (RequireTotp) {
-      setShowTotpDialog(true);
-    }
-  }, [RequireTotp]);
 
   const HandleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

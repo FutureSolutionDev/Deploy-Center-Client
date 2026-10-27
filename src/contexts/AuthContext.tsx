@@ -36,14 +36,15 @@ interface IAuthProviderProps {
 
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [User, setUser] = useState<IUser | null>(null);
-  const [IsLoading, setIsLoading] = useState<boolean>(true);
   const [HasSession, setHasSession] = useState<boolean>(() => !sessionStorage.getItem('dc_no_session'));
+  // Only "loading" when there is a session to restore; avoids a synchronous
+  // setState inside the effect below.
+  const [IsLoading, setIsLoading] = useState<boolean>(HasSession);
   const [CurrentSessionId, setCurrentSessionId] = useState<number | null>(null);
 
   // Initialize auth state by checking if user is authenticated via cookie
   useEffect(() => {
     if (!HasSession) {
-      setIsLoading(false);
       return;
     }
 
