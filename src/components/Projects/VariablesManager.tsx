@@ -28,6 +28,7 @@ import {
 import { useUpdateProject } from '@/hooks/useProjects';
 import { useToast } from '@/contexts/ToastContext';
 import type { IProject } from '@/types';
+import { IsMaskedSecret, SECRET_MASK } from '@/utils/secrets';
 
 interface IVariablesManagerProps {
   project: IProject;
@@ -43,6 +44,8 @@ export const VariablesManager: React.FC<IVariablesManagerProps> = ({ project, on
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  // True while editing a write-only value: empty input means "keep current".
+  const [editingMasked, setEditingMasked] = useState(false);
   const [localVariables, setLocalVariables] = useState<Record<string, string>>(
     project.Config?.Variables || {}
   );
@@ -74,7 +77,9 @@ export const VariablesManager: React.FC<IVariablesManagerProps> = ({ project, on
   const handleEditVariable = (key: string) => {
     setEditingKey(key);
     setNewKey(key);
-    setNewValue(localVariables[key]);
+    const masked = IsMaskedSecret(localVariables[key]);
+    setEditingMasked(masked);
+    setNewValue(masked ? '' : localVariables[key] ?? '');
     setDialogOpen(true);
   };
 
@@ -92,13 +97,15 @@ export const VariablesManager: React.FC<IVariablesManagerProps> = ({ project, on
         delete updated[editingKey];
       }
 
-      updated[newKey.trim()] = newValue;
+      // Leaving a write-only value empty keeps the stored secret.
+      updated[newKey.trim()] = editingMasked && newValue === '' ? SECRET_MASK : newValue;
       return updated;
     });
 
     setNewKey('');
     setNewValue('');
     setEditingKey(null);
+    setEditingMasked(false);
     setDialogOpen(false);
   };
 
@@ -231,7 +238,11 @@ export const VariablesManager: React.FC<IVariablesManagerProps> = ({ project, on
                         wordBreak: 'break-all',
                       }}
                     >
-                      {value || <em style={{ color: '#999' }}>(empty)</em>}
+                      {IsMaskedSecret(value) ? (
+                        <em style={{ color: '#999' }}>(set, hidden)</em>
+                      ) : (
+                        value || <em style={{ color: '#999' }}>(empty)</em>
+                      )}
                     </Typography>
                   </Box>
 
@@ -296,7 +307,12 @@ export const VariablesManager: React.FC<IVariablesManagerProps> = ({ project, on
               label="Value"
               value={newValue}
               onChange={(e) => setNewValue(e.target.value)}
-              placeholder="Variable value"
+              placeholder={editingMasked ? 'Enter a new value to replace it' : 'Variable value'}
+              helperText={
+                editingMasked
+                  ? 'The current value is hidden. Leave empty to keep it.'
+                  : undefined
+              }
               multiline
               rows={3}
             />

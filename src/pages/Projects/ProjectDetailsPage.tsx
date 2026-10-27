@@ -61,6 +61,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const deleteProject = useDeleteProject();
   const deployProject = useDeployProject();
   const regenerateWebhook = useRegenerateWebhook();
+  const [RevealedWebhookSecret, setRevealedWebhookSecret] = useState<string | null>(null);
 
   // Local UI state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -140,7 +141,9 @@ export const ProjectDetailsPage: React.FC = () => {
     if (!window.confirm(t("projects.webhookRegenerationWarning"))) return;
 
     regenerateWebhook.mutate(project.Id, {
-      onSuccess: () => {
+      onSuccess: (secret) => {
+        // Write-only: this is the only time the new secret is available.
+        setRevealedWebhookSecret(secret || null);
         showSuccess(t("projects.webhookRegenerated"));
       },
       onError: (error: Error) => {
@@ -228,6 +231,7 @@ export const ProjectDetailsPage: React.FC = () => {
                 onRegenerateWebhook={handleRegenerateWebhook}
                 onCopyToClipboard={copyToClipboard}
                 regeneratingWebhook={regenerateWebhook.isPending}
+                revealedSecret={RevealedWebhookSecret}
               />
               <SshKeyManagement project={project} onUpdate={() => refetch()} />
             </>
