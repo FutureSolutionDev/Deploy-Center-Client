@@ -1,7 +1,7 @@
 {
   "name": "deploy-center-client",
   "private": true,
-  "version": "2.1.0",
+  "version": "3.0.1",
   "description": "Deploy Center - Frontend Application | Comprehensive deployment automation platform with real-time monitoring, RBAC, and CI/CD integration",
   "type": "module",
   "author": "Deploy Center Team",
