@@ -3,6 +3,7 @@
  * Handles all authentication-related API calls
  */
 
+import { isAxiosError } from "axios";
 import ApiInstance from "./api";
 import type {
   ILoginCredentials,
@@ -12,6 +13,26 @@ import type {
   IApiResponse,
   ITwoFactorChallenge,
 } from "@/types";
+
+/** Error carrying the server's message and HTTP status. */
+export class AuthApiError extends Error {
+  public readonly Status?: number;
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = "AuthApiError";
+    this.Status = status;
+  }
+}
+
+const ToAuthError = (error: unknown, fallback: string): AuthApiError => {
+  if (isAxiosError<{ Message?: string }>(error)) {
+    return new AuthApiError(
+      error.response?.data?.Message || fallback,
+      error.response?.status
+    );
+  }
+  return new AuthApiError(error instanceof Error ? error.message : fallback);
+};
 
 class AuthService {
   /**
@@ -29,8 +50,8 @@ class AuthService {
     if (data?.TwoFactorRequired) {
       const challenge: ITwoFactorChallenge = {
         TwoFactorRequired: true,
-        UserId: (data as any).UserId,
-        Username: (data as any).Username,
+        Username: data.Username ?? credentials.Username,
+        ExpiresInSeconds: data.ExpiresInSeconds,
       };
       return challenge;
     }
@@ -103,19 +124,24 @@ class AuthService {
   }
 
   /**
-   * Verify 2FA code
+   * Verify 2FA code. The server identifies the user from the httpOnly
+   * `mfa_pending` cookie set by Login, so only the code is sent.
    */
-  public async Verify2FA(userId: number, code: string): Promise<IAuthResponse> {
-    const response = await ApiInstance.post<IApiResponse<IAuthResponse>>(
-      "/auth/verify-2fa",
-      { UserId: userId, Code: code }
-    );
+  public async Verify2FA(code: string): Promise<IAuthResponse> {
+    try {
+      const response = await ApiInstance.post<IApiResponse<IAuthResponse>>(
+        "/auth/verify-2fa",
+        { Code: code.trim() }
+      );
 
-    if (response.data.Data) {
-      return response.data.Data;
+      if (response.data.Data) {
+        return response.data.Data;
+      }
+
+      throw new AuthApiError(response.data.Message || "2FA verification failed");
+    } catch (error) {
+      throw ToAuthError(error, "2FA verification failed");
     }
-
-    throw new Error(response.data.Message || "2FA verification failed");
   }
 }
 export default new AuthService();

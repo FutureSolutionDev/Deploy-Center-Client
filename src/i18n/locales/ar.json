@@ -423,7 +423,8 @@
     "deleteAccountConfirm": "هل أنت متأكد من حذف حسابك؟",
     "deleteAccountFailed": "فشل حذف الحساب",
     "deleteAccountSuccess": "تم إرسال طلب حذف الحساب",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "legacyBackupCodesInvalidated": "أكواد الاسترداد الحالية اتعملت قبل الإصدار 3.0.1 ومبقتش مقبولة. اعمل أكواد جديدة دلوقتي واحفظها في مكان آمن."
   },
   "notifications": {
     "title": "الإشعارات",

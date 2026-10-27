@@ -30,7 +30,8 @@ import {
 } from "@mui/material";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { ILoginCredentials, ITwoFactorChallenge } from "@/types";
+import type { ILoginCredentials } from "@/types";
+import { AuthApiError } from "@/services/authService";
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +44,6 @@ export const LoginPage: React.FC = () => {
     TotpCode: "",
   });
   const [RequireTotp, setRequireTotp] = useState(false);
-  const [PendingUserId, setPendingUserId] = useState<number | null>(null);
   const [ShowTotpDialog, setShowTotpDialog] = useState(false);
   const [TotpError, setTotpError] = useState<string | null>(null);
   const [Info, setInfo] = useState<string | null>(null);
@@ -64,7 +64,6 @@ export const LoginPage: React.FC = () => {
 
   const ResetTotpState = () => {
     setRequireTotp(false);
-    setPendingUserId(null);
     setShowTotpDialog(false);
     setTotpError(null);
     setInfo(null);
@@ -106,13 +105,10 @@ export const LoginPage: React.FC = () => {
       const response = await Login(Credentials);
 
       if ("TwoFactorRequired" in response && response.TwoFactorRequired) {
-        const challenge = response as ITwoFactorChallenge;
-
-        // Set all states in a single batch to avoid HMR issues
+        // The server keeps the pending 2FA step in an httpOnly cookie.
         setLoading(false); // stop spinner first
         setError(null);
         setInfo(t("auth.totpPrompt"));
-        setPendingUserId(challenge.UserId);
         setRequireTotp(true);
 
         // Use setTimeout to ensure state updates are committed before showing dialog
@@ -155,14 +151,9 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    if (!PendingUserId) {
-      setTotpError(t("auth.loginFailed"));
-      return;
-    }
-
     try {
       setLoading(true);
-      await Verify2FA(PendingUserId, Credentials.TotpCode);
+      await Verify2FA(Credentials.TotpCode);
       setShowTotpDialog(false);
       navigate("/dashboard");
     } catch (error: unknown) {
@@ -170,6 +161,16 @@ export const LoginPage: React.FC = () => {
         error && typeof error === "object" && "message" in error
           ? String(error.message)
           : t("auth.loginFailed");
+
+      // Expired / exhausted 2FA step, or account locked: start over.
+      const restart =
+        error instanceof AuthApiError &&
+        (error.Status === 429 || /sign in again/i.test(errorMessage));
+      if (restart) {
+        ResetTotpState();
+        setError(errorMessage);
+        return;
+      }
 
       setTotpError(errorMessage);
     } finally {

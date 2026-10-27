@@ -22,7 +22,7 @@ interface IAuthContextValue {
   HasSession: boolean;
   CurrentSessionId: number | null;
   Login: (credentials: ILoginCredentials) => Promise<IAuthResponse | ITwoFactorChallenge>;
-  Verify2FA: (userId: number, code: string) => Promise<IAuthResponse>;
+  Verify2FA: (code: string) => Promise<IAuthResponse>;
   Register: (data: IRegisterData) => Promise<void>;
   Logout: () => Promise<void>;
   RefreshUser: () => Promise<void>;
@@ -87,10 +87,10 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     }
   };
 
-  const Verify2FA = async (userId: number, code: string): Promise<IAuthResponse> => {
+  const Verify2FA = async (code: string): Promise<IAuthResponse> => {
     try {
       setIsLoading(true);
-      const response = await AuthService.Verify2FA(userId, code);
+      const response = await AuthService.Verify2FA(code);
       setUser(response.User);
       setCurrentSessionId(response.SessionId);
       setHasSession(true);

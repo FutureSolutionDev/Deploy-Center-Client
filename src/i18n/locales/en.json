@@ -424,7 +424,8 @@
     "deleteAccount": "Delete Account",
     "deleteAccountConfirm": "Are you sure you want to delete your account?",
     "deleteAccountSuccess": "Account deletion requested",
-    "deleteAccountFailed": "Failed to delete account"
+    "deleteAccountFailed": "Failed to delete account",
+    "legacyBackupCodesInvalidated": "Your backup codes were created before v3.0.1 and are no longer accepted. Regenerate them now and store the new codes safely."
   },
   "notifications": {
     "title": "Notifications",
