@@ -6,6 +6,7 @@
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import AuthService from '@/services/authService';
+import { socketService } from '@/services/socket';
 import type {
   IUser,
   ILoginCredentials,
@@ -126,6 +127,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
+      // Close the authenticated socket so the next user starts clean.
+      socketService.disconnect();
       // Clear user state regardless of API response
       setUser(null);
       setCurrentSessionId(null);
