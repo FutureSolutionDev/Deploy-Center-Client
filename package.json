@@ -4,6 +4,7 @@
   "version": "3.0.1",
   "description": "Deploy Center - Frontend Application | Comprehensive deployment automation platform with real-time monitoring, RBAC, and CI/CD integration",
   "type": "module",
+  "packageManager": "bun@1.4.4",
   "author": "Deploy Center Team",
   "license": "SEE LICENSE IN LICENSE",
   "keywords": [
