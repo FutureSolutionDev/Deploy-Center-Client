@@ -3,6 +3,7 @@ import type {
   IApiKey,
   IApiKeyCreateResponse,
   INotificationSettings,
+  ITwoFactorStatus,
   IUser,
   IUserPreferences,
   IUserProfile,
@@ -75,7 +76,7 @@ export const UserSettingsService = {
     return response.data.Data?.backupCodes || [];
   },
 
-  get2FAStatus: async (): Promise<{ enabled: boolean; enabledAt?: Date | null }> => {
+  get2FAStatus: async (): Promise<ITwoFactorStatus> => {
     const response = await ApiInstance.get('/users/me/2fa/status');
     return response.data.Data;
   },

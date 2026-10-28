@@ -41,7 +41,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useRole, UserRole } from "@/contexts/RoleContext";
+import { useRole, UserRole, type TRoleName } from "@/contexts/RoleContext";
 
 const DRAWER_WIDTH = 240;
 
@@ -50,7 +50,7 @@ interface IMenuItem {
   TitleAr: string;
   Path: string;
   Icon: React.ReactNode;
-  AllowedRoles?: UserRole[]; // Optional - if not specified, all roles can access
+  AllowedRoles?: TRoleName[]; // Optional - if not specified, all roles can access
 }
 
 const MenuItems: IMenuItem[] = [

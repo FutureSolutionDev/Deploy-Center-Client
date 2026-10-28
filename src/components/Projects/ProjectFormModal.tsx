@@ -75,6 +75,7 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   // Reset form when modal opens/closes or project changes
   useEffect(() => {
     if (Open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the form each time the modal opens; pre-existing pattern, refactor tracked separately
       setFormData(Project || getDefaultFormData());
       setActiveStep(0);
       setError(null);

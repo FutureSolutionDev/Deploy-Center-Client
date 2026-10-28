@@ -73,6 +73,7 @@ export const DeploymentLogsPage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch for the deployment in the URL; pre-existing pattern, refactor tracked separately
     fetchDeployment();
     fetchLogs();
 

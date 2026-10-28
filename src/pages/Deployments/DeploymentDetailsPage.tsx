@@ -30,6 +30,28 @@ export const DeploymentDetailsPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState(0);
 
+    const fetchDeployment = async () => {
+        try {
+            if (!id) return;
+            const data = await DeploymentsService.getById(Number(id));
+            setDeployment(data);
+        } catch (_err) {
+            setError('Failed to load deployment details');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchLogs = async () => {
+        try {
+            if (!id) return;
+            const logData = await DeploymentsService.getLogs(Number(id));
+            setLogs(logData);
+        } catch (_err) {
+            console.error('Failed to load logs');
+        }
+    };
+
     // Connect to socket for this deployment
     useDeploymentUpdates(deployment?.ProjectId);
 
@@ -71,29 +93,8 @@ export const DeploymentDetailsPage: React.FC = () => {
         };
     }, [socket, id]);
 
-    const fetchDeployment = async () => {
-        try {
-            if (!id) return;
-            const data = await DeploymentsService.getById(Number(id));
-            setDeployment(data);
-        } catch (_err) {
-            setError('Failed to load deployment details');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchLogs = async () => {
-        try {
-            if (!id) return;
-            const logData = await DeploymentsService.getLogs(Number(id));
-            setLogs(logData);
-        } catch (_err) {
-            console.error('Failed to load logs');
-        }
-    };
-
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch for the deployment in the URL; pre-existing pattern, refactor tracked separately
         fetchDeployment();
         fetchLogs();
     }, [id]);

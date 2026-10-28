@@ -167,7 +167,10 @@
     "regenerateSshKeyWarning": "This will generate a new SSH key and invalidate the old one. You must update the deploy key in your GitHub repository. This action cannot be undone.",
     "deleteSshKeyWarning": "This will delete the SSH key from this project. Deployments will fall back to HTTPS. This action cannot be undone.",
     "processing": "Processing...",
-    "webhookUrl": "Webhook URL"
+    "webhookUrl": "Webhook URL",
+    "secretSet": "Set (hidden). Regenerate to get a new secret.",
+    "secretNotSet": "Not set",
+    "webhookSecretShownOnce": "Copy this secret now and update it in GitHub. It will not be shown again."
   },
   "deployments": {
     "title": "Deployments",
@@ -424,7 +427,8 @@
     "deleteAccount": "Delete Account",
     "deleteAccountConfirm": "Are you sure you want to delete your account?",
     "deleteAccountSuccess": "Account deletion requested",
-    "deleteAccountFailed": "Failed to delete account"
+    "deleteAccountFailed": "Failed to delete account",
+    "legacyBackupCodesInvalidated": "Your backup codes were created before v3.0.1 and are no longer accepted. Regenerate them now and store the new codes safely."
   },
   "notifications": {
     "title": "Notifications",

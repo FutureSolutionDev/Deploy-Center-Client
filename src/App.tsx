@@ -112,10 +112,8 @@ const AppRoutesWithToast: React.FC = () => {
 
     // Import socket service
     import('@/services/socket').then(({ socketService }) => {
+      // The server joins the authenticated user's room on connect.
       const socket = socketService.connect();
-
-      // Join user room for session management
-      socket.emit('join:user', User.Id);
 
       // Listen for session revoked event
       const handleSessionRevoked = (payload: { SessionId: number }) => {

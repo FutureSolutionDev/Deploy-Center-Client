@@ -170,6 +170,11 @@ export const SecurityTab: React.FC<ISecurityTabProps> = ({ t }) => {
               {errorMessage}
             </Alert>
           )}
+          {twoFactorEnabled && twoFAStatus?.legacyBackupCodesInvalidated && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              {t("settings.legacyBackupCodesInvalidated")}
+            </Alert>
+          )}
 
           {!twoFactorEnabled && (
             <Stack spacing={2}>

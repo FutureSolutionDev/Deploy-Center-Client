@@ -30,7 +30,7 @@ import type { IDeploymentStatistics, IProject } from "@/types";
 
 export const ReportsPage: React.FC = () => {
     const { t } = useLanguage();
-    const { } = useTheme();
+    useTheme();
 
     const [dateRange, setDateRange] = useState("last30");
     const [reportType, setReportType] = useState("overview");

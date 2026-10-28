@@ -6,6 +6,7 @@
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import AuthService from '@/services/authService';
+import { socketService } from '@/services/socket';
 import type {
   IUser,
   ILoginCredentials,
@@ -21,7 +22,7 @@ interface IAuthContextValue {
   HasSession: boolean;
   CurrentSessionId: number | null;
   Login: (credentials: ILoginCredentials) => Promise<IAuthResponse | ITwoFactorChallenge>;
-  Verify2FA: (userId: number, code: string) => Promise<IAuthResponse>;
+  Verify2FA: (code: string) => Promise<IAuthResponse>;
   Register: (data: IRegisterData) => Promise<void>;
   Logout: () => Promise<void>;
   RefreshUser: () => Promise<void>;
@@ -35,14 +36,15 @@ interface IAuthProviderProps {
 
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [User, setUser] = useState<IUser | null>(null);
-  const [IsLoading, setIsLoading] = useState<boolean>(true);
   const [HasSession, setHasSession] = useState<boolean>(() => !sessionStorage.getItem('dc_no_session'));
+  // Only "loading" when there is a session to restore; avoids a synchronous
+  // setState inside the effect below.
+  const [IsLoading, setIsLoading] = useState<boolean>(HasSession);
   const [CurrentSessionId, setCurrentSessionId] = useState<number | null>(null);
 
   // Initialize auth state by checking if user is authenticated via cookie
   useEffect(() => {
     if (!HasSession) {
-      setIsLoading(false);
       return;
     }
 
@@ -86,10 +88,12 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     }
   };
 
-  const Verify2FA = async (userId: number, code: string): Promise<IAuthResponse> => {
+  // Does not toggle the global IsLoading flag: the route guards render a
+  // loader while it is set, which unmounted the login page and lost the 2FA
+  // dialog (and its error) after a wrong code. LoginPage has its own spinner.
+  const Verify2FA = async (code: string): Promise<IAuthResponse> => {
     try {
-      setIsLoading(true);
-      const response = await AuthService.Verify2FA(userId, code);
+      const response = await AuthService.Verify2FA(code);
       setUser(response.User);
       setCurrentSessionId(response.SessionId);
       setHasSession(true);
@@ -98,8 +102,6 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('2FA verification error:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -126,6 +128,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
+      // Close the authenticated socket so the next user starts clean.
+      socketService.disconnect();
       // Clear user state regardless of API response
       setUser(null);
       setCurrentSessionId(null);

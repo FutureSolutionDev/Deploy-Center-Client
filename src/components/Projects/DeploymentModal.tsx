@@ -50,6 +50,7 @@ export const DeploymentModal: React.FC<IDeploymentModalProps> = ({
     // Reset form when project changes
     useEffect(() => {
         if (Project) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the form when a different project is opened; pre-existing pattern, refactor tracked separately
             setBranch(Project.Branch || 'main');
             setCommitHash('');
             setCommitMessage('');
