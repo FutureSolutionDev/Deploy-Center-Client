@@ -58,6 +58,7 @@ export const ProjectNotificationsCard: React.FC<IProps> = ({ projectId }) => {
     if (seededRef.current) {
       // Merge: for non-dirty rows, take server values; for dirty rows, keep
       // the user's in-progress edits intact.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs server data into local edit state without dropping dirty rows; see the note above
       setRows((prev) => {
         const next = new Map(prev);
         for (const c of channels) {

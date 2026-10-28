@@ -29,17 +29,17 @@ export interface IEmailConfigInput {
   presetName?: 'gmail' | 'sendgrid' | 'mailgun' | 'custom';
 }
 
-export type IProviderConfigInput = IDiscordConfigInput | ISlackConfigInput | IEmailConfigInput;
+export type TProviderConfigInput = IDiscordConfigInput | ISlackConfigInput | IEmailConfigInput;
 
 export interface IProviderCreate {
   Name: string;
   Type: TProviderType;
-  Config: IProviderConfigInput;
+  Config: TProviderConfigInput;
 }
 
 export interface IProviderUpdate {
   Name?: string;
-  Config?: IProviderConfigInput;
+  Config?: TProviderConfigInput;
   IsActive?: boolean;
 }
 

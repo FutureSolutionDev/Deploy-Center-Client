@@ -7,14 +7,14 @@
 
 import ApiInstance from './api';
 
-export type EProjectTemplateCategory = 'backend' | 'frontend' | 'static' | 'other';
+export type TProjectTemplateCategory = 'backend' | 'frontend' | 'static' | 'other';
 
 export interface IProjectTemplate {
   Id: number;
   Name: string;
   Description: string | null;
   Icon: string | null;
-  Category: EProjectTemplateCategory;
+  Category: TProjectTemplateCategory;
   DefaultConfig: Record<string, unknown>;
   IsBuiltIn: boolean;
   CreatedBy: number | null;
@@ -26,7 +26,7 @@ export interface IProjectTemplateCreate {
   Name: string;
   Description?: string | null;
   Icon?: string | null;
-  Category: EProjectTemplateCategory;
+  Category: TProjectTemplateCategory;
   DefaultConfig: Record<string, unknown>;
 }
 
@@ -34,12 +34,12 @@ export interface IProjectTemplateUpdate {
   Name?: string;
   Description?: string | null;
   Icon?: string | null;
-  Category?: EProjectTemplateCategory;
+  Category?: TProjectTemplateCategory;
   DefaultConfig?: Record<string, unknown>;
 }
 
 export const ProjectTemplateService = {
-  list: async (category?: EProjectTemplateCategory): Promise<IProjectTemplate[]> => {
+  list: async (category?: TProjectTemplateCategory): Promise<IProjectTemplate[]> => {
     const params = category ? { category } : undefined;
     const res = await ApiInstance.get('/project-templates', { params });
     const data = res.data?.Data;
