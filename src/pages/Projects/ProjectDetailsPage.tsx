@@ -104,10 +104,6 @@ export const ProjectDetailsPage: React.FC = () => {
   const deleteProject = useDeleteProject();
   const deployProject = useDeployProject();
   const regenerateWebhook = useRegenerateWebhook();
-  const [RevealedWebhook, setRevealedWebhook] = useState<{ ProjectId: number; Secret: string } | null>(null);
-  const RevealedWebhookSecret =
-    RevealedWebhook && project && RevealedWebhook.ProjectId === project.Id ? RevealedWebhook.Secret : null;
-
   // Local UI state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deployDialogOpen, setDeployDialogOpen] = useState(false);
@@ -183,10 +179,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
     const projectId = project.Id;
     regenerateWebhook.mutate(projectId, {
-      onSuccess: (secret) => {
-        // Write-only: this is the only time the new secret is available.
-        // Keyed by project so another project's page never shows it.
-        setRevealedWebhook(secret ? { ProjectId: projectId, Secret: secret } : null);
+      onSuccess: () => {
         showSuccess(t("projects.webhookRegenerated"));
       },
       onError: (error: Error) => {
