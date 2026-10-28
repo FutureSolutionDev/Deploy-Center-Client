@@ -22,7 +22,10 @@ export interface IProject {
   ProjectPath: string; // Deprecated: kept for backward compatibility, use DeploymentPaths instead
   DeploymentPaths?: string[]; // Array of deployment paths (replaces single ProjectPath)
   ProjectType: TProjectType;
-  WebhookSecret: string;
+  /** Never returned since server v3.0.1 (write-only); see Secrets.WebhookSecret. */
+  WebhookSecret?: string;
+  /** Write-only secret state by path, e.g. "WebhookSecret", "Config.Variables.API_KEY". */
+  Secrets?: Record<string, { HasValue: boolean }>;
   IsActive: boolean;
   Config: IProjectConfig;
   CreatedAt: Date;
@@ -30,9 +33,6 @@ export interface IProject {
 
   // SSH Key Management Fields
   UseSshKey: boolean;
-  SshKeyEncrypted?: string | null;
-  SshKeyIv?: string | null;
-  SshKeyAuthTag?: string | null;
   SshPublicKey?: string | null;
   SshKeyFingerprint?: string | null;
   SshKeyType?: 'ed25519' | 'rsa' | null;

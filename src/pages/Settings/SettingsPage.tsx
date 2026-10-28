@@ -9,7 +9,7 @@ import {
 } from "@mui/icons-material";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRole } from "@/contexts/RoleContext";
-import { UserRole } from "@/contexts/RoleContext";
+import { UserRole, type TRoleName } from "@/contexts/RoleContext";
 import ProfileTab from "@/components/Settings/ProfileTab";
 import PreferencesTab from "@/components/Settings/PreferencesTab";
 import NotificationsTab from "@/components/Settings/NotificationsTab";
@@ -35,7 +35,7 @@ interface ITabConfig {
   label: string;
   icon: React.ReactElement;
   component: React.ReactElement;
-  allowedRoles?: UserRole[]; // If not specified, allowed for all roles
+  allowedRoles?: TRoleName[]; // If not specified, allowed for all roles
 }
 
 export const SettingsPage: React.FC = () => {

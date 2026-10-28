@@ -39,10 +39,21 @@ export interface ILoginCredentials {
   TotpCode?: string;
 }
 
+/**
+ * Returned by /auth/login for 2FA accounts. Since v3.0.1 the server binds the
+ * second step to an httpOnly `mfa_pending` cookie; no user id is exposed.
+ */
 export interface ITwoFactorChallenge {
   TwoFactorRequired: true;
-  UserId: number;
   Username: string;
+  ExpiresInSeconds?: number;
+}
+
+export interface ITwoFactorStatus {
+  enabled: boolean;
+  enabledAt?: Date | null;
+  backupCodesRemaining?: number;
+  legacyBackupCodesInvalidated?: boolean;
 }
 
 export interface IRegisterData {

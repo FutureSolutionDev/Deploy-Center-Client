@@ -10,6 +10,7 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
@@ -20,12 +21,15 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useRole } from '@/contexts/RoleContext';
 import type { IProject } from '@/types';
+import { HasSecret } from '@/utils/secrets';
 
 interface IProjectWebhookCardProps {
   project: IProject;
   onRegenerateWebhook: () => Promise<void>;
   onCopyToClipboard: (text: string) => void;
   regeneratingWebhook: boolean;
+  /** The new secret, available only right after regeneration (write-only). */
+  revealedSecret?: string | null;
 }
 
 export const ProjectWebhookCard: React.FC<IProjectWebhookCardProps> = ({
@@ -33,10 +37,12 @@ export const ProjectWebhookCard: React.FC<IProjectWebhookCardProps> = ({
   onRegenerateWebhook,
   onCopyToClipboard,
   regeneratingWebhook,
+  revealedSecret,
 }) => {
   const { t } = useTranslation();
   const { canManageProjects } = useRole();
   const [showWebhook, setShowWebhook] = useState(false);
+  const hasSecret = HasSecret(project.Secrets, 'WebhookSecret', project.WebhookSecret);
 
   // Build webhook URL from current window location
   const webhookUrl = `${window.location.protocol}//${window.location.host}/api/webhooks/github/${project.Name}`;
@@ -75,31 +81,44 @@ export const ProjectWebhookCard: React.FC<IProjectWebhookCardProps> = ({
           sx={{ mb: 2 }}
         />
 
-        <TextField
-          fullWidth
-          label={t('projects.webhookSecret')}
-          type={showWebhook ? 'text' : 'password'}
-          value={project.WebhookSecret || 'Not generated'}
-          InputProps={{
-            readOnly: true,
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowWebhook(!showWebhook)} edge="end">
-                  {showWebhook ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                </IconButton>
-                <Tooltip title={t('common.copy')}>
-                  <IconButton
-                    onClick={() => onCopyToClipboard(project.WebhookSecret)}
-                    edge="end"
-                  >
-                    <CopyIcon />
-                  </IconButton>
-                </Tooltip>
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 0.5 }}
-        />
+        {revealedSecret ? (
+          <>
+            <Alert severity="warning" sx={{ mb: 1 }}>
+              {t('projects.webhookSecretShownOnce')}
+            </Alert>
+            <TextField
+              fullWidth
+              label={t('projects.webhookSecret')}
+              type={showWebhook ? 'text' : 'password'}
+              value={revealedSecret}
+              InputProps={{
+                readOnly: true,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowWebhook(!showWebhook)} edge="end">
+                      {showWebhook ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                    <Tooltip title={t('common.copy')}>
+                      <IconButton onClick={() => onCopyToClipboard(revealedSecret)} edge="end">
+                        <CopyIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 0.5 }}
+            />
+          </>
+        ) : (
+          <TextField
+            fullWidth
+            label={t('projects.webhookSecret')}
+            type="text"
+            value={hasSecret ? t('projects.secretSet') : t('projects.secretNotSet')}
+            InputProps={{ readOnly: true }}
+            sx={{ mb: 0.5 }}
+          />
+        )}
 
         {canManageProjects && (
           <Button

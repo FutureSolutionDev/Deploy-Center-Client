@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import UserSettingsService from '@/services/userSettingsService';
 import type {
+  ITwoFactorStatus,
   IUserSettings,
   INotificationSettings,
   IUserPreferences,
@@ -43,7 +44,7 @@ export const useUserSessions = () => {
  * Custom hook to fetch 2FA status
  */
 export const use2FAStatus = () => {
-  return useQuery<{ enabled: boolean }, Error>({
+  return useQuery<ITwoFactorStatus, Error>({
     queryKey: ['2faStatus'],
     queryFn: () => UserSettingsService.get2FAStatus(),
   });

@@ -158,7 +158,10 @@
     "regenerateSshKeyWarning": "سيتم توليد مفتاح SSH جديد وإبطال المفتاح القديم. يجب عليك تحديث مفتاح النشر في مستودع GitHub الخاص بك. لا يمكن التراجع عن هذا الإجراء.",
     "deleteSshKeyWarning": "سيتم حذف مفتاح SSH من هذا المشروع. ستعود عمليات النشر إلى استخدام HTTPS. لا يمكن التراجع عن هذا الإجراء.",
     "processing": "جاري المعالجة...",
-    "webhookUrl": "لينك الويبهوك"
+    "webhookUrl": "لينك الويبهوك",
+    "secretSet": "متسجّل (مخفي). اعمل توليد جديد عشان تاخد سر جديد.",
+    "secretNotSet": "مش متسجّل",
+    "webhookSecretShownOnce": "انسخ السر ده دلوقتي وحدّثه في GitHub، مش هيظهر تاني."
   },
   "deployments": {
     "title": "عمليات النشر",
@@ -423,7 +426,8 @@
     "deleteAccountConfirm": "هل أنت متأكد من حذف حسابك؟",
     "deleteAccountFailed": "فشل حذف الحساب",
     "deleteAccountSuccess": "تم إرسال طلب حذف الحساب",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "legacyBackupCodesInvalidated": "أكواد الاسترداد الحالية اتعملت قبل الإصدار 3.0.1 ومبقتش مقبولة. اعمل أكواد جديدة دلوقتي واحفظها في مكان آمن."
   },
   "notifications": {
     "title": "الإشعارات",

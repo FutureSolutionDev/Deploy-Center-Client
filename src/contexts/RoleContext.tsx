@@ -13,10 +13,10 @@ export const UserRole = {
   Viewer: 'viewer',
 } as const;
 
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+export type TRoleName = typeof UserRole[keyof typeof UserRole];
 
 interface IRoleContext {
-  role: UserRole | null;
+  role: TRoleName | null;
   isAdmin: boolean;
   isManager: boolean;
   isDeveloper: boolean;
@@ -26,7 +26,7 @@ interface IRoleContext {
   canManageUsers: boolean;
   canDeploy: boolean;
   canViewReports: boolean;
-  hasRole: (roles: UserRole[]) => boolean;
+  hasRole: (roles: TRoleName[]) => boolean;
 }
 
 const RoleContext = createContext<IRoleContext | undefined>(undefined);
@@ -35,7 +35,7 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { User } = useAuth();
 
   const roleUtils = useMemo(() => {
-    const role = User?.Role as UserRole | null;
+    const role = User?.Role as TRoleName | null;
     const isAdmin = role === UserRole.Admin;
     const isManager = role === UserRole.Manager;
     const isDeveloper = role === UserRole.Developer;
@@ -53,7 +53,7 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
       canManageUsers: isAdmin || isManager,
       canDeploy: isAdmin || isManager || isDeveloper,
       canViewReports: isAdmin || isManager,
-      hasRole: (roles: UserRole[]) => (role ? roles.includes(role) : false),
+      hasRole: (roles: TRoleName[]) => (role ? roles.includes(role) : false),
     };
   }, [User?.Role]);
 

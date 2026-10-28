@@ -60,13 +60,6 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
 
   const hasSSHKey = project.UseSshKey && project.SshPublicKey;
 
-  // Load SSH key info if exists
-  useEffect(() => {
-    if (hasSSHKey) {
-      loadSshKeyInfo();
-    }
-  }, [hasSSHKey, project.Id]);
-
   const loadSshKeyInfo = async () => {
     try {
       const keyInfo = await ProjectsService.getSshPublicKey(project.Id);
@@ -75,6 +68,14 @@ export const SshKeyManagement: React.FC<ISshKeyManagementProps> = ({
       console.error('Failed to load SSH key info', err);
     }
   };
+
+  // Load SSH key info if exists
+  useEffect(() => {
+    if (hasSSHKey) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- loads key details from the API when the project changes; pre-existing pattern, refactor tracked separately
+      loadSshKeyInfo();
+    }
+  }, [hasSSHKey, project.Id]);
 
   const handleGenerateKey = async () => {
     setLoading(true);
