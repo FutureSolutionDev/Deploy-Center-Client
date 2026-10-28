@@ -89,6 +89,13 @@ export const VariablesManager: React.FC<IVariablesManagerProps> = ({ project, on
       return;
     }
 
+    // The mask means "keep the value stored under this name", so a renamed
+    // write-only variable needs its value entered again.
+    if (editingMasked && newValue === '' && editingKey && editingKey !== newKey.trim()) {
+      showError('Enter the value again to rename a hidden variable');
+      return;
+    }
+
     setLocalVariables((prev) => {
       const updated = { ...prev };
 

@@ -55,7 +55,8 @@ class SocketService {
       this.rejoinRooms();
     });
 
-    this.socket.on("connect_error", () => {
+    this.socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
       // `active` is false when the server middleware refused the handshake;
       // socket.io will not retry on its own in that case.
       if (this.socket && !this.socket.active) {
