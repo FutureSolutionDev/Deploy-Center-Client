@@ -17,18 +17,14 @@ Modern React-based web interface for Deploy Center CI/CD platform.
 
 ## 📋 Prerequisites
 
-- Node.js 18+
-- npm or yarn
+- [Bun](https://bun.sh) 1.4+ (the project's package manager and script runner)
 - Deploy Center Server running
 
 ## 🛠️ Installation
 
 ```bash
-# Install dependencies
-npm install
-
-# or with yarn
-yarn install
+# Install dependencies (bun.lock is the only lockfile)
+bun install
 ```
 
 ## ⚙️ Configuration
@@ -49,7 +45,7 @@ VITE_API_TIMEOUT=30000
 
 ```bash
 # Start development server
-npm run dev
+bun run dev
 
 # Server will start at http://localhost:5173
 ```
@@ -58,10 +54,10 @@ npm run dev
 
 ```bash
 # Build for production
-npm run build
+bun run build
 
 # Preview production build
-npm run preview
+bun run preview
 ```
 
 Build output will be in `dist/` directory.

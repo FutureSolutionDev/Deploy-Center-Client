@@ -17,7 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   NotificationChannelService,
   type IChannelListItem,
-  type IDeliveryConfigInput,
+  type TDeliveryConfigInput,
 } from '@/services/notificationChannelService';
 import { NotificationProviderService, type IProviderListItem } from '@/services/notificationProviderService';
 
@@ -66,7 +66,7 @@ export const NotificationChannelsTab: React.FC<{ t: (key: string) => string }> =
 
   const selectedProvider = dialog.ProviderId === '' ? undefined : providerById.get(dialog.ProviderId);
 
-  const buildDelivery = (): IDeliveryConfigInput | null => {
+  const buildDelivery = (): TDeliveryConfigInput | null => {
     if (!selectedProvider) return null;
     if (selectedProvider.Type === 'discord') {
       return dialog.discordOverride
@@ -98,7 +98,7 @@ export const NotificationChannelsTab: React.FC<{ t: (key: string) => string }> =
   const updateMut = useMutation({
     mutationFn: () => {
       if (!dialog.editingId) throw new Error('Missing id');
-      const payload: { Name?: string; DeliveryConfig?: IDeliveryConfigInput; IsActive?: boolean } = {
+      const payload: { Name?: string; DeliveryConfig?: TDeliveryConfigInput; IsActive?: boolean } = {
         Name: dialog.Name, IsActive: dialog.IsActive,
       };
       const delivery = buildDelivery();

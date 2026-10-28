@@ -20,7 +20,7 @@ interface IProps {
   resetMs?: number;
 }
 
-type Status = 'idle' | 'success' | 'error';
+type TStatus = 'idle' | 'success' | 'error';
 
 const fallbackCopy = (value: string): boolean => {
   // Last-resort fallback for non-secure-context browsers.
@@ -39,7 +39,7 @@ const fallbackCopy = (value: string): boolean => {
 };
 
 export const CopyLogButton: React.FC<IProps> = ({ text, size = 'small', resetMs = 1500 }) => {
-  const [status, setStatus] = useState<Status>('idle');
+  const [status, setStatus] = useState<TStatus>('idle');
 
   const handleClick = async () => {
     let ok = false;

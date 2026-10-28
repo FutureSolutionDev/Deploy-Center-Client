@@ -19,17 +19,17 @@ export interface IChannelListItem {
 export interface IDiscordDelivery { webhookSuffix?: string; overrideWebhook?: string; }
 export interface ISlackDelivery { channel: string; }
 export interface IEmailDelivery { recipients: string[]; }
-export type IDeliveryConfigInput = IDiscordDelivery | ISlackDelivery | IEmailDelivery;
+export type TDeliveryConfigInput = IDiscordDelivery | ISlackDelivery | IEmailDelivery;
 
 export interface IChannelCreate {
   ProviderId: number;
   Name: string;
-  DeliveryConfig: IDeliveryConfigInput;
+  DeliveryConfig: TDeliveryConfigInput;
 }
 
 export interface IChannelUpdate {
   Name?: string;
-  DeliveryConfig?: IDeliveryConfigInput;
+  DeliveryConfig?: TDeliveryConfigInput;
   IsActive?: boolean;
 }
 

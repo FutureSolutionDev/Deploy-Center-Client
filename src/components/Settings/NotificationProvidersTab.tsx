@@ -19,7 +19,7 @@ import {
   NotificationProviderService,
   type IProviderListItem,
   type TProviderType,
-  type IProviderConfigInput,
+  type TProviderConfigInput,
 } from '@/services/notificationProviderService';
 import SmtpPresetPicker, { SMTP_PRESETS, type TSmtpPreset } from './SmtpPresetPicker';
 
@@ -78,7 +78,7 @@ export const NotificationProvidersTab: React.FC<{ t: (key: string) => string }> 
   const [error, setError] = useState<string | null>(null);
   const refetch = () => queryClient.invalidateQueries({ queryKey });
 
-  const buildConfig = (): IProviderConfigInput => {
+  const buildConfig = (): TProviderConfigInput => {
     if (dialog.Type === 'discord') return { webhookRoot: dialog.webhookRoot };
     if (dialog.Type === 'slack')   return { webhookUrl: dialog.webhookUrl || undefined, botToken: dialog.botToken || undefined };
     return {
@@ -100,7 +100,7 @@ export const NotificationProvidersTab: React.FC<{ t: (key: string) => string }> 
   const updateMut = useMutation({
     mutationFn: () => {
       if (!dialog.editingId) throw new Error('Missing id');
-      const payload: { Name?: string; Config?: IProviderConfigInput; IsActive?: boolean } = {
+      const payload: { Name?: string; Config?: TProviderConfigInput; IsActive?: boolean } = {
         Name: dialog.Name,
         IsActive: dialog.IsActive,
       };

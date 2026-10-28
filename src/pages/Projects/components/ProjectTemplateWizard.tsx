@@ -33,7 +33,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ProjectTemplateService,
   type IProjectTemplate,
-  type EProjectTemplateCategory,
+  type TProjectTemplateCategory,
 } from '@/services/projectTemplateService';
 
 interface IProps {
@@ -41,7 +41,7 @@ interface IProps {
   onClose: (chosen: IProjectTemplate | null | 'cancel') => void;
 }
 
-const CATEGORY_LABELS: Record<EProjectTemplateCategory, string> = {
+const CATEGORY_LABELS: Record<TProjectTemplateCategory, string> = {
   backend: 'Backend',
   frontend: 'Frontend',
   static: 'Static',
@@ -59,7 +59,7 @@ export const ProjectTemplateWizard: React.FC<IProps> = ({ open, onClose }) => {
   });
 
   const grouped = useMemo(() => {
-    const map = new Map<EProjectTemplateCategory, IProjectTemplate[]>();
+    const map = new Map<TProjectTemplateCategory, IProjectTemplate[]>();
     for (const cat of ['backend', 'frontend', 'static', 'other'] as const) {
       map.set(cat, []);
     }
