@@ -21,6 +21,7 @@ export const ETriggerType = {
   Webhook: 'webhook',
   Manual: 'manual',
   Scheduled: 'scheduled',
+  Rollback: 'rollback', // v3.0 F-007 — created by RollbackService
 } as const;
 
 export type TTriggerType = typeof ETriggerType[keyof typeof ETriggerType];

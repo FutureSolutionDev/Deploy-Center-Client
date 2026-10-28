@@ -7,13 +7,9 @@ import type { IUser } from './auth';
 export interface IUserSettings {
   Id: number;
   UserId: number;
-  EmailNotifications: boolean;
-  DiscordWebhookUrl?: string | null;
-  SlackWebhookUrl?: string | null;
-  NotifyOnSuccess: boolean;
-  NotifyOnFailure: boolean;
-  NotifyOnProjectUpdate: boolean;
-  NotifyOnSystemAlert: boolean;
+  // v3.0 — per-user notification fields removed; notifications are
+  // managed centrally via NotificationProviders/Channels + per-project
+  // ProjectNotificationSubscriptions (F-006).
   Timezone: string;
   DateFormat: string;
   TimeFormat: '12h' | '24h';
@@ -22,16 +18,6 @@ export interface IUserSettings {
   ColorTheme: string;
   CreatedAt: Date;
   UpdatedAt: Date;
-}
-
-export interface INotificationSettings {
-  EmailNotifications?: boolean;
-  DiscordWebhookUrl?: string | null;
-  SlackWebhookUrl?: string | null;
-  NotifyOnSuccess?: boolean;
-  NotifyOnFailure?: boolean;
-  NotifyOnProjectUpdate?: boolean;
-  NotifyOnSystemAlert?: boolean;
 }
 
 export interface IUserPreferences {

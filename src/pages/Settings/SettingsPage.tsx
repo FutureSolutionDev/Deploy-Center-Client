@@ -12,10 +12,16 @@ import { useRole } from "@/contexts/RoleContext";
 import { UserRole, type TRoleName } from "@/contexts/RoleContext";
 import ProfileTab from "@/components/Settings/ProfileTab";
 import PreferencesTab from "@/components/Settings/PreferencesTab";
-import NotificationsTab from "@/components/Settings/NotificationsTab";
 import SecurityTab from "@/components/Settings/SecurityTab";
 import ApiKeysTab from "@/components/Settings/ApiKeysTab";
 import SessionsTab from "@/components/Settings/SessionsTab";
+// v3.0 F-006 — central notification config. The legacy per-user
+// NotificationsTab (UserSettings.DiscordWebhookUrl + Notify* flags) was
+// deleted in this release; nothing on the server fanned those values out
+// for real deployment notifications. Use Providers + Channels (here) plus
+// per-project Subscriptions (on ProjectDetailsPage) instead.
+import NotificationProvidersTab from "@/components/Settings/NotificationProvidersTab";
+import NotificationChannelsTab from "@/components/Settings/NotificationChannelsTab";
 
 interface ITabPanelProps {
   children?: React.ReactNode;
@@ -58,16 +64,24 @@ export const SettingsPage: React.FC = () => {
       // Allowed for all roles
     },
     {
-      label: t("settings.notifications"),
-      icon: <NotificationsIcon />,
-      component: <NotificationsTab t={t} />,
-      // Allowed for all roles
-    },
-    {
       label: t("settings.apiKeys"),
       icon: <SecurityIcon />,
       component: <ApiKeysTab t={t} />,
       allowedRoles: [UserRole.Admin, UserRole.Manager], // Only Admin and Manager
+    },
+    // v3.0 F-006 — Notification Providers (Admin only, holds credentials)
+    {
+      label: "Notification Providers",
+      icon: <NotificationsIcon />,
+      component: <NotificationProvidersTab t={t} />,
+      allowedRoles: [UserRole.Admin],
+    },
+    // v3.0 F-006 — Notification Channels (Admin/Manager)
+    {
+      label: "Notification Channels",
+      icon: <NotificationsIcon />,
+      component: <NotificationChannelsTab t={t} />,
+      allowedRoles: [UserRole.Admin, UserRole.Manager],
     },
     {
       label: t("settings.sessions"),

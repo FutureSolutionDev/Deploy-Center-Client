@@ -160,6 +160,17 @@ export const ProjectConfigCard: React.FC<IProjectConfigCardProps> = ({ project }
               </Paper>
             </Grid>
           )}
+
+          {project.Config?.SelfContained && (
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="caption" color="text.secondary">
+                Self-Contained Bundle
+              </Typography>
+              <Typography variant="body2">
+                Enabled — node_modules &amp; lock files are synced (no install on the server)
+              </Typography>
+            </Grid>
+          )}
         </Grid>
       </CardContent>
     </Card>

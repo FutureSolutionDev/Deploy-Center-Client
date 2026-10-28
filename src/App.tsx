@@ -168,6 +168,8 @@ const AppRoutes: React.FC = () => {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectDetailsPage />} />
+        {/* v3.0 F-009 — Workspaces merged into ProjectsPage; redirect any deep links */}
+        <Route path="workspaces" element={<Navigate to="/projects" replace />} />
         <Route path="deployments" element={<DeploymentsPage />} />
         <Route path="deployments/:id" element={<DeploymentDetailsPage />} />
         <Route path="queue" element={<QueuePage />} />

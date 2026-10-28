@@ -20,19 +20,30 @@ import { Step1BasicInfo } from './Wizard/Step1BasicInfo';
 import { Step2Configuration } from './Wizard/Step2Configuration';
 import { Step3Pipeline } from './Wizard/Step3Pipeline';
 import { PostDeploymentPipeline } from './Wizard/PostDeploymentPipeline';
-import { Step4Notifications } from './Wizard/Step4Notifications';
+// v3.0 F-006: notification subscriptions live in their own tab on the
+// Project Details page (ProjectNotificationsCard). The wizard only covers
+// project-intrinsic fields (info, config, pipeline) — same pattern as
+// Members / SSH / Webhook, which are also tab-only.
 
 interface IProjectFormModalProps {
   Open: boolean;
   Project?: IProject; // Optional - if provided, it's edit mode
+  /**
+   * v3.0 F-008 (T084): when set (and Project is NOT set), pre-fills the
+   * Create form with these defaults. Typically supplied by
+   * ProjectTemplateWizard's selected template's `DefaultConfig`.
+   * Ignored in edit mode.
+   */
+  PrefillConfig?: Partial<import('@/types').IProjectConfig>;
   OnClose: (updated: boolean) => void;
 }
 
-const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Post-Deployment', 'Notifications'];
+const steps = ['Basic Info', 'Configuration', 'Pipeline', 'Post-Deployment'];
 
 export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   Open,
   Project,
+  PrefillConfig,
   OnClose,
 }) => {
   const { showSuccess, showError } = useToast();
@@ -75,13 +86,24 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
   // Reset form when modal opens/closes or project changes
   useEffect(() => {
     if (Open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the form each time the modal opens; pre-existing pattern, refactor tracked separately
-      setFormData(Project || getDefaultFormData());
+      if (Project) {
+        setFormData(Project);
+      } else if (PrefillConfig) {
+        // v3.0 F-008 — merge template DefaultConfig over the create defaults,
+        // user can still edit every field in subsequent steps.
+        const defaults = getDefaultFormData();
+        setFormData({
+          ...defaults,
+          Config: { ...defaults.Config!, ...PrefillConfig },
+        });
+      } else {
+        setFormData(getDefaultFormData());
+      }
       setActiveStep(0);
       setError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Open, Project?.Id]);
+  }, [Open, Project?.Id, PrefillConfig]);
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -116,9 +138,15 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
         showSuccess('Project created successfully');
       }
 
+      // v3.0 F-006 — notification subscriptions are managed on the
+      // Project Details → Notifications tab, not here. No fan-out at save.
+
       OnClose(true); // Pass true to indicate update/create happened
     } catch (err: unknown) {
-      const errorMessage = (err as any).message || 'Failed to save project';
+      const errorMessage =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Failed to save project';
       setError(errorMessage);
       showError(errorMessage);
     }
@@ -161,19 +189,6 @@ export const ProjectFormModal: React.FC<IProjectFormModalProps> = ({
             onEnableRollbackChange={(enabled) =>
               updateConfig({ EnableRollbackOnPostDeployFailure: enabled })
             }
-          />
-        );
-      case 4:
-        return (
-          <Step4Notifications
-            notifications={
-              formData.Config?.Notifications || {
-                OnSuccess: true,
-                OnFailure: true,
-                OnStart: false,
-              }
-            }
-            onChange={(notifications) => updateConfig({ Notifications: notifications })}
           />
         );
       default:
